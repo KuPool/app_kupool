@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nexus/login/page/email_verification_page.dart';
+import 'package:nexus/net/api_service.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
+import 'package:nexus/utils/loading_state_mixin.dart';
+import 'package:nexus/utils/toast_utils.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -13,7 +16,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage>
-    with AutomaticKeepAliveClientMixin<RegisterPage> {
+    with
+        AutomaticKeepAliveClientMixin<RegisterPage>,
+        LoadingStateMixin<RegisterPage> { // 混入加载状态管理
   final _emailController = TextEditingController();
   bool _isAgreed = false;
   bool _isButtonEnabled = false;
@@ -37,6 +42,55 @@ class _RegisterPageState extends State<RegisterPage>
   void _updateButtonState() {
     setState(() {
       _isButtonEnabled = _emailController.text.isNotEmpty && _isAgreed;
+    });
+  }
+
+  /// “下一步”按钮的点击事件处理
+  void _onNextStep() {
+    // 使用 runWithLoading 来自动管理加载状态和防止重复点击
+    runWithLoading(() async {
+      FocusManager.instance.primaryFocus?.unfocus();
+
+      // 第一步：校验邮箱格式
+      final email = _emailController.text;
+      final isEmailValid = RegExp(
+              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+          .hasMatch(email);
+
+      if (!isEmailValid) {
+        ToastUtils.show('请输入有效的邮箱地址');
+        return; // 中断操作
+      }
+
+      // 第二步：调用接口判断邮箱是否存在
+      final existsResponse = await ApiService().post(
+        '/v1/user/email/exists',
+        data: {'email': email},
+      );
+
+      if (existsResponse == null) return;
+
+      final bool emailExists = existsResponse['exists'] ?? true;
+
+      if (emailExists) {
+        ToastUtils.show('该邮箱已被注册');
+      } else {
+        // 第三步：邮箱可用，发送注册邮件
+        final signUpResponse = await ApiService().post(
+          '/v1/sign_up_email',
+          data: {'email': email},
+        );
+
+        // 如果发送邮件请求成功(signUpResponse为true), 则导航到下一个页面
+        if (signUpResponse == true && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationPage(email: email),
+            ),
+          );
+        }
+      }
     });
   }
 
@@ -102,8 +156,8 @@ class _RegisterPageState extends State<RegisterPage>
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment(0.50, -0.00),
-                  end: Alignment(0.50, 1.00),
+                  begin: const Alignment(0.50, -0.00),
+                  end: const Alignment(0.50, 1.00),
                   colors: [const Color(0x00D9D9D9), const Color(0x160D5EF5)],
                 ),
               ),
@@ -124,7 +178,7 @@ class _RegisterPageState extends State<RegisterPage>
       controller: _emailController,
       inputFormatters: [_asciiFormatter],
       textInputAction: TextInputAction.done,
-      onEditingComplete: () => FocusManager.instance.primaryFocus?.unfocus(),
+      onEditingComplete: _onNextStep, // 点击键盘完成时也可触发
       style: TextStyle(fontSize: 16.sp),
       decoration: InputDecoration(
         hintText: '邮箱',
@@ -141,7 +195,7 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         suffixIcon: _emailController.text.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.cancel, color: Colors.grey),
+                icon: const Icon(Icons.cancel, color: Colors.grey),
                 onPressed: () {
                   _emailController.clear();
                 },
@@ -167,37 +221,34 @@ class _RegisterPageState extends State<RegisterPage>
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: _isButtonEnabled ? ColorUtils.mainColor : ColorUtils.unUseMainColor,
+        color: _isButtonEnabled && !isLoading
+            ? ColorUtils.mainColor
+            : ColorUtils.unUseMainColor,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8.r),
-          onTap: _isButtonEnabled
-              ? () async {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  await Future.delayed(const Duration(milliseconds: 100));
-                  if (mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EmailVerificationPage(email: _emailController.text),
-                      ),
-                    );
-                  }
-                }
-              : null,
+          onTap: _isButtonEnabled && !isLoading ? _onNextStep : null,
           child: Center(
-            child: Text(
-              '下一步',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    '下一步',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -210,7 +261,7 @@ class _RegisterPageState extends State<RegisterPage>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         InkWell(
-          onTap: () {
+          onTap: isLoading ? null : () { // 加载时禁用
             setState(() {
               _isAgreed = !_isAgreed;
               _updateButtonState();
@@ -232,7 +283,7 @@ class _RegisterPageState extends State<RegisterPage>
                 TextSpan(
                   text: '《Kupool用户协议》',
                   style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),
-                  // Add recognizer to make it tappable
+                  // 这里可以添加点击事件来查看协议详情
                 ),
               ],
             ),

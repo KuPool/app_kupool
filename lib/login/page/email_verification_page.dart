@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nexus/login/page/set_password_page.dart';
+import 'package:nexus/net/api_service.dart';
 import 'package:nexus/utils/color_utils.dart';
+import 'package:nexus/utils/loading_state_mixin.dart';
 import 'package:pinput/pinput.dart';
 
 class EmailVerificationPage extends StatefulWidget {
@@ -15,7 +18,8 @@ class EmailVerificationPage extends StatefulWidget {
   State<EmailVerificationPage> createState() => _EmailVerificationPageState();
 }
 
-class _EmailVerificationPageState extends State<EmailVerificationPage> {
+class _EmailVerificationPageState extends State<EmailVerificationPage>
+    with LoadingStateMixin<EmailVerificationPage> {
   final _pinController = TextEditingController();
   final _focusNode = FocusNode();
 
@@ -23,8 +27,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   bool _hasError = false;
   int _countdown = 59;
   Timer? _timer;
-
-  String _verificationCode = '';
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
   void _startTimer() {
-    _timer?.cancel(); // Cancel any existing timer
+    _timer?.cancel(); // 如果已有定时器，先取消
     setState(() => _countdown = 59);
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 0) {
@@ -60,6 +62,42 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   void _updateButtonState() {
     setState(() {
       _isButtonEnabled = _pinController.text.length == 6;
+    });
+  }
+
+  /// “下一步”按钮的点击事件
+  void _onNext() {
+    runWithLoading(() async {
+      FocusManager.instance.primaryFocus?.unfocus();
+
+      // 验证码输入完成后，直接跳转到设置密码页面
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SetPasswordPage(
+              email: widget.email,
+              verificationCode: _pinController.text,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  /// “重新发送”的点击事件
+  void _resendCode() {
+    runWithLoading(() async {
+      // 调用发送验证码的接口
+      final success = await ApiService().post(
+        '/v1/sign_up_email',
+        data: {'email': widget.email},
+      );
+
+      // 如果发送成功，则重新开始倒计时
+      if (success == true) {
+        _startTimer();
+      }
     });
   }
 
@@ -161,14 +199,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: (value) {
         setState(() {
-          _verificationCode = value;
-          _hasError = false; // Clear error on new input
+          _hasError = false; // 用户输入时清除错误状态
         });
-
       },
       onCompleted: (pin) {
-        _verificationCode = pin;
         _focusNode.unfocus();
+        _onNext(); // 输入完成后自动触发下一步
       },
       defaultPinTheme: defaultPinTheme,
       submittedPinTheme: submittedPinTheme,
@@ -196,16 +232,15 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             style: TextStyle(color: Colors.red, fontSize: 14.sp),
           ),
         const Spacer(),
+        // 如果倒计时大于0，显示倒计时
         _countdown > 0
             ? Text(
                 '${_countdown}s 重新发送',
                 style: TextStyle(color: Colors.grey, fontSize: 14.sp),
               )
+            // 否则，显示“重新发送”按钮
             : InkWell(
-                onTap: () {
-                  // Resend code logic
-                  _startTimer();
-                },
+                onTap: isLoading ? null : _resendCode, // 加载中不可点击
                 child: Text(
                   '重新发送',
                   style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),
@@ -218,8 +253,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Widget _buildNextButton() {
     return Container(
       height: 48.h,
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: _isButtonEnabled
+        color: _isButtonEnabled && !isLoading
             ? ColorUtils.mainColor
             : ColorUtils.unUseMainColor,
         borderRadius: BorderRadius.circular(8.r),
@@ -228,28 +264,24 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8.r),
-          onTap: _isButtonEnabled
-              ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  // For demonstration, let's assume '111111' is wrong
-                  if (_verificationCode == '111111') {
-                    setState(() {
-                      _hasError = true;
-                    });
-                  } else {
-                    // Next step logic here
-                  }
-                }
-              : null,
+          onTap: _isButtonEnabled && !isLoading ? _onNext : null,
           child: Center(
-            child: Text(
-              '下一步',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ))
+                : Text(
+                    '下一步',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),

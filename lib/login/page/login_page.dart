@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nexus/home/page/home_page.dart';
 import 'package:nexus/login/page/register_page.dart';
+import 'package:nexus/net/api_service.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
+import 'package:nexus/utils/loading_state_mixin.dart';
+import 'package:nexus/utils/toast_utils.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,7 +17,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage>
-    with AutomaticKeepAliveClientMixin<LoginPage> {
+    with AutomaticKeepAliveClientMixin<LoginPage>, LoadingStateMixin<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
@@ -42,6 +46,37 @@ class _LoginPageState extends State<LoginPage>
     setState(() {
       _isButtonEnabled = _emailController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
+    });
+  }
+
+  void _login() {
+    runWithLoading(() async {
+      final email = _emailController.text;
+
+      // 国际邮箱格式校验
+      final bool isEmailValid = RegExp(
+              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+          .hasMatch(email);
+
+      if (!isEmailValid) {
+        ToastUtils.show('请输入有效的邮箱地址');
+        return; // 校验失败，中断登录流程
+      }
+
+      final loginData = await ApiService().post(
+        '/v1/sign_in',
+        data: {
+          'email': email,
+          'password': _passwordController.text,
+        },
+      );
+      // 如果 ApiService 返回数据（即非 null），则表示请求成功。
+      // 如果失败，它会返回 null 并自动显示一个 toast。
+      if (loginData != null && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
     });
   }
 
@@ -74,7 +109,7 @@ class _LoginPageState extends State<LoginPage>
         onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();
         },
-        behavior: HitTestBehavior.opaque, // Make sure empty areas are tappable
+        behavior: HitTestBehavior.opaque, // 确保空白区域也可以点击
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -110,8 +145,8 @@ class _LoginPageState extends State<LoginPage>
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment(0.50, -0.00),
-                  end: Alignment(0.50, 1.00),
+                  begin: const Alignment(0.50, -0.00),
+                  end: const Alignment(0.50, 1.00),
                   colors: [const Color(0x00D9D9D9), const Color(0x160D5EF5)],
                 ),
               ),
@@ -148,7 +183,7 @@ class _LoginPageState extends State<LoginPage>
         ),
         suffixIcon: _emailController.text.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.cancel, color: Colors.grey),
+                icon: const Icon(Icons.cancel, color: Colors.grey),
                 onPressed: () {
                   _emailController.clear();
                 },
@@ -222,28 +257,39 @@ class _LoginPageState extends State<LoginPage>
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: _isButtonEnabled ? ColorUtils.mainColor : ColorUtils.unUseMainColor,
+        color: _isButtonEnabled && !isLoading ? ColorUtils.mainColor : ColorUtils.unUseMainColor,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8.r),
-          onTap: _isButtonEnabled
+          // 当按钮可用且不处于加载中时，才响应点击事件
+          onTap: _isButtonEnabled && !isLoading
               ? () {
-                FocusManager.instance.primaryFocus?.unfocus();
-                  // Login logic here
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  _login();
                 }
               : null,
           child: Center(
-            child: Text(
-              '登录',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            // 根据加载状态显示不同的小组件
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    '登录',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -252,7 +298,7 @@ class _LoginPageState extends State<LoginPage>
 
   Widget _buildRegisterButton() {
     return OutlinedButton(
-      onPressed: () {
+      onPressed: isLoading ? null : () {
         FocusManager.instance.primaryFocus?.unfocus();
         Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
       },
