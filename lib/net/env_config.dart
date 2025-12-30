@@ -1,6 +1,6 @@
 /// 环境
 enum Environment {
-  dev,
+  // dev,
   test,
   prod,
 }
@@ -12,10 +12,10 @@ class EnvConfig {
 
   // 不同环境对应的-baseUrl
   static final Map<Environment, String> _baseUrls = {
-    Environment.dev: 'https://dev.api.com',
-    Environment.test: 'https://test.api.com',
-    // 我们暂时用旧的地址作为生产环境地址
-    Environment.prod: 'https://jsonplaceholder.typicode.com',
+    // dev是本地ip
+    // Environment.dev: 'https://dev.api.com',
+    Environment.test: 'https://www.ku-pool.com',
+    Environment.prod: 'https://www.kupool.com',
   };
 
   /// 设置当前环境
