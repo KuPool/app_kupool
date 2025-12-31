@@ -22,6 +22,7 @@ class ImageUtils {
   static const String loginEmail = '${_imageBasePath}login/login_email.png';
   static const String checkSelect = '${_imageBasePath}login/select_check.png';
   static const String checkUnSelect = '${_imageBasePath}login/unselect_check.png';
+  static const String registerSuccess = '${_imageBasePath}login/dialog_success.png';
 
 
 }

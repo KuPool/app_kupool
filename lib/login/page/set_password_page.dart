@@ -6,7 +6,7 @@ import 'package:nexus/net/api_service.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
 import 'package:nexus/utils/loading_state_mixin.dart';
-import 'package:nexus/utils/toast_utils.dart';
+import 'package:nexus/widget/success_dialog.dart';
 
 class SetPasswordPage extends StatefulWidget {
   final String email;
@@ -27,6 +27,9 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
   final _confirmPasswordController = TextEditingController();
   final _passwordFocusNode = FocusNode(); // 密码框焦点节点
   final _confirmPasswordFocusNode = FocusNode(); // 确认密码框焦点节点
+
+  // 密码输入格式化器，允许除空格外的所有可打印ASCII字符
+  final _passwordInputFormatter = FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -107,13 +110,13 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
 
       // 密码长度校验
       if (password.length < 8) {
-        ToastUtils.show('密码长度至少为8位');
+        // ToastUtils.show('密码长度至少为8位');
         return;
       }
       
       // 调用最终的注册接口
       final result = await ApiService().post(
-        '/v1/sign_up', // 假设的最终注册接口
+        '/v1/sign_up',
         data: {
           'email': widget.email,
           'code': widget.verificationCode,
@@ -123,11 +126,23 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
 
       // 注册成功
       if (result != null && mounted) {
-        ToastUtils.show('注册成功');
-        // 清空所有历史路由，并跳转到登录页
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginPage()), 
-          (route) => false,
+        // 显示成功对话框
+        showDialog(
+          context: context,
+          barrierDismissible: false, // 用户必须点击按钮才能关闭
+          builder: (BuildContext context) {
+            return SuccessDialog(
+              title: '注册成功',
+              buttonText: '完成',
+              onButtonPressed: () {
+                // 优化：保留第一个路由(HomePage)，移除中间所有路由，然后推入LoginPage
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginPage()), 
+                  (route) => route.isFirst, // 只保留第一个路由
+                );
+              },
+            );
+          },
         );
       }
     });
@@ -220,6 +235,7 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
       controller: controller,
       focusNode: focusNode,
       obscureText: !isVisible,
+      inputFormatters: [_passwordInputFormatter], // 应用输入格式化器
       decoration: InputDecoration(
         hintText: hint,
         helperText: showError ? _errorText : ' ', // 使用helperText预留空间
@@ -233,13 +249,13 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
             ImageUtils.loginPass,
             width: 24.w,
             height: 24.h,
-            color: showError ? const Color(0xFFFF383C) : Colors.grey,
+            color: Colors.grey,
           ),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: showError ? const Color(0xFFFF383C) : Colors.grey,
+            color: Colors.grey,
           ),
           onPressed: onToggleVisibility,
         ),

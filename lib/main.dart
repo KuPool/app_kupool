@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nexus/home/page/home_page.dart';
 import 'package:nexus/user_panel/page/user_panel_page.dart';
@@ -12,7 +13,8 @@ import 'net/env_config.dart';
 
 void main() {
   EnvConfig.setEnvironment(Environment.test);
-  runApp(const MyApp());
+  // 1. 将您的根组件包裹在 ProviderScope 中
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MaterialApp(
           title: 'Kupool',
+          debugShowCheckedModeBanner: false, // 移除右上角的Debug标签
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
             useMaterial3: true,

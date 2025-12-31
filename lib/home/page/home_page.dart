@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nexus/login/page/login_page.dart';
+import 'package:nexus/net/auth_notifier.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) { // 2. build 方法增加 WidgetRef
+    // 3. 监听认证状态的变化，当状态改变时，UI会自动重建
+    final authState = ref.watch(authNotifierProvider);
+
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
       appBar: AppBar(
@@ -21,19 +26,33 @@ class HomePage extends StatelessWidget {
           height: 24.h,
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+          // 4. 根据登录状态，动态决定显示哪个小组件
+          authState.when(
+            data: (user) {
+              if (user != null) {
+                // 已登录，可以显示用户名或其他信息，这里暂时返回空
+                // 例如：return [Padding(padding: EdgeInsets.all(8), child: Text(user.userInfo?.email ?? ''))];
+                return const SizedBox.shrink(); // 或者返回一个空的占位符
+              } else {
+                // 未登录，显示登录/注册按钮
+                return TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+                  },
+                  child: Text(
+                    '登录/注册',
+                    style: TextStyle(fontSize: 14.sp, color: ColorUtils.mainColor),
+                  ),
+                );
+              }
             },
-            child: Text(
-              '登录/注册',
-              style: TextStyle(fontSize: 14.sp, color: ColorUtils.mainColor),
-            ),
+            loading: () => const Center(child: CircularProgressIndicator()), // 加载中状态
+            error: (err, stack) => const Center(child: Text('Error')), // 错误状态
           ),
-        ],
+        ].where((widget) => widget is! SizedBox).toList(), // 过滤掉SizedBox
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
             _buildTopBanner(context),

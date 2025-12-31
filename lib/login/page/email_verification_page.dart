@@ -204,7 +204,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
       },
       onCompleted: (pin) {
         _focusNode.unfocus();
-        _onNext(); // 输入完成后自动触发下一步
       },
       defaultPinTheme: defaultPinTheme,
       submittedPinTheme: submittedPinTheme,

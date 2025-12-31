@@ -1,30 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nexus/home/page/home_page.dart';
 import 'package:nexus/login/page/register_page.dart';
-import 'package:nexus/net/api_service.dart';
+import 'package:nexus/net/auth_notifier.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
-import 'package:nexus/utils/loading_state_mixin.dart';
 import 'package:nexus/utils/toast_utils.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with AutomaticKeepAliveClientMixin<LoginPage>, LoadingStateMixin<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
   bool _isPasswordVisible = false;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -50,42 +46,51 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _login() {
-    runWithLoading(() async {
-      final email = _emailController.text;
+    final email = _emailController.text;
 
-      // 国际邮箱格式校验
-      final bool isEmailValid = RegExp(
-              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-          .hasMatch(email);
+    // 国际邮箱格式校验
+    final bool isEmailValid = RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+        .hasMatch(email);
 
-      if (!isEmailValid) {
-        ToastUtils.show('请输入有效的邮箱地址');
-        return; // 校验失败，中断登录流程
-      }
+    if (!isEmailValid) {
+      ToastUtils.show('请输入有效的邮箱地址');
+      return; // 校验失败，中断登录流程
+    }
 
-      final loginData = await ApiService().post(
-        '/v1/sign_in',
-        data: {
-          'email': email,
-          'password': _passwordController.text,
-        },
-      );
-      // 如果 ApiService 返回数据（即非 null），则表示请求成功。
-      // 如果失败，它会返回 null 并自动显示一个 toast。
-      if (loginData != null && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomePage()),
+    // 调用Notifier执行登录，UI将通过ref.watch和ref.listen响应状态变化
+    ref.read(authNotifierProvider.notifier).signIn(
+          email,
+          _passwordController.text,
         );
-      }
-    });
   }
 
+  // 优化：修改正则表达式以禁止输入空格
   final _asciiFormatter =
-      FilteringTextInputFormatter.allow(RegExp(r'[ -~]'));
+      FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    // 使用ref.listen来处理副作用，如导航、弹窗等
+    ref.listen(authNotifierProvider, (previous, next) {
+      // 仅在登录成功时执行导航
+      next.when(
+        data: (user) {
+          if (user != null && mounted) {
+            // 智能处理登录后的导航逻辑
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          }
+        },
+        loading: () {},
+        error: (err, stack) {},
+      );
+    });
+
+    // 使用ref.watch来监听状态变化，并重建UI
+    final authState = ref.watch(authNotifierProvider);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
@@ -132,9 +137,9 @@ class _LoginPageState extends State<LoginPage>
                     SizedBox(height: 20.h),
                     _buildPasswordField(),
                     SizedBox(height: 40.h),
-                    _buildLoginButton(),
+                    _buildLoginButton(authState.isLoading),
                     SizedBox(height: 16.h),
-                    _buildRegisterButton(),
+                    _buildRegisterButton(authState.isLoading),
                   ],
                 ),
               ),
@@ -253,7 +258,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(bool isLoading) {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
@@ -264,15 +269,8 @@ class _LoginPageState extends State<LoginPage>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8.r),
-          // 当按钮可用且不处于加载中时，才响应点击事件
-          onTap: _isButtonEnabled && !isLoading
-              ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  _login();
-                }
-              : null,
+          onTap: _isButtonEnabled && !isLoading ? _login : null,
           child: Center(
-            // 根据加载状态显示不同的小组件
             child: isLoading
                 ? const SizedBox(
                     width: 24,
@@ -296,7 +294,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(bool isLoading) {
     return OutlinedButton(
       onPressed: isLoading ? null : () {
         FocusManager.instance.primaryFocus?.unfocus();

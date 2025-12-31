@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,8 @@ import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
 import 'package:nexus/utils/loading_state_mixin.dart';
 import 'package:nexus/utils/toast_utils.dart';
+
+import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,6 +23,7 @@ class _RegisterPageState extends State<RegisterPage>
         AutomaticKeepAliveClientMixin<RegisterPage>,
         LoadingStateMixin<RegisterPage> { // 混入加载状态管理
   final _emailController = TextEditingController();
+  late final TapGestureRecognizer _agreementRecognizer;
   bool _isAgreed = false;
   bool _isButtonEnabled = false;
 
@@ -30,13 +34,20 @@ class _RegisterPageState extends State<RegisterPage>
   void initState() {
     super.initState();
     _emailController.addListener(_updateButtonState);
+    _agreementRecognizer = TapGestureRecognizer()..onTap = _handleAgreementTap;
   }
 
   @override
   void dispose() {
     _emailController.removeListener(_updateButtonState);
     _emailController.dispose();
+    _agreementRecognizer.dispose(); // 必须释放资源
     super.dispose();
+  }
+
+  void _handleAgreementTap() {
+    // 这里可以跳转到用户协议的WebView或详情页面
+    ToastUtils.show('跳转到用户协议页面');
   }
 
   void _updateButtonState() {
@@ -95,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage>
   }
 
   final _asciiFormatter =
-      FilteringTextInputFormatter.allow(RegExp(r'[ -~]'));
+      FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +294,7 @@ class _RegisterPageState extends State<RegisterPage>
                 TextSpan(
                   text: '《Kupool用户协议》',
                   style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),
-                  // 这里可以添加点击事件来查看协议详情
+                  recognizer: _agreementRecognizer, // 将手势识别器绑定到TextSpan
                 ),
               ],
             ),
