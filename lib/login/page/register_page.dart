@@ -24,8 +24,11 @@ class _RegisterPageState extends State<RegisterPage>
         LoadingStateMixin<RegisterPage> { // 混入加载状态管理
   final _emailController = TextEditingController();
   late final TapGestureRecognizer _agreementRecognizer;
+  late final TapGestureRecognizer _loginRecognizer;
+
   bool _isAgreed = false;
   bool _isButtonEnabled = false;
+  String? _errorText;
 
   @override
   bool get wantKeepAlive => true;
@@ -35,6 +38,7 @@ class _RegisterPageState extends State<RegisterPage>
     super.initState();
     _emailController.addListener(_updateButtonState);
     _agreementRecognizer = TapGestureRecognizer()..onTap = _handleAgreementTap;
+    _loginRecognizer = TapGestureRecognizer()..onTap = _handleLoginTap;
   }
 
   @override
@@ -42,6 +46,7 @@ class _RegisterPageState extends State<RegisterPage>
     _emailController.removeListener(_updateButtonState);
     _emailController.dispose();
     _agreementRecognizer.dispose(); // 必须释放资源
+    _loginRecognizer.dispose();
     super.dispose();
   }
 
@@ -49,10 +54,18 @@ class _RegisterPageState extends State<RegisterPage>
     // 这里可以跳转到用户协议的WebView或详情页面
     ToastUtils.show('跳转到用户协议页面');
   }
+  
+  void _handleLoginTap() {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+  }
 
   void _updateButtonState() {
     setState(() {
       _isButtonEnabled = _emailController.text.isNotEmpty && _isAgreed;
+      // 当用户开始编辑时，实时清除错误提示
+      if (_errorText != null) {
+        _errorText = null;
+      }
     });
   }
 
@@ -84,7 +97,9 @@ class _RegisterPageState extends State<RegisterPage>
       final bool emailExists = existsResponse['exists'] ?? true;
 
       if (emailExists) {
-        ToastUtils.show('该邮箱已被注册');
+        setState(() {
+          _errorText = '该邮箱已被注册';
+        });
       } else {
         // 第三步：邮箱可用，发送注册邮件
         final signUpResponse = await ApiService().post(
@@ -185,6 +200,9 @@ class _RegisterPageState extends State<RegisterPage>
   }
 
   Widget _buildEmailField() {
+    bool showError = _errorText != null;
+    const Color errorColor = Color(0xFFFF383C);
+
     return TextField(
       controller: _emailController,
       inputFormatters: [_asciiFormatter],
@@ -196,12 +214,17 @@ class _RegisterPageState extends State<RegisterPage>
         hintStyle: TextStyle(
           fontSize: 16.sp,
         ),
+        helperText: showError ? _errorText : ' ', // 使用helperText预留空间
+        helperStyle: TextStyle(color: errorColor, fontSize: 12.sp),
+        helperMaxLines: 1,
+        errorStyle: const TextStyle(height: 0), // 隐藏默认的errorStyle空间
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Image.asset(
             ImageUtils.loginEmail,
             width: 24.w,
             height: 24.h,
+            color: Colors.grey,
           ),
         ),
         suffixIcon: _emailController.text.isNotEmpty
@@ -218,11 +241,19 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: showError ? errorColor : Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: ColorUtils.mainColor),
+          borderSide: BorderSide(color: showError ? errorColor : ColorUtils.mainColor),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: errorColor),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: errorColor, width: 2),
+          borderRadius: BorderRadius.circular(8.r),
         ),
       ),
     );
