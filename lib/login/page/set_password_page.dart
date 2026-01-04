@@ -1,12 +1,12 @@
+import 'package:Kupool/login/page/login_page.dart';
+import 'package:Kupool/net/api_service.dart';
+import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/loading_state_mixin.dart';
+import 'package:Kupool/widget/success_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nexus/login/page/login_page.dart';
-import 'package:nexus/net/api_service.dart';
-import 'package:nexus/utils/color_utils.dart';
-import 'package:nexus/utils/image_utils.dart';
-import 'package:nexus/utils/loading_state_mixin.dart';
-import 'package:nexus/widget/success_dialog.dart';
 
 class SetPasswordPage extends StatefulWidget {
   final String email;

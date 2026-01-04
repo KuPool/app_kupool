@@ -1,13 +1,13 @@
+import 'package:Kupool/home/page/home_page.dart';
+import 'package:Kupool/login/page/register_page.dart';
+import 'package:Kupool/net/auth_notifier.dart';
+import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nexus/home/page/home_page.dart';
-import 'package:nexus/login/page/register_page.dart';
-import 'package:nexus/net/auth_notifier.dart';
-import 'package:nexus/utils/color_utils.dart';
-import 'package:nexus/utils/image_utils.dart';
-import 'package:nexus/utils/toast_utils.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});

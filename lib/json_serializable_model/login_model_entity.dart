@@ -1,7 +1,7 @@
-import 'package:nexus/generated/json/base/json_field.dart';
-import 'package:nexus/generated/json/login_model_entity.g.dart';
+import 'package:Kupool/generated/json/base/json_field.dart';
+import 'package:Kupool/generated/json/login_model_entity.g.dart';
 import 'dart:convert';
-export 'package:nexus/generated/json/login_model_entity.g.dart';
+export 'package:Kupool/generated/json/login_model_entity.g.dart';
 
 @JsonSerializable()
 class LoginModelEntity {

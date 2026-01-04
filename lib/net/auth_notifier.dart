@@ -1,7 +1,7 @@
+import 'package:Kupool/json_serializable_model/login_model_entity.dart';
+import 'package:Kupool/net/auth_provider.dart';
+import 'package:Kupool/net/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nexus/json_serializable_model/login_model_entity.dart';
-import 'package:nexus/net/auth_provider.dart';
-import 'package:nexus/net/auth_repository.dart';
 
 
 /// 认证状态的 Notifier (已升级到 AsyncNotifier)

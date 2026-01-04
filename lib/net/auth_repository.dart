@@ -1,5 +1,5 @@
-import 'package:nexus/json_serializable_model/login_model_entity.dart';
-import 'package:nexus/net/api_service.dart';
+import 'package:Kupool/json_serializable_model/login_model_entity.dart';
+import 'package:Kupool/net/api_service.dart';
 
 /// 认证相关的仓库层
 ///

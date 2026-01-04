@@ -1,15 +1,14 @@
+import 'package:Kupool/earnings/page/earnings_page.dart';
+import 'package:Kupool/home/page/home_page.dart';
+import 'package:Kupool/mining_machine/page/mining_machine_page.dart';
+import 'package:Kupool/my/page/my_page.dart';
+import 'package:Kupool/net/env_config.dart';
+import 'package:Kupool/user_panel/page/user_panel_page.dart';
+import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nexus/home/page/home_page.dart';
-import 'package:nexus/user_panel/page/user_panel_page.dart';
-import 'package:nexus/mining_machine/page/mining_machine_page.dart';
-import 'package:nexus/earnings/page/earnings_page.dart';
-import 'package:nexus/my/page/my_page.dart';
-import 'package:nexus/utils/color_utils.dart';
-import 'package:nexus/utils/image_utils.dart';
-
-import 'net/env_config.dart';
 
 void main() {
   EnvConfig.setEnvironment(Environment.test);

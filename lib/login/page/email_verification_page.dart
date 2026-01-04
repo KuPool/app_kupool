@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:Kupool/login/page/set_password_page.dart';
+import 'package:Kupool/net/api_service.dart';
+import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/loading_state_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nexus/login/page/set_password_page.dart';
-import 'package:nexus/net/api_service.dart';
-import 'package:nexus/utils/color_utils.dart';
-import 'package:nexus/utils/loading_state_mixin.dart';
 import 'package:pinput/pinput.dart';
 
 class EmailVerificationPage extends StatefulWidget {

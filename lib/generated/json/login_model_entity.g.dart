@@ -1,5 +1,5 @@
-import 'package:nexus/generated/json/base/json_convert_content.dart';
-import 'package:nexus/json_serializable_model/login_model_entity.dart';
+import 'package:Kupool/generated/json/base/json_convert_content.dart';
+import 'package:Kupool/json_serializable_model/login_model_entity.dart';
 
 LoginModelEntity $LoginModelEntityFromJson(Map<String, dynamic> json) {
   final LoginModelEntity loginModelEntity = LoginModelEntity();

@@ -1,6 +1,6 @@
+import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nexus/utils/image_utils.dart';
 
 /// 一个通用的成功提示对话框
 class SuccessDialog extends StatelessWidget {

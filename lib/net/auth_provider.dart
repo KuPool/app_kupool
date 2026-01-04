@@ -1,6 +1,6 @@
+import 'package:Kupool/net/api_service.dart';
+import 'package:Kupool/net/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nexus/net/api_service.dart';
-import 'package:nexus/net/auth_repository.dart';
 
 /// 提供 ApiService 的单例
 final apiServiceProvider = Provider<ApiService>((ref) {
