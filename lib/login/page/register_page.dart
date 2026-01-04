@@ -2,12 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nexus/login/page/agreement_page.dart';
 import 'package:nexus/login/page/email_verification_page.dart';
 import 'package:nexus/net/api_service.dart';
+import 'package:nexus/net/env_config.dart';
 import 'package:nexus/utils/color_utils.dart';
 import 'package:nexus/utils/image_utils.dart';
 import 'package:nexus/utils/loading_state_mixin.dart';
-import 'package:nexus/utils/toast_utils.dart';
 
 import 'login_page.dart';
 
@@ -51,8 +52,15 @@ class _RegisterPageState extends State<RegisterPage>
   }
 
   void _handleAgreementTap() {
-    // 这里可以跳转到用户协议的WebView或详情页面
-    ToastUtils.show('跳转到用户协议页面');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>  AgreementPage(
+          title: '用户协议',
+          url: EnvConfig.baseUrl, // 保持占位，不拼接具体路径
+        ),
+      ),
+    );
   }
   
   void _handleLoginTap() {
@@ -82,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage>
           .hasMatch(email);
 
       if (!isEmailValid) {
-        ToastUtils.show('请输入有效的邮箱地址');
+        // ToastUtils.show('请输入有效的邮箱地址');
         return; // 中断操作
       }
 
