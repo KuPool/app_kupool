@@ -14,6 +14,16 @@ class ColorUtils {
   static const Color widgetBgColor = Color(0xFFF4F4F4);
   static const Color bottomBarBgColor = Color(0xFFF8F8F8);
 
+  static const Color colorTitleOne = Color(0xFF222222);
+  static const Color colorT1 = Color(0xFF333333);
+  static const Color colorTableHear = Color(0xFF666666);
+  static const Color colorBg1 = Color(0xFFFFFFFF);
+  static const Color colorEXBg1 = Color(0xFFF3F3F3);
+  static const Color colorEXBg2 = Color(0xFFF6F6F6);
+  static const Color colorNoteT1 = Color(0xFF888888);
+  static const Color colorT2 = Color(0xFF444444);
+  static const Color colorNoteT2 = Color(0xFF777777);
+  static const Color colorC1 = Color(0xFF878787);
 
 
   // TODO: Add your custom app colors here

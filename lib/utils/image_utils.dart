@@ -4,6 +4,8 @@ class ImageUtils {
   // home
   static const String homeBottomBar = '${_imageBasePath}home/home_bottom_bar.png';
   static const String homeVolume = '${_imageBasePath}home/home_volume.png';
+  static const String turnRight = '${_imageBasePath}home/turn_right.png';
+  static const String homeCopy = '${_imageBasePath}home/home_copy.png';
 
   // panel
   static const String panelBottomBar = '${_imageBasePath}panel/panel_bottom_bar.png';

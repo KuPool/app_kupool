@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
@@ -6,12 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { // 2. build 方法增加 WidgetRef
-    // 3. 监听认证状态的变化，当状态改变时，UI会自动重建
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  final Map<String, bool> _expansionState = {};
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
     return Scaffold(
@@ -22,19 +29,15 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
         elevation: 0,
         centerTitle: false,
         title: Image.asset(
-          ImageUtils.kupoolLogo, // Assuming you have a logo in ImageUtils
+          ImageUtils.kupoolLogo,
           height: 24.h,
         ),
         actions: [
-          // 4. 根据登录状态，动态决定显示哪个小组件
           authState.when(
             data: (user) {
               if (user != null) {
-                // 已登录，可以显示用户名或其他信息，这里暂时返回空
-                // 例如：return [Padding(padding: EdgeInsets.all(8), child: Text(user.userInfo?.email ?? ''))];
-                return const SizedBox.shrink(); // 或者返回一个空的占位符
+                return const SizedBox.shrink();
               } else {
-                // 未登录，显示登录/注册按钮
                 return TextButton(
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
@@ -46,10 +49,10 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
                 );
               }
             },
-            loading: () => const Center(child: CircularProgressIndicator()), // 加载中状态
-            error: (err, stack) => const Center(child: Text('Error')), // 错误状态
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => const Center(child: Text('Error')),
           ),
-        ].where((widget) => widget is! SizedBox).toList(), // 过滤掉SizedBox
+        ].where((widget) => widget is! SizedBox).toList(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -58,7 +61,6 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
             _buildTopBanner(context),
             _buildAnnouncementBar(context),
             _buildMiningCoinsSection(context),
-            _buildMiningAddressSection(context),
             SizedBox(height: 24.h),
           ],
         ),
@@ -109,8 +111,10 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
   }
 
   Widget _buildMiningCoinsSection(BuildContext context) {
+    const List<int> flexes = [5, 3, 4];
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
       margin: EdgeInsets.only(top: 12.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -124,98 +128,167 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
             child: Text('挖矿币种',
                 style: TextStyle(
                     fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0D1835))),
+                    fontWeight: FontWeight.normal,
+                    color: ColorUtils.colorT1)),
           ),
           SizedBox(height: 16.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: _buildCoinHeader(),
+            child: _buildCoinHeader(flexes),
           ),
-          SizedBox(height: 12.h),
-          _buildCoinRow(
-            context,
-            coinName: 'BTC',
-            dailyEarning: '¥ 55.04 /G',
-            poolHashrate: '6.31 EH/s',
-            isUp: null,
+          Column(
+            children: [
+              _buildCoinRow(
+                context,
+                flexes: flexes,
+                icons: [Icons.currency_bitcoin],
+                coinName: 'BTC',
+                dailyEarning: '¥ 55.04 /G',
+                poolHashrate: '6.31 EH/s',
+                isUp: _expansionState['BTC'] ?? false,
+                onTap: () => setState(() => _expansionState['BTC'] = !(_expansionState['BTC'] ?? false)),
+              ),
+              if (_expansionState['BTC'] ?? false) _buildMiningAddressSection(context),
+            ],
           ),
-          const Divider(indent: 16, endIndent: 16),
-          _buildCoinRow(
-            context,
-            coinName: 'DOGE/LTC',
-            dailyEarning: '¥ 5.04 /G',
-            poolHashrate: '76.31 TH/s',
-            isUp: true,
+           Column(
+            children: [
+              _buildCoinRow(
+                context,
+                flexes: flexes,
+                icons: [Icons.pets, Icons.flash_on],
+                coinName: 'DOGE/LTC',
+                dailyEarning: '¥ 5.04 /G',
+                poolHashrate: '76.31 TH/s',
+                isUp: _expansionState['DOGE/LTC'] ?? false,
+                onTap: () => setState(() => _expansionState['DOGE/LTC'] = !(_expansionState['DOGE/LTC'] ?? false)),
+              ),
+              if (_expansionState['DOGE/LTC'] ?? false) _buildMiningAddressSection(context),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCoinHeader() {
+  Widget _buildCoinHeader(List<int> flexes) {
     return Row(
       children: [
+        SizedBox(width: 60), 
         Expanded(
-            flex: 2,
+            flex: flexes[0],
             child: Text('币种',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey))),
+                style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear))),
         Expanded(
-            flex: 3,
+            flex: flexes[1],
             child: Text('日收益',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey))),
+                style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear))),
         Expanded(
-            flex: 3,
-            child: Text('矿池算力',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey))),
+          flex: flexes[2],
+          child: Text(
+            '矿池算力',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear),
+          ),
+        ),
       ],
     );
   }
 
+  Widget _buildCoinIcons(List<IconData> icons) {
+    if (icons.length > 1) {
+      return SizedBox(
+        width: 48.w, 
+        height: 32.h,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 16.w,
+              child: CircleAvatar(
+                radius: 16.r,
+                backgroundColor: Colors.blue.shade300,
+                child: Icon(icons[1], color: Colors.white, size: 20),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              child: CircleAvatar(
+                radius: 16.r,
+                backgroundColor: Colors.yellow.shade600,
+                child: Icon(icons[0], color: Colors.white, size: 20),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return SizedBox(
+        width: 48.w, 
+        height: 32.h,
+        child: CircleAvatar(
+          radius: 16.r,
+          backgroundColor: Colors.grey.shade200,
+          child: Icon(icons.first, color: Colors.grey.shade400, size: 20),
+        ),
+      );
+    }
+  }
+
   Widget _buildCoinRow(BuildContext context,
-      {
+      {required List<int> flexes, 
+      required List<IconData> icons,
       required String coinName,
       required String dailyEarning,
       required String poolHashrate,
-      bool? isUp}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      required bool isUp, 
+      required VoidCallback onTap, 
+      }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            flex: 2,
+            flex: flexes[0],
             child: Row(
               children: [
-                Container(height: 32.h,color: Colors.grey,),
+                _buildCoinIcons(icons),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(coinName,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: ColorUtils.colorT1,
+                        )
+                  ),
                 ),
               ],
             ),
           ),
           Expanded(
-              flex: 3,
-              child: Text(dailyEarning, style: TextStyle(fontSize: 14.sp))),
+              flex: flexes[1],
+              child: Text(dailyEarning, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1))),
           Expanded(
-            flex: 3,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(poolHashrate, style: TextStyle(fontSize: 14.sp)),
-                if (isUp != null)
-                  Icon(
-                    isUp ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: isUp ? Colors.green : Colors.red,
-                    size: 16,
+            flex: flexes[2],
+            child: InkWell(
+              onTap: onTap, 
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end, 
+                children: [
+                  Text(poolHashrate, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1)),
+                  SizedBox(width: 4.w),
+                  Transform.rotate(
+                    angle: isUp ? -math.pi / 2 : 0, 
+                    child: Image.asset(
+                      ImageUtils.turnRight,
+                      width: 16,
+                      height: 16,
+                    ),
                   )
-                else
-                  const Icon(Icons.arrow_forward_ios,
-                      size: 16, color: Colors.grey),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -226,9 +299,9 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
   Widget _buildMiningAddressSection(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16.w),
-      margin: EdgeInsets.only(top: 12.w),
+      margin: EdgeInsets.only(top: 12.w, left: 12.w, right: 12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorUtils.widgetBgColor, 
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -236,20 +309,20 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
         children: [
           Text('挖矿地址',
               style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0D1835))),
-          SizedBox(height: 16.h),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: ColorUtils.colorTableHear)),
+          SizedBox(height: 20.h),
           _buildAddressRow(
               '亚洲', 'stratum+tcp://ltc-cn.kupool.com:8888'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 20.h),
           _buildAddressRow('全球', 'stratum+tcp://ltc.kupool.com:8888'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 20.h),
           Text(
             '非加密地址, 仅供测试, 国内用户请勿直连, 请注册后联系商务经理',
-            style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: ColorUtils.colorNoteT1),
           ),
-          const Divider(height: 32),
+          SizedBox(height: 16.h,),
           _buildInfoRow('分配方式', 'FPPS'),
           _buildInfoRow('起付额', '40 DOGE / 0.01 LTC'),
           _buildInfoRow('支付时间', '每日 9:00-12:00 (UTC+8)'),
@@ -259,13 +332,27 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
   }
   
   Widget _buildAddressRow(String region, String address) {
+
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center, // 顶部对齐，以在文本换行时保持布局稳定
       children: [
-        Text(region, style: TextStyle(fontSize: 14.sp)),
-        SizedBox(width: 16.w),
-        Expanded(child: Text(address, style: TextStyle(fontSize: 14.sp), overflow: TextOverflow.ellipsis,)),
-        SizedBox(width: 8.w),
-        const Icon(Icons.copy, size: 16, color: Colors.grey),
+        Text(region, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            address,
+            style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        SizedBox(width: 8),
+        Image.asset(
+          ImageUtils.homeCopy,
+          width: 16,
+          height: 16,
+          color: ColorUtils.colorT1,
+        ),
       ],
     );
   }
@@ -276,8 +363,8 @@ class HomePage extends ConsumerWidget { // 1. 改造为 ConsumerWidget
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 14.sp, color: Colors.grey)),
-          Text(value, style: TextStyle(fontSize: 14.sp, color: const Color(0xFF0D1835))),
+          Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorTableHear)),
+          Text(value, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
         ],
       ),
     );
