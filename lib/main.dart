@@ -12,7 +12,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   EnvConfig.setEnvironment(Environment.test);
-  // 1. 将您的根组件包裹在 ProviderScope 中
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -22,13 +21,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812), // 设计稿的尺寸
+      designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp(
           title: 'Kupool',
-          debugShowCheckedModeBanner: false, // 移除右上角的Debug标签
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
             useMaterial3: true,
@@ -48,8 +47,11 @@ class MainTabBar extends StatefulWidget {
   State<MainTabBar> createState() => _MainTabBarState();
 }
 
-class _MainTabBarState extends State<MainTabBar> {
+// 1. 将 TickerProvider 混入到根部的 State
+class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  late TabController _tabController; // 2. 将 TabController 移动到这里
+
   final List<Widget> _pages = [
     const HomePage(),
     const UserPanelPage(),
@@ -59,8 +61,21 @@ class _MainTabBarState extends State<MainTabBar> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildDrawer(), // 3. 将抽屉添加到根 Scaffold
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -72,8 +87,8 @@ class _MainTabBarState extends State<MainTabBar> {
             _currentIndex = index;
           });
         },
-        selectedFontSize: 11.sp, // 使用.sp进行适配
-        unselectedFontSize: 11.sp, // 使用.sp进行适配
+        selectedFontSize: 11.sp,
+        unselectedFontSize: 11.sp,
         selectedItemColor: ColorUtils.mainColor,
         unselectedItemColor: ColorUtils.unselectBarTextColor,
         backgroundColor: ColorUtils.bottomBarBgColor,
@@ -104,6 +119,80 @@ class _MainTabBarState extends State<MainTabBar> {
             activeIcon: Image.asset(ImageUtils.mineBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
             label: '我的',
           ),
+        ],
+      ),
+    );
+  }
+
+  // 4. 将抽屉的构建逻辑移动到这里
+  Widget _buildDrawer() {
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.85, // 增大抽屉宽度
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Text('子账户', style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold)),
+            ),
+            TabBar(
+              controller: _tabController,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: ColorUtils.mainColor,
+              tabs: [
+                Tab(
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.pets), SizedBox(width: 4), Text('DOGE/LTC')]),
+                ),
+                Tab(
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.currency_bitcoin), SizedBox(width: 4), Text('BTC')]),
+                ),
+              ],
+            ),
+            Expanded(
+              child: ListView.separated(
+                itemCount: 5,
+                separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+                itemBuilder: (context, index) {
+                  return _buildAccountItem(
+                    name: index == 0 ? 'doge_ltc_pro' : 'sub_account_001',
+                    remark: index == 0 ? '王总的主账户' : '备注名',
+                    hashrate: index < 3 ? '14.25 TH/s' : '0.00 TH/s',
+                    isSelected: index == 0,
+                  );
+                },
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountItem({required String name, required String remark, required String hashrate, bool isSelected = false}) {
+    return Container(
+      color: isSelected ? const Color(0xFFE9F0FF) : Colors.transparent,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+              SizedBox(height: 4.h),
+              Text(remark, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+            ],
+          ),
+          Row(
+            children: [
+              Text(hashrate, style: TextStyle(fontSize: 14.sp)),
+              SizedBox(width: 8.w),
+              if (isSelected)
+                const Icon(Icons.check_circle, color: ColorUtils.mainColor, size: 20),
+            ],
+          )
         ],
       ),
     );
