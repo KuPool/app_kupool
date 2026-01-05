@@ -27,6 +27,7 @@ class ColorUtils {
   static const Color color555 = Color(0xFF555555);
   static const Color color000 = Color(0xFF000000);
   static const Color colorBe = Color(0xFFbebebe);
+  static const Color color64 = Color(0xFF646464);
 
 
   // TODO: Add your custom app colors here
