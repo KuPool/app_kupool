@@ -1,25 +1,21 @@
 import 'dart:math' as math;
+import 'package:Kupool/home/home_provider.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends ConsumerState<HomePage> {
-  final Map<String, bool> _expansionState = {};
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
+    final homeDataAsync = ref.watch(homeDataProvider);
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
@@ -49,20 +45,26 @@ class _HomePageState extends ConsumerState<HomePage> {
                 );
               }
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => const Center(child: Text('Error')),
+            loading: () => const SizedBox.shrink(), // 在AppBar中不显示加载指示器
+            error: (err, stack) => const Icon(Icons.error), // 在AppBar中显示一个错误图标
           ),
         ].where((widget) => widget is! SizedBox).toList(),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(
-          children: [
-            _buildTopBanner(context),
-            _buildAnnouncementBar(context),
-            _buildMiningCoinsSection(context),
-            SizedBox(height: 24.h),
-          ],
+      body: homeDataAsync.when(
+        data: (homeData) => SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            children: [
+              _buildTopBanner(context),
+              _buildAnnouncementBar(context),
+              _buildMiningCoinsSection(context, homeData),
+              SizedBox(height: 24.h),
+            ],
+          ),
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(
+          child: Text('加载失败: $err'),
         ),
       ),
     );
@@ -110,8 +112,30 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildMiningCoinsSection(BuildContext context) {
+  Widget _buildMiningCoinsSection(BuildContext context, HomeDataState homeData) {
     const List<int> flexes = [5, 3, 4];
+    var coinInfoModel = homeData.coinInfo.ltc;
+    var poolHash = FormatUtils.formatHashrate(coinInfoModel?.poolHash);
+
+    var dogeMergeMining = coinInfoModel?.mergeMining?.where((mm) => mm.name == "doge").toList();
+    var dogeAvg = dogeMergeMining?.first.valueAvg;
+
+    var priceModel = homeData.price;
+    var dogePrice = priceModel.price?.doge?.price ?? 0.0;
+    var ltcPrice = priceModel.price?.ltc?.price ?? 0.0;
+    var cnyPrice = priceModel.fiat?.cny ?? 0.0;
+
+    final earnPerUnit = double.tryParse(coinInfoModel?.earnPerUnit ?? '') ?? 0.0;
+    final dogeValueAvg = double.tryParse(dogeAvg ?? '') ?? 0.0;
+
+    final dogeEarning = earnPerUnit * dogeValueAvg * dogePrice * cnyPrice;
+
+    final ltcEarning = earnPerUnit * 1 * ltcPrice * cnyPrice;
+
+    final totalEarning = dogeEarning + ltcEarning;
+    var dayEarning = '¥ ${totalEarning.toStringAsFixed(2)} /${coinInfoModel?.earnUnit}';
+
+
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -136,36 +160,15 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: _buildCoinHeader(flexes),
           ),
-          Column(
-            children: [
-              _buildCoinRow(
-                context,
-                flexes: flexes,
-                icons: [Icons.currency_bitcoin],
-                coinName: 'BTC',
-                dailyEarning: '¥ 55.04 /G',
-                poolHashrate: '6.31 EH/s',
-                isUp: _expansionState['BTC'] ?? false,
-                onTap: () => setState(() => _expansionState['BTC'] = !(_expansionState['BTC'] ?? false)),
-              ),
-              if (_expansionState['BTC'] ?? false) _buildMiningAddressSection(context),
-            ],
+          _buildCoinRow(
+            context,
+            flexes: flexes,
+            icons: [ImageUtils.homeDoge, ImageUtils.homeLtc],
+            coinName: 'DOGE/LTC',
+            dailyEarning: dayEarning,
+            poolHashrate: '$poolHash ${coinInfoModel?.poolHashUnit}',
           ),
-           Column(
-            children: [
-              _buildCoinRow(
-                context,
-                flexes: flexes,
-                icons: [Icons.pets, Icons.flash_on],
-                coinName: 'DOGE/LTC',
-                dailyEarning: '¥ 5.04 /G',
-                poolHashrate: '76.31 TH/s',
-                isUp: _expansionState['DOGE/LTC'] ?? false,
-                onTap: () => setState(() => _expansionState['DOGE/LTC'] = !(_expansionState['DOGE/LTC'] ?? false)),
-              ),
-              if (_expansionState['DOGE/LTC'] ?? false) _buildMiningAddressSection(context),
-            ],
-          ),
+          _buildMiningAddressSection(context,homeData),
         ],
       ),
     );
@@ -187,7 +190,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           flex: flexes[2],
           child: Text(
             '矿池算力',
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.right,
             style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear),
           ),
         ),
@@ -195,10 +198,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildCoinIcons(List<IconData> icons) {
+  Widget _buildCoinIcons(List<String> icons) {
     if (icons.length > 1) {
       return SizedBox(
-        width: 48.w, 
+        width: 48.w,
         height: 32.h,
         child: Stack(
           children: [
@@ -206,16 +209,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               left: 16.w,
               child: CircleAvatar(
                 radius: 16.r,
-                backgroundColor: Colors.blue.shade300,
-                child: Icon(icons[1], color: Colors.white, size: 20),
+                backgroundImage: AssetImage(icons[1]),
+                backgroundColor: Colors.transparent,
               ),
             ),
             Positioned(
               left: 0,
               child: CircleAvatar(
                 radius: 16.r,
-                backgroundColor: Colors.yellow.shade600,
-                child: Icon(icons[0], color: Colors.white, size: 20),
+                backgroundImage: AssetImage(icons[0]),
+                backgroundColor: Colors.transparent,
               ),
             ),
           ],
@@ -223,12 +226,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
     } else {
       return SizedBox(
-        width: 48.w, 
+        width: 48.w,
         height: 32.h,
         child: CircleAvatar(
           radius: 16.r,
-          backgroundColor: Colors.grey.shade200,
-          child: Icon(icons.first, color: Colors.grey.shade400, size: 20),
+          backgroundImage: AssetImage(icons.first),
+          backgroundColor: Colors.transparent,
         ),
       );
     }
@@ -236,13 +239,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildCoinRow(BuildContext context,
       {required List<int> flexes, 
-      required List<IconData> icons,
+      required List<String> icons,
       required String coinName,
       required String dailyEarning,
-      required String poolHashrate,
-      required bool isUp, 
-      required VoidCallback onTap, 
-      }) {
+      required String poolHashrate}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       child: Row(
@@ -269,26 +269,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           Expanded(
               flex: flexes[1],
-              child: Text(dailyEarning, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1))),
+              child: Text(dailyEarning, textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1))),
           Expanded(
             flex: flexes[2],
-            child: InkWell(
-              onTap: onTap, 
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end, 
-                children: [
-                  Text(poolHashrate, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1)),
-                  SizedBox(width: 4.w),
-                  Transform.rotate(
-                    angle: isUp ? -math.pi / 2 : 0, 
-                    child: Image.asset(
-                      ImageUtils.turnRight,
-                      width: 16,
-                      height: 16,
-                    ),
-                  )
-                ],
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end, 
+              children: [
+                Text(poolHashrate, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,overflow: TextOverflow.ellipsis)),
+              ],
             ),
           ),
         ],
@@ -296,10 +284,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildMiningAddressSection(BuildContext context) {
+  Widget _buildMiningAddressSection(BuildContext context,HomeDataState homeData) {
+
+    var ltcModel = homeData.coinInfo.ltc;
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      margin: EdgeInsets.only(top: 12.w, left: 12.w, right: 12.w),
+      margin: EdgeInsets.only(top: 0, left: 12.w, right: 12.w),
       decoration: BoxDecoration(
         color: ColorUtils.widgetBgColor, 
         borderRadius: BorderRadius.circular(16.r),
@@ -312,20 +303,47 @@ class _HomePageState extends ConsumerState<HomePage> {
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                   color: ColorUtils.colorTableHear)),
-          SizedBox(height: 20.h),
+          SizedBox(height: 16.h),
           _buildAddressRow(
-              '亚洲', 'stratum+tcp://ltc-cn.kupool.com:8888'),
-          SizedBox(height: 20.h),
-          _buildAddressRow('全球', 'stratum+tcp://ltc.kupool.com:8888'),
-          SizedBox(height: 20.h),
+              '亚洲', '${ltcModel?.miningAddresses?.asia}'),
+          SizedBox(height: 16.h),
+          _buildAddressRow('全球', '${ltcModel?.miningAddresses?.global}'),
+          SizedBox(height: 16.h),
           Text(
             '非加密地址, 仅供测试, 国内用户请勿直连, 请注册后联系商务经理',
             style: TextStyle(fontSize: 12, color: ColorUtils.colorNoteT1),
           ),
           SizedBox(height: 16.h,),
-          _buildInfoRow('分配方式', 'FPPS'),
-          _buildInfoRow('起付额', '40 DOGE / 0.01 LTC'),
-          _buildInfoRow('支付时间', '每日 9:00-12:00 (UTC+8)'),
+          _buildInfoRow('分配方式',
+              value: Text.rich(
+                TextSpan(
+                  style: TextStyle(fontSize: 14),
+                  children: <TextSpan>[
+                    TextSpan(text: '${ltcModel?.dogeEarnMode} ', style: TextStyle(color: ColorUtils.colorT1)),
+                    TextSpan(text: 'DOGE', style: TextStyle(color: ColorUtils.color888)),
+                    TextSpan(text: ' / ', style: TextStyle(color: ColorUtils.colorT1)),
+                    TextSpan(text: '${ltcModel?.earnMode} ', style: TextStyle(color: ColorUtils.colorT1)),
+                    TextSpan(text: 'LTC', style: TextStyle(color: ColorUtils.color888)),
+                  ],
+                ),
+                textAlign: TextAlign.right,
+              ),),
+          _buildInfoRow('起付额', 
+            value: Text.rich(
+              TextSpan(
+                style: TextStyle(fontSize: 14),
+                children: <TextSpan>[
+                  TextSpan(text: '${ltcModel?.dogeMinimumPayAmount} ', style: TextStyle(color: ColorUtils.colorT1)),
+                  TextSpan(text: 'DOGE', style: TextStyle(color: ColorUtils.color888)),
+                  TextSpan(text: ' / ', style: TextStyle(color: ColorUtils.colorT1)),
+                  TextSpan(text: '${ltcModel?.minimumPayAmount} ', style: TextStyle(color: ColorUtils.colorT1)),
+                  TextSpan(text: 'LTC', style: TextStyle(color: ColorUtils.color888)),
+                ],
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+          _buildInfoRow('支付时间', value: Text('每日 9:00-12:00 (UTC+8)', style: TextStyle(fontSize: 14, color: ColorUtils.colorT1), textAlign: TextAlign.right)),
         ],
       ),
     );
@@ -334,7 +352,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildAddressRow(String region, String address) {
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center, // 顶部对齐，以在文本换行时保持布局稳定
+      crossAxisAlignment: CrossAxisAlignment.start, // 1. 改为 start 对齐
       children: [
         Text(region, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
         SizedBox(width: 8),
@@ -342,8 +360,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Text(
             address,
             style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            // 2. 移除 overflow 和 maxLines 以允许换行
           ),
         ),
         SizedBox(width: 8),
@@ -357,14 +374,17 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildInfoRow(String title, String value) {
+  Widget _buildInfoRow(String title, {required Widget value}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start, // 1. 添加 start 对齐
         children: [
           Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorTableHear)),
-          Text(value, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
+          SizedBox(width: 16), // 2. 添加间距
+          Expanded(
+            child: value, // 3. 用 Expanded 包裹 value，使其可以换行
+          ),
         ],
       ),
     );
