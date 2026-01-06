@@ -1,11 +1,15 @@
 import 'dart:math' as math;
 import 'package:Kupool/home/home_provider.dart';
+import 'package:Kupool/home/widgets/home_error_widget.dart';
+import 'package:Kupool/home/widgets/home_skeleton_widget.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -45,26 +49,30 @@ class HomePage extends ConsumerWidget {
                 );
               }
             },
-            loading: () => const SizedBox.shrink(), // 在AppBar中不显示加载指示器
-            error: (err, stack) => const Icon(Icons.error), // 在AppBar中显示一个错误图标
+            loading: () => const SizedBox.shrink(),
+            error: (err, stack) => const Icon(Icons.error),
           ),
         ].where((widget) => widget is! SizedBox).toList(),
       ),
-      body: homeDataAsync.when(
-        data: (homeData) => SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(homeDataProvider.future),
+        color: ColorUtils.mainColor,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
               _buildTopBanner(context),
               _buildAnnouncementBar(context),
-              _buildMiningCoinsSection(context, homeData),
+              homeDataAsync.when(
+                data: (homeData) => _buildMiningCoinsSection(context, homeData),
+                loading: () => const HomeSkeletonWidget(),
+                error: (err, stack) => const HomeErrorWidget(),
+              ),
               SizedBox(height: 24.h),
             ],
           ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Text('加载失败: $err'),
         ),
       ),
     );
@@ -117,7 +125,8 @@ class HomePage extends ConsumerWidget {
     var coinInfoModel = homeData.coinInfo.ltc;
     var poolHash = FormatUtils.formatHashrate(coinInfoModel?.poolHash);
 
-    var dogeMergeMining = coinInfoModel?.mergeMining?.where((mm) => mm.name == "doge").toList();
+    var dogeMergeMining =
+        coinInfoModel?.mergeMining?.where((mm) => mm.name == "doge").toList();
     var dogeAvg = dogeMergeMining?.first.valueAvg;
 
     var priceModel = homeData.price;
@@ -303,12 +312,12 @@ class HomePage extends ConsumerWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                   color: ColorUtils.colorTableHear)),
-          SizedBox(height: 16.h),
+          SizedBox(height: 8.h),
           _buildAddressRow(
               '亚洲', '${ltcModel?.miningAddresses?.asia}'),
-          SizedBox(height: 16.h),
+          SizedBox(height: 4.h),
           _buildAddressRow('全球', '${ltcModel?.miningAddresses?.global}'),
-          SizedBox(height: 16.h),
+          SizedBox(height: 8.h),
           Text(
             '非加密地址, 仅供测试, 国内用户请勿直连, 请注册后联系商务经理',
             style: TextStyle(fontSize: 12, color: ColorUtils.colorNoteT1),
@@ -352,7 +361,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildAddressRow(String region, String address) {
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start, // 1. 改为 start 对齐
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(region, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
         SizedBox(width: 8),
@@ -360,15 +369,23 @@ class HomePage extends ConsumerWidget {
           child: Text(
             address,
             style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
-            // 2. 移除 overflow 和 maxLines 以允许换行
           ),
         ),
-        SizedBox(width: 8),
-        Image.asset(
-          ImageUtils.homeCopy,
-          width: 16,
-          height: 16,
-          color: ColorUtils.colorT1,
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: address));
+            ToastUtils.show("已复制");
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              ImageUtils.homeCopy,
+              width: 16,
+              height: 16,
+              color: ColorUtils.colorT1,
+            ),
+          ),
         ),
       ],
     );
