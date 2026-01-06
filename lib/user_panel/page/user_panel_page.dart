@@ -1,63 +1,123 @@
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class UserPanelPage extends StatelessWidget {
+import '../widgets/chart_for_TH.dart';
+import '../widgets/toggle_switch.dart';
+
+class UserPanelPage extends StatefulWidget {
   const UserPanelPage({super.key});
+
+  @override
+  State<UserPanelPage> createState() => _UserPanelPageState();
+}
+
+class _UserPanelPageState extends State<UserPanelPage> {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: const Text(
-          'doge_lt...',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Column(
           children: [
             _buildInfoCard(
-              icon: Icons.flash_on,
+              iconPath: ImageUtils.panelSl, // 替换图标
               iconColor: const Color(0xFF00D187),
               title: '算力',
               child: _buildHashrateContent(),
             ),
             SizedBox(height: 12.h),
             _buildInfoCard(
-              icon: Icons.storage,
+              iconPath: ImageUtils.panelKj, // 替换图标
               iconColor: const Color(0xFF3375E0),
               title: '矿机',
               child: _buildMinersContent(),
             ),
             SizedBox(height: 12.h),
             _buildInfoCard(
-              icon: Icons.monetization_on,
+              iconPath: ImageUtils.panelWksy, // 替换图标
               iconColor: const Color(0xFFF5A623),
               title: '挖矿收益',
               child: _buildRevenueContent(),
             ),
+            SizedBox(height: 12.h),
+            _buildChartCard(),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildChartCard() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column( // Use Column for vertical arrangement
+        children: [
+          Row( // First child: the header row
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('算力图表', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorTitleOne)),
+              const ToggleSwitch(),
+            ],
+          ),
+          SizedBox(height: 8.h), // Add some space
+          SizedBox(
+            // height: 200.h, // Give the chart a fixed height
+            child: const ChartForTHPage(), // Second child: the chart
+          ),
+          // SizedBox(height: 16.h),
+          _buildChartLegend(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartLegend() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 16,
+              height: 4, 
+              decoration: BoxDecoration(
+                color: ColorUtils.mainColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(width: 8),
+            Text('算力', style: TextStyle(fontSize: 12, color: ColorUtils.color555)),
+          ],
+        ),
+        SizedBox(width: 24),
+        Row(
+          children: [
+            Container(
+              width: 16,
+              height: 4, 
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(width: 8),
+            Text('拒绝率', style: TextStyle(fontSize: 12, color: ColorUtils.color555)),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildInfoCard(
-      {required IconData icon, required Color iconColor, required String title, required Widget child}) {
+      {required String iconPath, required Color iconColor, required String title, required Widget child}) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -69,13 +129,13 @@ class UserPanelPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 12.r,
-                backgroundColor: iconColor.withOpacity(0.1),
-                child: Icon(icon, color: iconColor, size: 16.sp),
+              Image.asset(
+                iconPath,
+                width: 24.sp,
+                height: 24.sp,
               ),
               SizedBox(width: 8.w),
-              Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+              Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600,color: ColorUtils.colorTitleOne)),
             ],
           ),
           SizedBox(height: 16.h),

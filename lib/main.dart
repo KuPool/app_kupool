@@ -47,10 +47,9 @@ class MainTabBar extends StatefulWidget {
   State<MainTabBar> createState() => _MainTabBarState();
 }
 
-// 1. 将 TickerProvider 混入到根部的 State
 class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  late TabController _tabController; // 2. 将 TabController 移动到这里
+  late TabController _tabController;
 
   final List<Widget> _pages = [
     const HomePage(),
@@ -58,6 +57,14 @@ class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateM
     const MiningMachinePage(),
     const EarningsPage(),
     const MyPage(),
+  ];
+
+  final List<String> _titles = [
+    '',
+    'doge_ltc',
+    '矿机',
+    '收益',
+    '我的',
   ];
 
   @override
@@ -75,7 +82,38 @@ class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: _buildDrawer(), // 3. 将抽屉添加到根 Scaffold
+      appBar: _currentIndex == 0
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: Row(
+                children: [
+                  Builder(
+                    builder: (context) => InkWell(
+                      onTap: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 2),
+                        child: Image.asset(
+                          ImageUtils.panelMenu,
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _titles[_currentIndex],
+                    style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
+                  ),
+                ],
+              ),
+              leadingWidth: 150.w, // You might need to adjust this width
+            ),
+      drawer: _buildDrawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -124,7 +162,6 @@ class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateM
     );
   }
 
-  // 4. 将抽屉的构建逻辑移动到这里
   Widget _buildDrawer() {
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.85, // 增大抽屉宽度

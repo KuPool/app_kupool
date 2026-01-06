@@ -11,6 +11,11 @@ class ImageUtils {
 
   // panel
   static const String panelBottomBar = '${_imageBasePath}panel/panel_bottom_bar.png';
+  static const String panelMenu = '${_imageBasePath}panel/panel_menu.png';
+  static const String panelWksy = '${_imageBasePath}panel/panel_wksy.png';
+  static const String panelKj = '${_imageBasePath}panel/panel_kj.png';
+  static const String panelSl = '${_imageBasePath}panel/panel_sl.png';
+
 
   // earn
   static const String earnBottomBar = '${_imageBasePath}earn/earn_bottom_bar.png';
