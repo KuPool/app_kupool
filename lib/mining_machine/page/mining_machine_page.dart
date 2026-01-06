@@ -1,7 +1,6 @@
-import 'dart:math';
 import 'package:Kupool/utils/color_utils.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MiningMachinePage extends StatefulWidget {
   const MiningMachinePage({super.key});
@@ -11,314 +10,241 @@ class MiningMachinePage extends StatefulWidget {
 }
 
 class _MiningMachinePageState extends State<MiningMachinePage> {
-  // 主轴（算力）和次轴（拒绝率）的最大值
-  final double _hashrateMaxY = 21.0;
-  final double _rejectionMaxY = 10.0;
-
-  // 存储原始数据和归一化后的数据
-  late List<FlSpot> _hashrateSpots;
-  late List<FlSpot> _rejectionRateSpots;
-
-  @override
-  void initState() {
-    super.initState();
-    _hashrateSpots = _generateRandomData(18, 19, 25);
-    final originalRejectionSpots = _generateRandomData(0.01, 0.5, 25, isRejection: true);
-    _rejectionRateSpots = originalRejectionSpots.map((spot) {
-      final normalizedY = (spot.y / _rejectionMaxY) * _hashrateMaxY;
-      return FlSpot(spot.x, normalizedY);
-    }).toList();
-  }
-
-  List<FlSpot> _generateRandomData(double min, double max, int count, {bool isRejection = false}) {
-    final random = Random();
-    double value = min + random.nextDouble() * (max - min);
-    return List.generate(count, (index) {
-      if (isRejection) {
-        value += random.nextDouble() * 0.2 - 0.1;
-      } else {
-        value += random.nextDouble() * 0.5 - 0.25;
-      }
-      value = value.clamp(min, max);
-      return FlSpot(index.toDouble(), value);
-    });
-  }
-
-  // 手动构建水平网格线
-  List<HorizontalLine> _buildHorizontalGridLines() {
-    final List<HorizontalLine> lines = [];
-    for (double i = 3; i <= _hashrateMaxY; i += 3) {
-      lines.add(
-        HorizontalLine(
-          y: i,
-          color: ColorUtils.colorBe,
-          strokeWidth: 0.5,
-          dashArray: [2, 2],
-        ),
-      );
-    }
-    return lines;
-  }
-  
-  /// 根据传入的文本和样式，计算其渲染宽度
-  double _calculateTextWidth(String text, TextStyle style) {
-    final textPainter = TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: TextDirection.ltr)..layout();
-    return textPainter.size.width;
-  }
-
-  /// 构建 Tooltip 的 TextSpan 列表
-  List<TextSpan> _getTooltipSpans(String time, String hashrate, String rejection) {
-    const labelStyle = TextStyle(color: Colors.white60, fontSize: 10,fontWeight: FontWeight.w500);
-    const valueStyle = TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold);
-    const totalWidth = 140.0; // 期望的总宽度
-
-    // 计算标签和圆点的宽度
-    final dotWidth = _calculateTextWidth('● ', labelStyle);
-    final hashrateLabelWidth = _calculateTextWidth('算力', labelStyle) + dotWidth;
-    final rejectionLabelWidth = _calculateTextWidth('拒绝率', labelStyle) + dotWidth;
-
-    // 计算数值的宽度
-    final hashrateValueWidth = _calculateTextWidth(hashrate, valueStyle);
-    final rejectionValueWidth = _calculateTextWidth(rejection, valueStyle);
-
-    // 计算需要的空格填充
-    final spaceWidth = _calculateTextWidth(' ', labelStyle);
-    final hashratePadding = spaceWidth > 0 ? ' ' * ((totalWidth - hashrateLabelWidth - hashrateValueWidth -16) / spaceWidth).floor() : '';
-    final rejectionPadding = spaceWidth > 0 ? ' ' * ((totalWidth - rejectionLabelWidth - rejectionValueWidth -16) / spaceWidth).floor() : '';
-
-
-    return [
-      TextSpan(
-        text: '$time\n',
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
-      TextSpan(text: '● ', style: const TextStyle(color: ColorUtils.mainColor, fontSize: 10)),
-      TextSpan(text: '算力$hashratePadding', style: labelStyle),
-      TextSpan(text: '$hashrate\n', style: valueStyle),
-      TextSpan(text: '● ', style: const TextStyle(color: Colors.orange, fontSize: 10)),
-      TextSpan(text: '拒绝率$rejectionPadding', style: labelStyle),
-      TextSpan(text: rejection, style: valueStyle),
-    ];
-  }
-
+  int _selectedStatusIndex = 0;
+  int _sortColumnIndex = 0;
+  bool _sortAscending = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Hash Chart', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: ToggleButtons(
-              isSelected: const [false, true],
-              onPressed: (index) {},
-              borderRadius: BorderRadius.circular(4),
-              selectedColor: Colors.black,
-              color: Colors.grey[600],
-              fillColor: Colors.grey[200],
-              constraints: const BoxConstraints(minHeight: 32.0, minWidth: 60.0),
-              children: const [Text('1 Hour'), Text('1 Day')],
-            ),
+      backgroundColor: ColorUtils.widgetBgColor,
+      body: Stack(
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 6.w,vertical: 40),
+            color: Colors.white,
+          ),
+          Column(
+            children: [
+              _buildStatusCards(),
+              Expanded(child: _buildMinersTable()),
+            ],
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            height: 180,
-            color: Colors.white,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 20, 16),
-            child: AspectRatio(
-              aspectRatio: 1.8,
-              child: LineChart(
-                LineChartData(
-                  clipData: const FlClipData.none(),
-                  minY: 0,
-                  maxY: _hashrateMaxY,
-                  minX: 0,
-                  maxX: 24,
+    );
+  }
 
-                  gridData: const FlGridData(show: false),
-
-                  extraLinesData: ExtraLinesData(
-                    horizontalLines: _buildHorizontalGridLines(),
-                  ),
-
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border(
-                      bottom: BorderSide(color: ColorUtils.colorBe, width: 1),
-                      // left: BorderSide(color: Colors.grey[300]!, width: 2),
-                      // right: BorderSide(color: Colors.grey[300]!, width: 2),
-                      top: BorderSide.none,
-                    ),
-                  ),
-
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: _hashrateSpots,
-                      // isCurved: true,
-                      color: ColorUtils.mainColor,
-                      barWidth: 1,
-                      dotData: const FlDotData(show: false),
-                    ),
-                    LineChartBarData(
-                      spots: _rejectionRateSpots,
-                      // isCurved: true,
-                      color: Colors.red,
-                      barWidth: 1,
-                      dotData: const FlDotData(show: false),
-                    ),
-                  ],
-                  titlesData: _buildTitlesData(),
-                  lineTouchData: LineTouchData(
-                    getTouchedSpotIndicator: (barData, spotIndexes) {
-                        return spotIndexes.map((spotIndex) {
-                          return TouchedSpotIndicatorData(
-                            FlLine(
-                              color: ColorUtils.color64,
-                              strokeWidth: 0.5,
-                              dashArray: [3, 3],
-                            ),
-                            FlDotData(
-                              getDotPainter: (spot, percent, barData, index) {
-                                final dotColor = barData.color ?? ColorUtils.mainColor;
-                                return FlDotCirclePainter(
-                                  radius: 3,
-                                  color: dotColor,
-                                  strokeWidth: 3,
-                                  strokeColor: dotColor.withAlpha(50),
-                                );
-                              },
-                            ),
-                          );
-                        }).toList();
-                      },
-                    touchTooltipData: LineTouchTooltipData(
-                      maxContentWidth: 140,
-                      fitInsideHorizontally: true,
-                      tooltipPadding: EdgeInsets.symmetric(vertical: 6,horizontal: 10),
-                      getTooltipColor: (pot) => Colors.black87,
-                      getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                        if (touchedSpots.isEmpty) return [];
-
-                        final time = _getBottomTitle(touchedSpots.first.x, isTooltip: true);
-                        final spot1 = _hashrateSpots.firstWhere((s) => s.x == touchedSpots.first.x, orElse: () => touchedSpots.first);
-                        final spot2 = _rejectionRateSpots.firstWhere((s) => s.x == touchedSpots.first.x, orElse: () => touchedSpots.first);
-                        final originalRejectionY = (spot2.y / _hashrateMaxY) * _rejectionMaxY;
-                        
-                        final children = _getTooltipSpans(time, '${spot1.y.toStringAsFixed(2)} GH/s', '${originalRejectionY.toStringAsFixed(2)}%');
-
-                        return touchedSpots.map((barSpot) {
-                          if (barSpot.barIndex == touchedSpots.first.barIndex) {
-
-                            return LineTooltipItem(
-                              "",
-                              TextStyle(),
-                              children: children,
-                              textAlign: TextAlign.left,
-                            );
-                          } else {
-                            return LineTooltipItem('', const TextStyle(fontSize: 0));
-                          }
-                        }).toList();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
+  Widget _buildStatusCards() {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(25),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 3), // changes position of shadow
           ),
         ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatusCard('59830', '全部', 0),
+            _buildStatusCard('58120', '活跃', 1),
+            _buildStatusCard('1400', '不活跃', 2),
+            _buildStatusCard('20', '失效', 3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(String count, String label, int index) {
+    final isSelected = _selectedStatusIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedStatusIndex = index;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.only(left: 16,right: 16,top: 8),
+        decoration: isSelected
+            ? BoxDecoration(
+                color: ColorUtils.mainColor.withAlpha(16),
+                borderRadius: BorderRadius.circular(8.r),
+              )
+            : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT1,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(label, style: TextStyle(fontSize: 12.sp, color:  isSelected ? ColorUtils.mainColor : ColorUtils.colorT2)),
+            SizedBox(height: 4.h),
+            if (isSelected)
+              Container(
+                width: 20.w,
+                height: 3.h,
+                decoration: BoxDecoration(
+                  color: ColorUtils.mainColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              )
+            else
+              SizedBox(height: 3.h), // Keep the space to prevent layout jump
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMinersTable() {
+    return Container(
+      color: Colors.white,
+      margin: EdgeInsets.only(left: 8,right: 8),
+      child: Column(
+        children: [
+          _buildTableHeader(),
+          Expanded(
+            child: _buildMinerListView(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinerListView() {
+    const int itemCount = 20;
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        final isHighRejection = index == 0;
+        return Column(
+          children: [
+            _buildMinerRow(
+              name: 'DOGE/LTC_01',
+              realtimeHashrate: '908.90 TH/s',
+              dailyHashrate: '918.90 TH/s',
+              rejectionRate: isHighRejection ? '1.00 %' : '0.01 %',
+              rejectionColor: isHighRejection ? Colors.red : Colors.green,
+            ),
+            if (index < itemCount - 1) // Don't add divider for the last item
+               Divider(height: 0.5, indent: 16, endIndent: 16,color: Colors.grey[200],),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTableHeader() {
+    return Container(
+      margin: EdgeInsets.fromLTRB(8, 8, 8, 0),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: ColorUtils.widgetBgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _buildHeaderCell('矿机名', 0, flex: 2),
+          _buildHeaderCell('实时算力', 1, flex: 2, alignment: TextAlign.right),
+          _buildHeaderCell('日算力', 2, flex: 2, alignment: TextAlign.right),
+          _buildHeaderCell('拒绝率', 3, flex: 2, alignment: TextAlign.right),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCell(String title, int index, {int flex = 1, TextAlign alignment = TextAlign.left}) {
+    final isSelected = _sortColumnIndex == index;
+    return Expanded(
+      flex: flex,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            if (_sortColumnIndex == index) {
+              _sortAscending = !_sortAscending;
+            } else {
+              _sortColumnIndex = index;
+              _sortAscending = true;
+            }
+            // TODO: Implement actual sorting logic here
+          });
+        },
+        child: Row(
+          mainAxisAlignment: alignment == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
+              ),
+            ),
+            SizedBox(width: 2),
+            Icon(
+              _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 14,
+              color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
+            ),
+          ],
+        ),
       ),
     );
   }
   
-  FlTitlesData _buildTitlesData() {
-    return FlTitlesData(
-      topTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 26,
-          getTitlesWidget: (value, meta) {
-            const style = TextStyle(fontSize: 10);
-            Widget text;
-            if (value == meta.min) {
-               text = Text('TH/s        ', style: style.copyWith(color: ColorUtils.color000), textAlign: TextAlign.left);
-            } else if (value == meta.max) {
-               text = Text('拒绝率%', style: style.copyWith(color: ColorUtils.color000), textAlign: TextAlign.right);
-            } else {
-              return const Spacer();
-            }
-            return Container(margin: EdgeInsets.only(bottom: 6),color: Colors.white,child:text,);
-            //  return SideTitleWidget(
-            //   axisSide: meta.axisSide,
-            //   child: text,
-            // );
-          },
-        ),
-      ),
-      leftTitles: AxisTitles(
-        sideTitles: SideTitles(
-            showTitles: true,
-            interval: 3,
-            reservedSize: 20,
-            getTitlesWidget: (value, meta) {
-              // if (value == 0) return Container();
-              return Text(value.toInt().toString(), style: const TextStyle(color: ColorUtils.color555, fontSize: 10), textAlign: TextAlign.left);
-            }),
-      ),
-      rightTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 20,
-          interval: _hashrateMaxY / (_rejectionMaxY / 2),
-          getTitlesWidget: (value, meta) {
-            // if (value == 0) return Container();
-            final rejectionValue = (value / _hashrateMaxY) * _rejectionMaxY;
-            return Text(rejectionValue.toInt().toString(), style: const TextStyle(color: ColorUtils.color555, fontSize: 10), textAlign: TextAlign.right);
-          },
-        ),
-      ),
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: 1,
-          reservedSize: 30,
-          getTitlesWidget: (value, meta) => SideTitleWidget(
-            axisSide: meta.axisSide,
-            child: Text(_getBottomTitle(value), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+  Widget _buildHashrateWidget(String text, {TextAlign alignment = TextAlign.left}) {
+    final parts = text.split(' ');
+    final value = parts.isNotEmpty ? parts[0] : '';
+    final unit = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
+
+    return Text.rich(
+      TextSpan(
+        style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+        children: [
+          TextSpan(text: value),
+          TextSpan(
+            text: unit,
+            style: TextStyle(color: ColorUtils.color888, fontSize: 14),
           ),
-        ),
+        ],
       ),
+      textAlign: alignment,
     );
   }
 
-  String _getBottomTitle(double value, {bool isTooltip = false}) {
-    if (isTooltip) {
-      final totalHours = 19 + value;
-      final day = totalHours >= 24 ? 15 : 14;
-      final hourInDay = totalHours.toInt() % 24;
-      return '2017/10/${day.toString().padLeft(2, '0')} ${hourInDay.toString().padLeft(2, '0')}:00:00';
-    }
-    switch (value.toInt()) {
-      case 0: return '19:00';
-      case 3: return '22:00';
-      case 6: return '01:00';
-      case 9: return '04:00';
-      case 12: return '07:00';
-      case 15: return '10:00';
-      case 18: return '13:00';
-      case 21: return '16:00';
-      case 24: return '19:00';
-      default: return '';
-    }
+  Widget _buildMinerRow({
+    required String name,
+    required String realtimeHashrate,
+    required String dailyHashrate,
+    required String rejectionRate,
+    required Color rejectionColor,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: Text(name, textAlign: TextAlign.left,style: TextStyle(fontSize: 14, color: ColorUtils.colorT1,))),
+          Expanded(flex: 2, child: _buildHashrateWidget(realtimeHashrate, alignment: TextAlign.center)),
+          Expanded(flex: 2, child: _buildHashrateWidget(dailyHashrate, alignment: TextAlign.center)),
+          Expanded(flex: 1, child: Text(rejectionRate, textAlign: TextAlign.right, style: TextStyle(fontSize: 14, color: rejectionColor))),
+        ],
+      ),
+    );
   }
 }
