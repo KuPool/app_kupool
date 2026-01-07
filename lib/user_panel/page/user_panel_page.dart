@@ -1,52 +1,93 @@
+import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../widgets/chart_for_TH.dart';
 import '../widgets/toggle_switch.dart';
 
-class UserPanelPage extends StatefulWidget {
+class UserPanelPage extends ConsumerStatefulWidget {
   const UserPanelPage({super.key});
 
   @override
-  State<UserPanelPage> createState() => _UserPanelPageState();
+  ConsumerState<UserPanelPage> createState() => _UserPanelPageState();
 }
 
-class _UserPanelPageState extends State<UserPanelPage> {
+class _UserPanelPageState extends ConsumerState<UserPanelPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Column(
-          children: [
-            _buildInfoCard(
-              iconPath: ImageUtils.panelSl, // 替换图标
-              iconColor: const Color(0xFF00D187),
-              title: '算力',
-              child: _buildHashrateContent(),
+      body: authState.when(
+        data: (user) {
+          if (user != null && (user.userInfo?.subaccounts ?? 0) == 1) {
+            return _buildEmptyState();
+          } else {
+            return _buildUserPanelContent();
+          }
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('您还没有子账户', style: TextStyle(fontSize: 16.sp, color: Colors.grey)),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Navigate to create subaccount page
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorUtils.mainColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
             ),
-            SizedBox(height: 12.h),
-            _buildInfoCard(
-              iconPath: ImageUtils.panelKj, // 替换图标
-              iconColor: const Color(0xFF3375E0),
-              title: '矿机',
-              child: _buildMinersContent(),
-            ),
-            SizedBox(height: 12.h),
-            _buildInfoCard(
-              iconPath: ImageUtils.panelWksy, // 替换图标
-              iconColor: const Color(0xFFF5A623),
-              title: '挖矿收益',
-              child: _buildRevenueContent(),
-            ),
-            SizedBox(height: 12.h),
-            _buildChartCard(),
-          ],
-        ),
+            child: const Text('创建子账户'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserPanelContent() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      child: Column(
+        children: [
+          _buildInfoCard(
+            iconPath: ImageUtils.panelSl, // 替换图标
+            iconColor: const Color(0xFF00D187),
+            title: '算力',
+            child: _buildHashrateContent(),
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoCard(
+            iconPath: ImageUtils.panelKj, // 替换图标
+            iconColor: const Color(0xFF3375E0),
+            title: '矿机',
+            child: _buildMinersContent(),
+          ),
+          SizedBox(height: 12.h),
+          _buildInfoCard(
+            iconPath: ImageUtils.panelWksy, // 替换图标
+            iconColor: const Color(0xFFF5A623),
+            title: '挖矿收益',
+            child: _buildRevenueContent(),
+          ),
+          SizedBox(height: 12.h),
+          _buildChartCard(),
+        ],
       ),
     );
   }

@@ -1,7 +1,9 @@
 import 'package:Kupool/earnings/page/earnings_page.dart';
 import 'package:Kupool/home/page/home_page.dart';
+import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/mining_machine/page/mining_machine_page.dart';
 import 'package:Kupool/my/page/my_page.dart';
+import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/net/env_config.dart';
 import 'package:Kupool/user_panel/page/user_panel_page.dart';
 import 'package:Kupool/utils/color_utils.dart';
@@ -40,14 +42,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MainTabBar extends StatefulWidget {
+class MainTabBar extends ConsumerStatefulWidget {
   const MainTabBar({super.key});
 
   @override
-  State<MainTabBar> createState() => _MainTabBarState();
+  ConsumerState<MainTabBar> createState() => _MainTabBarState();
 }
 
-class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateMixin {
+class _MainTabBarState extends ConsumerState<MainTabBar> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late TabController _tabController;
 
@@ -121,9 +123,23 @@ class _MainTabBarState extends State<MainTabBar> with SingleTickerProviderStateM
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          if (index != 0) {
+            final user = ref.read(authNotifierProvider).value;
+            if (user == null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            } else {
+              setState(() {
+                _currentIndex = index;
+              });
+            }
+          } else {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
         },
         selectedFontSize: 11.sp,
         unselectedFontSize: 11.sp,
