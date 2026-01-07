@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'net/navigation_service.dart';
+
 void main() {
   EnvConfig.setEnvironment(Environment.test);
   runApp(const ProviderScope(child: MyApp()));
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp(
+          navigatorKey: NavigationService.navigatorKey,
           title: 'Kupool',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(

@@ -1,3 +1,4 @@
+import 'package:Kupool/my/page/sub_account_create.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -46,7 +47,10 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           SizedBox(height: 24.h),
           ElevatedButton(
             onPressed: () {
-              // TODO: Navigate to create subaccount page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SubAccountCreatePage()),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorUtils.mainColor,

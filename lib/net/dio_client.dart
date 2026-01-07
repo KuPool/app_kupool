@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:Kupool/json_serializable_model/login_model_entity.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/base_response.dart';
 import 'package:Kupool/net/business_exception.dart';
@@ -9,6 +11,7 @@ import 'package:Kupool/net/navigation_service.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 extension RequestOptionsExtension on RequestOptions {
   static const String _returnRawDataKey = 'returnRawData';
@@ -167,10 +170,32 @@ class ResponseInterceptor extends Interceptor {
 }
 
 class AuthInterceptor extends Interceptor {
+  static const String _userSessionKey = 'user_session';
   static bool _isNavigating = false;
 
   static void reset() {
     _isNavigating = false;
+  }
+
+  @override
+  Future<void> onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString(_userSessionKey);
+
+    if (userJson != null) {
+      try {
+        final user = LoginModelEntity.fromJson(jsonDecode(userJson));
+        final accessToken = user.accessToken;
+
+        if (accessToken != null && accessToken.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $accessToken';
+        }
+      } catch (e) {
+        debugPrint('AuthInterceptor: Failed to decode user session: $e');
+      }
+    }
+    super.onRequest(options, handler);
   }
 
   @override
@@ -183,7 +208,7 @@ class AuthInterceptor extends Interceptor {
 
       NavigationService.navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),
-        (route) => false,
+        (route) => route.isFirst,
       );
       return;
     }
