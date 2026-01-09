@@ -33,17 +33,23 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          navigatorObservers: [FlutterSmartDialog.observer],
-          builder: FlutterSmartDialog.init(),
-          navigatorKey: NavigationService.navigatorKey,
-          title: 'Kupool',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
-            useMaterial3: true,
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => DogeLtcListNotifier()),
+            // You can add providers for BTC and other coins here in the future
+          ],
+          child: MaterialApp(
+            navigatorObservers: [FlutterSmartDialog.observer],
+            builder: FlutterSmartDialog.init(),
+            navigatorKey: NavigationService.navigatorKey,
+            title: 'Kupool',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
+              useMaterial3: true,
+            ),
+            home: child,
           ),
-          home: child,
         );
       },
       child: const MainTabBar(),
@@ -62,6 +68,18 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
   int _currentIndex = 0;
   SubAccountCoinType _selectedCoinType = SubAccountCoinType.dogeLtc;
 
+  @override
+  void initState() {
+    super.initState();
+    // After the first frame, check the initial login state and fetch data if needed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authNotifierProvider).value;
+      if (user != null) {
+        context.read<DogeLtcListNotifier>().fetchAccounts();
+      }
+    });
+  }
+
   final List<Widget> _pages = [
     const HomePage(),
     const UserPanelPage(),
@@ -72,7 +90,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
 
   final List<String> _titles = [
     '',
-    'doge_ltc',
+    'doge_ltc', // Default title, will be replaced
     '矿机',
     '收益',
     '我的',
@@ -80,110 +98,122 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => DogeLtcListNotifier()),
-        // You can add providers for BTC and other coins here in the future
-      ],
-      child: Scaffold(
-        appBar: _currentIndex == 0
-            ? null
-            : AppBar(
-                backgroundColor: Colors.white,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                leading: Row(
-                  children: [
-                    Builder(
-                      builder: (context) => InkWell(
-                        onTap: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 16, right: 2),
-                          child: Image.asset(
-                            ImageUtils.panelMenu,
-                            width: 24,
-                            height: 24,
-                          ),
+    ref.listen(authNotifierProvider, (previous, next) {
+      next.when(data: (user){
+        if (user != null) {
+          context.read<DogeLtcListNotifier>().fetchAccounts();
+        } else  {
+          context.read<DogeLtcListNotifier>().clearData();
+        }
+      }, error: (err, stack){}, loading: (){});
+    });
+
+    final selectedAccountName = context.watch<DogeLtcListNotifier>().selectedAccount?.name;
+
+    String appBarTitle;
+    if (_currentIndex != 0 && selectedAccountName != null) {
+      appBarTitle = selectedAccountName;
+    } else {
+      appBarTitle = _titles[_currentIndex];
+    }
+
+    return Scaffold(
+      appBar: _currentIndex == 0
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: Row(
+                children: [
+                  Builder(
+                    builder: (context) => InkWell(
+                      onTap: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 2),
+                        child: Image.asset(
+                          ImageUtils.panelMenu,
+                          width: 24,
+                          height: 24,
                         ),
                       ),
                     ),
-                    Text(
-                      _titles[_currentIndex],
-                      style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
-                    ),
-                  ],
-                ),
-                leadingWidth: 150.w,
+                  ),
+                  Text(
+                    appBarTitle, // Use the dynamic title
+                    style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
+                  ),
+                ],
               ),
-        drawer: MainDrawer(
-          selectedCoinType: _selectedCoinType,
-          onTabChanged: (coinType) {
-            setState(() {
-              _selectedCoinType = coinType;
-            });
-          },
-        ),
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            if (index != 0) {
-              final user = ref.read(authNotifierProvider).value;
-              if (user == null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              } else {
-                setState(() {
-                  _currentIndex = index;
-                });
-              }
+              leadingWidth: 150.w,
+            ),
+      drawer: MainDrawer(
+        selectedCoinType: _selectedCoinType,
+        onTabChanged: (coinType) {
+          _selectedCoinType = coinType;
+          context.read<DogeLtcListNotifier>().fetchAccounts(coinType:_selectedCoinType);
+        },
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (index != 0) {
+            final user = ref.read(authNotifierProvider).value;
+            if (user == null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
             } else {
               setState(() {
                 _currentIndex = index;
               });
             }
-          },
-          selectedFontSize: 11.sp,
-          unselectedFontSize: 11.sp,
-          selectedItemColor: ColorUtils.mainColor,
-          unselectedItemColor: ColorUtils.unselectBarTextColor,
-          backgroundColor: ColorUtils.bottomBarBgColor,
-          type: BottomNavigationBarType.fixed,
-          items: [
-            BottomNavigationBarItem(
-              icon: Image.asset(ImageUtils.homeBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
-              activeIcon: Image.asset(ImageUtils.homeBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
-              label: '首页',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(ImageUtils.panelBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
-              activeIcon: Image.asset(ImageUtils.panelBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
-              label: '用户面板',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(ImageUtils.machineBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
-              activeIcon: Image.asset(ImageUtils.machineBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
-              label: '矿机',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(ImageUtils.earnBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
-              activeIcon: Image.asset(ImageUtils.earnBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
-              label: '收益',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(ImageUtils.mineBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
-              activeIcon: Image.asset(ImageUtils.mineBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
-              label: '我的',
-            ),
-          ],
-        ),
+          } else {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
+        },
+        selectedFontSize: 11.sp,
+        unselectedFontSize: 11.sp,
+        selectedItemColor: ColorUtils.mainColor,
+        unselectedItemColor: ColorUtils.unselectBarTextColor,
+        backgroundColor: ColorUtils.bottomBarBgColor,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: Image.asset(ImageUtils.homeBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
+            activeIcon: Image.asset(ImageUtils.homeBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
+            label: '首页',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(ImageUtils.panelBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
+            activeIcon: Image.asset(ImageUtils.panelBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
+            label: '用户面板',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(ImageUtils.machineBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
+            activeIcon: Image.asset(ImageUtils.machineBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
+            label: '矿机',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(ImageUtils.earnBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
+            activeIcon: Image.asset(ImageUtils.earnBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
+            label: '收益',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(ImageUtils.mineBottomBar, width: 28, height: 28, color: ColorUtils.unselectBarTextColor),
+            activeIcon: Image.asset(ImageUtils.mineBottomBar, width: 28, height: 28, color: ColorUtils.mainColor),
+            label: '我的',
+          ),
+        ],
       ),
     );
   }

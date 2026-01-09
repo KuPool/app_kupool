@@ -5,7 +5,10 @@ import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
+import '../../drawer/model/sub_account_mini_info_entity.dart';
+import '../../drawer/page/doge_ltc_list_page.dart';
 import '../widgets/chart_for_TH.dart';
 import '../widgets/toggle_switch.dart';
 
@@ -18,18 +21,42 @@ class UserPanelPage extends ConsumerStatefulWidget {
 
 class _UserPanelPageState extends ConsumerState<UserPanelPage> {
 
+  SubAccountMiniInfoList? _selectedAccount;
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    _selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
       body: authState.when(
         data: (user) {
-          if (user != null && (user.userInfo?.subaccounts ?? 0) > 1) {
+          if (user != null && (user.userInfo?.subaccounts ?? 0) == 0) {
             return _buildEmptyState();
           } else {
-            return _buildUserPanelContent();
+            if((_selectedAccount?.miningInfo?.activeWorkers ?? 0) > 0) {
+              return _buildUserPanelContent();
+            } else {
+              return Padding(
+                padding: const EdgeInsets.only(top: 100,left: 16.0,right: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text("您需要添加矿机到矿池，然后开始挖矿",style: TextStyle(fontSize: 16.sp,color: ColorUtils.colorTitleOne),),
+                    ),
+                    Text(
+                        '''1、电脑连接至矿机所在的局域网，获取矿机IP，登录至矿机后台。\n\n2、进入矿机配置页面，参照示例设置挖矿地址、矿工名，密码可为空，并保存配置。矿机名（worker）命名规则：子账户+英文句号+您想为矿机设置的编号。如果您的子账户为，那矿机名可以设置为 ${_selectedAccount?.name}.001\n\n3、保存配置等待生效，矿机将在5分钟内自动添加至矿池网站页面。
+                  '''
+                        ,style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
+                    ),
+                  ],
+                ),
+              );
+            }
           }
         },
         loading: () => const Center(child: CircularProgressIndicator()),

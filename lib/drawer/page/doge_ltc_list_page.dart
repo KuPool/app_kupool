@@ -17,23 +17,20 @@ class DogeLtcListNotifier with ChangeNotifier {
   SubAccountMiniInfoList? _selectedAccount;
   SubAccountMiniInfoList? get selectedAccount => _selectedAccount;
 
-  // Keep track of which coin type the data belongs to
   SubAccountCoinType? _currentCoinType;
 
-  Future<void> fetchAccounts(SubAccountCoinType coinType) async {
-    // If the data for the current coinType is already loaded, do nothing.
-    if (_currentCoinType == coinType && _accounts != null) {
-      return;
-    }
+  Future<void> fetchAccounts({SubAccountCoinType coinType = SubAccountCoinType.dogeLtc}) async {
+
     _currentCoinType = coinType;
     _isLoading = true;
+    _accounts = null;
     notifyListeners();
 
     final params = {
       'page': 1,
       'page_size': 50,
       'is_hidden': -1,
-      // 'coin_type': _currentCoinType, 待后台开发，先预留
+      "coin_type": _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc",
     };
     final response = await ApiService().get(
       '/v1/subaccount/list_with_mining_info',
@@ -43,7 +40,7 @@ class DogeLtcListNotifier with ChangeNotifier {
     if (response != null) {
       var resultModel = SubAccountMiniInfoEntity.fromJson(response);
       _accounts = resultModel.list;
-      if (_accounts != null && _accounts!.isNotEmpty) {
+      if (_accounts != null && _accounts!.isNotEmpty && _selectedAccount == null) {
         _selectedAccount = _accounts!.first;
       }
     } else {
@@ -54,6 +51,11 @@ class DogeLtcListNotifier with ChangeNotifier {
     notifyListeners();
   }
 
+  void clearData(){
+    _accounts = null;
+    _selectedAccount = null;
+    notifyListeners();
+  }
   void selectAccount(SubAccountMiniInfoList account) {
     if (_selectedAccount != account) {
       _selectedAccount = account;
@@ -71,22 +73,6 @@ class DogeLtcListPage extends StatefulWidget {
 }
 
 class _DogeLtcListPageState extends State<DogeLtcListPage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DogeLtcListNotifier>().fetchAccounts(widget.coinType);
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant DogeLtcListPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.coinType != widget.coinType) {
-      // When the coinType changes, fetch new data.
-      context.read<DogeLtcListNotifier>().fetchAccounts(widget.coinType);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,19 +92,20 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
       itemCount: accounts.length,
       itemBuilder: (context, index) {
         final item = accounts[index];
-        final hashrate = '${item.miningInfo?.earn ?? '0.00'} H/s'.trim();
+        final hashrate = '${item.miningInfo?.hashrate ?? '0.00 '}H/s'.trim();
 
         return Column(
           children: [
             InkWell(
               onTap: () {
                 context.read<DogeLtcListNotifier>().selectAccount(item);
+                Navigator.pop(context);
               },
               child: _buildAccountItem(
                 name: item.name ?? '',
                 remark: item.remark ?? '',
                 hashrate: hashrate,
-                isSelected: item == listNotifier.selectedAccount,
+                isSelected: item.id == listNotifier.selectedAccount?.id,
               ),
             ),
             if (index < accounts.length - 1)

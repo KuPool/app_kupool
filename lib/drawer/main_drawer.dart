@@ -29,11 +29,13 @@ class MainDrawer extends StatelessWidget {
               padding: EdgeInsets.all(16.w),
               child: Text('子账户', style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold)),
             ),
-            Padding(
+            Container(
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Color(0xfff0f0f0),width: 1)),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: _buildCustomTabBar(),
             ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
             const SizedBox(height: 8),
             Expanded(
               // Pass the selected coin type to the single list page
@@ -47,7 +49,6 @@ class MainDrawer extends StatelessWidget {
 
   Widget _buildCustomTabBar() {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         _buildTabItem(
           text: 'DOGE/LTC',
@@ -76,36 +77,38 @@ class MainDrawer extends StatelessWidget {
       onTap: onTap,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            icon,
-            const SizedBox(width: 2),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isSelected ? ColorUtils.mainColor : Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center, // Vertically center the icon and text
+            children: [
+              icon,
+              const SizedBox(width: 2),
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isSelected ? ColorUtils.mainColor : Colors.grey[600],
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 3,
-                  width: 22,
-                  decoration: BoxDecoration(
-                    color: isSelected ? ColorUtils.mainColor : Colors.transparent,
-                    borderRadius: BorderRadius.circular(1.5),
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Use Padding to align the indicator with the text
+          Padding(
+            padding: const EdgeInsets.only(left: 42.0), // 40 for icon + 2 for spacing
+            child: Container(
+              height: 3,
+              width: 22,
+              decoration: BoxDecoration(
+                color: isSelected ? ColorUtils.mainColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
