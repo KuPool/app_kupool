@@ -1,7 +1,9 @@
 import 'dart:math' as math;
+import 'package:Kupool/home/announcement_provider.dart';
 import 'package:Kupool/home/home_provider.dart';
 import 'package:Kupool/home/widgets/home_error_widget.dart';
 import 'package:Kupool/home/widgets/home_skeleton_widget.dart';
+import 'package:Kupool/login/page/agreement_page.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
@@ -20,6 +22,7 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final homeDataAsync = ref.watch(homeDataProvider);
+    final announcementAsync = ref.watch(announcementProvider);
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
@@ -55,7 +58,13 @@ class HomePage extends ConsumerWidget {
         ].where((widget) => widget is! SizedBox).toList(),
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(homeDataProvider.future),
+        onRefresh: () async {
+          // Refresh both providers in parallel
+          await Future.wait([
+            ref.refresh(homeDataProvider.future),
+            ref.refresh(announcementProvider.future),
+          ]);
+        },
         color: ColorUtils.mainColor,
         backgroundColor: Colors.white,
         child: SingleChildScrollView(
@@ -64,7 +73,11 @@ class HomePage extends ConsumerWidget {
           child: Column(
             children: [
               _buildTopBanner(context),
-              _buildAnnouncementBar(context),
+              announcementAsync.when(
+                data: (announcement) => announcement != null ? _buildAnnouncementBar(context, announcement) : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (err, stack) => const SizedBox.shrink(),
+              ),
               homeDataAsync.when(
                 data: (homeData) => _buildMiningCoinsSection(context, homeData),
                 loading: () => const HomeSkeletonWidget(),
@@ -94,28 +107,43 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAnnouncementBar(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(top: 12.w),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          Image.asset(ImageUtils.homeVolume, width: 24.w, height: 24.h),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              '[11-12] Kupool 上线 TRMP',
-              style:
-                  TextStyle(fontSize: 14.sp, color: const Color(0xFF0D1835)),
+  Widget _buildAnnouncementBar(BuildContext context, Map<String, dynamic> announcement) {
+    final title = announcement['title'] as String? ?? '';
+    final htmlUrl = announcement['html_url'] as String?;
+
+    return InkWell(
+      onTap: () {
+        if (htmlUrl != null && htmlUrl.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AgreementPage(title: title, url: htmlUrl),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.grey),
-        ],
+          );
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.only(top: 12.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Image.asset(ImageUtils.homeVolume, width: 24.w, height: 24.h),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                title,
+                style:
+                    TextStyle(fontSize: 14.sp, color: const Color(0xFF0D1835)),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
