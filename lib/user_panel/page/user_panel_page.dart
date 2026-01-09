@@ -26,7 +26,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       backgroundColor: ColorUtils.widgetBgColor,
       body: authState.when(
         data: (user) {
-          if (user != null && (user.userInfo?.subaccounts ?? 0) == 1) {
+          if (user != null && (user.userInfo?.subaccounts ?? 0) > 1) {
             return _buildEmptyState();
           } else {
             return _buildUserPanelContent();
@@ -43,8 +43,8 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('您还没有子账户', style: TextStyle(fontSize: 16.sp, color: Colors.grey)),
-          SizedBox(height: 24.h),
+          Text('您还没有子账户', style: TextStyle(fontSize: 16, color: ColorUtils.colorNoteT1)),
+          SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -57,7 +57,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
             ),
-            child: const Text('创建子账户'),
+            child: const Text('+创建子账户',style: TextStyle(color: Colors.white,fontSize: 14),),
           ),
         ],
       ),

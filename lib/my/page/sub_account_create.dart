@@ -1,4 +1,3 @@
-import 'package:Kupool/my/provider/sub_account_create_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/utils/toast_utils.dart';
@@ -6,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+
+import '../../net/api_service.dart';
 
 class SubAccountCreatePage extends ConsumerStatefulWidget {
   const SubAccountCreatePage({super.key});
@@ -105,16 +107,6 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(subAccountCreateProvider, (previous, next) {
-      if (previous is AsyncLoading && next is AsyncData) {
-        if (next.value != null && next.value is bool && next.value == true) {
-          ToastUtils.show('创建成功');
-          if (mounted) Navigator.pop(context);
-        }
-      } else if (next is AsyncError) {
-        // Error is already handled by ApiService, but we could show a different error here if needed
-      }
-    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -361,15 +353,13 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
   }
 
   Widget _buildSubmitButton() {
-    final createAccountState = ref.watch(subAccountCreateProvider);
-    final isLoading = createAccountState is AsyncLoading;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
         child: InkWell(
           onTap: _isSubmitEnabled
-              ? () {
+              ? () async {
                   FocusManager.instance.primaryFocus?.unfocus();
                   var name = _nameController.text.trim();
                   var remark = _remarkController.text.trim();
@@ -384,7 +374,13 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                     },
                     "remark": remark
                   };
-                  ref.read(subAccountCreateProvider.notifier).create(parm);
+
+                  SmartDialog.showLoading(msg: "创建中...");
+                  await ApiService().post('/v1/subaccount/create', data: parm);
+                  SmartDialog.dismiss();
+                  SmartDialog.showToast("创建成功",alignment: Alignment.center,displayTime: Duration(seconds: 2),onDismiss: (){
+                    Navigator.pop(context);
+                  });
                 }
               : null,
           borderRadius: BorderRadius.circular(12),
@@ -397,13 +393,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
               color: _isSubmitEnabled ? ColorUtils.mainColor : ColorUtils.mainColor.withAlpha(75),
             ),
             child: Center(
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text(
+              child: const Text(
                       '提交',
                       style: TextStyle(
                           fontSize: 14,

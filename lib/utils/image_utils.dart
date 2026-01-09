@@ -8,6 +8,8 @@ class ImageUtils {
   static const String homeCopy = '${_imageBasePath}home/home_copy.png';
   static const String homeDoge = '${_imageBasePath}home/doge.png';
   static const String homeLtc = '${_imageBasePath}home/ltc.png';
+  static const String homeBtc = '${_imageBasePath}home/btc.png';
+
 
   // panel
   static const String panelBottomBar = '${_imageBasePath}panel/panel_bottom_bar.png';
@@ -22,6 +24,7 @@ class ImageUtils {
   static const String machineBottomBar = '${_imageBasePath}machine/machine_bottom_bar.png';
   // mine
   static const String mineBottomBar = '${_imageBasePath}mine/mine_bottom_bar.png';
+  static const String subAccountSelect = '${_imageBasePath}mine/sub_account_select.png';
 
   static const String kupoolLogo = '${_imageBasePath}home/kupoolLogo.png';
   static const String homeBanner = '${_imageBasePath}home/homeBanner.png';

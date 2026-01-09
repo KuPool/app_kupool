@@ -1,5 +1,6 @@
 import 'package:Kupool/home/page/home_page.dart';
 import 'package:Kupool/login/page/register_page.dart';
+import 'package:Kupool/main.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -40,8 +41,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _updateButtonState() {
     setState(() {
-      _isButtonEnabled = _emailController.text.isNotEmpty &&
-          _passwordController.text.isNotEmpty;
+      _isButtonEnabled =
+          _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
     });
   }
 
@@ -66,8 +67,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   // 优化：修改正则表达式以禁止输入空格
-  final _asciiFormatter =
-      FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
+  final _asciiFormatter = FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +77,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       next.when(
         data: (user) {
           if (user != null && mounted) {
-            // 智能处理登录后的导航逻辑
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
+            // 销毁所有路由并回到首页
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainTabBar()),
+              (route) => false,
+            );
           }
         },
         loading: () {},
@@ -262,7 +264,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: _isButtonEnabled && !isLoading ? ColorUtils.mainColor : ColorUtils.unUseMainColor,
+        color: _isButtonEnabled && !isLoading
+            ? ColorUtils.mainColor
+            : ColorUtils.unUseMainColor,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Material(
@@ -296,10 +300,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildRegisterButton(bool isLoading) {
     return OutlinedButton(
-      onPressed: isLoading ? null : () {
-        FocusManager.instance.primaryFocus?.unfocus();
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
-      },
+      onPressed: isLoading
+          ? null
+          : () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const RegisterPage()));
+            },
       style: OutlinedButton.styleFrom(
         minimumSize: Size(double.infinity, 34.h),
         side: BorderSide(color: ColorUtils.mainColor, width: 0.5),

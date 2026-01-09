@@ -202,14 +202,19 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
       if (_isNavigating) {
-        return;
+        return; // Already handling navigation, do nothing.
       }
       _isNavigating = true;
 
-      NavigationService.navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-        (route) => route.isFirst,
-      );
+      final navigator = NavigationService.navigatorKey.currentState;
+      if (navigator != null) {
+        navigator.popUntil((route) => route.isFirst);
+        navigator.push(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
+      // By returning without calling handler.next() or super.onError(),
+      // we "swallow" the error and prevent it from propagating to the UI.
       return;
     }
     super.onError(err, handler);

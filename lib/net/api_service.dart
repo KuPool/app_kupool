@@ -46,26 +46,19 @@ class ApiService {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool returnRawData = false, // Allow fetching raw response
   }) async {
     try {
       return await _dioClient.get<T>(
         path,
         queryParameters: queryParameters,
         options: options,
+        returnRawData: returnRawData,
       );
     } on DioException catch (e) {
       final message = getErrorMessage(e);
       ToastUtils.show(message);
       rethrow; // Re-throw the exception
-    }
-  }
-  
-  Future<bool> createSubAccount(Map<String, dynamic> parm) async {
-    try {
-      await post('/v1/subaccount/create', data: parm);
-      return true;
-    } catch (_) {
-      return false;
     }
   }
 }
