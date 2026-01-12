@@ -34,7 +34,7 @@ class UserPanelPage extends ConsumerWidget {
           }
           
           // Layer 2: Check for miners (assuming a field like totalMiners exists)
-          if (selectedAccount != null && (selectedAccount.miningInfo?.activeWorkers ?? 0) == 0) {
+          if (selectedAccount != null && (selectedAccount.miningInfo?.activeWorkers ?? 0) == 1) {
             return _buildAddMinerGuide();
           }
 
@@ -239,9 +239,9 @@ class UserPanelPage extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildDataColumn(data.realtimeHashrate ?? '0', data.realtimeHashrateUnit ?? '', '近 15 分钟'),
-        _buildDataColumn(data.hour24Hashrate ?? '0', data.hour24HashrateUnit ?? '', '近 24 小时'),
-        _buildDataColumn(data.yesterdayAcceptHashrate ?? '0', data.yesterdayAcceptHashrateUnit ?? '', '昨日结算算力'),
+        _buildDataColumn(data.realtimeHashrate ?? '0', "${data.realtimeHashrateUnit ?? ''}H/s", '近 15 分钟',),
+        _buildDataColumn(data.hour24Hashrate ?? '0', "${data.hour24HashrateUnit ?? ''}H/s", '近 24 小时'),
+        _buildDataColumn(data.yesterdayAcceptHashrate ?? '0', "${data.yesterdayAcceptHashrateUnit ?? ''}H/s", '昨日结算算力'),
       ],
     );
   }
@@ -261,56 +261,99 @@ class UserPanelPage extends ConsumerWidget {
 
   Widget _buildRevenueContent(SubAccountPanelEntity data) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      // mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildRevenueColumn('昨日收益', {
-          data.yesterdayEarnings ?? '0.00': 'DOGE',
-          data.yesterdayEarningsDoge ?? '0.00': 'LTC',
-        }),
-        _buildRevenueColumn('今日已挖 (预估)', {
-          data.todayEstimated ?? '0.00': 'DOGE',
-          data.todayEstimatedDoge ?? '0.00': 'LTC',
-        }),
+        Expanded(
+          child: _buildRevenueColumn('昨日收益', [
+            // 使用 MapEntry 确保顺序和内容正确
+            MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
+            MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
+          ]),
+        ),
+        SizedBox(width: 12,),
+        Expanded(
+          child: _buildRevenueColumn('今日已挖 (预估)', [
+            // 使用 MapEntry 确保顺序和内容正确
+            MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
+            MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
+          ]),
+        ),
       ],
     );
   }
 
-  Widget _buildDataColumn(String value, String unit, String label, {Color? valueColor}) {
+  Widget _buildDataColumn(String value, String unit, String label, {Color? valueColor,Color unitColor = ColorUtils.color888}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor)),
-            SizedBox(width: 4.w),
-            Text(unit, style: TextStyle(fontSize: 12, color: valueColor)),
+            SizedBox(width: 4),
+            Text(unit, style: TextStyle(fontSize: 12, color: unitColor)),
           ],
         ),
         SizedBox(height: 4.h),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2)),
       ],
     );
   }
 
-  Widget _buildRevenueColumn(String label, Map<String, String> revenues) {
+  Widget _buildRevenueColumn(String label, List<MapEntry<String, String>> revenues) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ...revenues.entries.map((entry) => Padding(
-          padding: const EdgeInsets.only(bottom: 4.0),
-          child: Row(
-            children: [
-              Text(entry.key, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
-              SizedBox(width: 4.w),
-              Text(entry.value, style: TextStyle(fontSize: 12.sp)),
-            ],
-          ),
-        )),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...revenues.map((entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Row(
+              children: [
+                Flexible(
+                  child: _buildDecimalText(entry.key),
+                ),
+                SizedBox(width: 4),
+                Text(entry.value, style: TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          )),
+        ],
+      ),
         SizedBox(height: 4.h),
-        Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
       ],
     );
   }
+
+  Widget _buildDecimalText(String text) {
+    Color textColor = ColorUtils.colorT1;
+    final intStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: textColor);
+    final decimalStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: textColor); // 小数点后的样式
+
+    if (text.contains('.')) {
+      final parts = text.split('.');
+      final integerPart = parts[0];
+      final decimalPart = parts[1];
+
+      return RichText(
+        text: TextSpan(// 继承默认文本样式
+          children: <TextSpan>[
+            TextSpan(text: integerPart, style: intStyle),
+            TextSpan(text: '.', style: decimalStyle), // 小数点本身也用小号字体
+            TextSpan(text: decimalPart, style: decimalStyle),
+          ],
+        ),
+      );
+    } else {
+      // 如果没有小数点，直接返回一个普通的 Text Widget
+      return Text(
+        text,
+        style: intStyle,
+      );
+    }
+  }
+
 }

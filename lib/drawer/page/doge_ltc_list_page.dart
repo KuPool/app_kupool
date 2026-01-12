@@ -20,36 +20,49 @@ class DogeLtcListNotifier with ChangeNotifier {
   SubAccountCoinType? _currentCoinType;
 
   Future<void> fetchAccounts({SubAccountCoinType coinType = SubAccountCoinType.dogeLtc}) async {
-
     _currentCoinType = coinType;
     _isLoading = true;
     _accounts = null;
     notifyListeners();
 
-    final params = {
-      'page': 1,
-      'page_size': 50,
-      'is_hidden': -1,
-      "coin_type": _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc",
-    };
-    final response = await ApiService().get(
-      '/v1/subaccount/list_with_mining_info',
-      queryParameters: params,
-    );
+    try {
+      final params = {
+        'page': 1,
+        'page_size': 50,
+        'is_hidden': -1,
+        "coin_type": _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc",
+      };
 
-    if (response != null) {
-      var resultModel = SubAccountMiniInfoEntity.fromJson(response);
-      _accounts = resultModel.list;
-      if (_accounts != null && _accounts!.isNotEmpty && _selectedAccount == null) {
-        _selectedAccount = _accounts!.first;
+      final response = await ApiService().get(
+        '/v1/subaccount/list_with_mining_info',
+        queryParameters: params,
+      );
+
+      // ---- 成功逻辑 ----
+      if (response != null) {
+        var resultModel = SubAccountMiniInfoEntity.fromJson(response);
+        _accounts = resultModel.list;
+        // 只有在首次加载且没有选中账户时，才设置默认选中
+        if (_accounts != null && _accounts!.isNotEmpty && _selectedAccount == null) {
+          _selectedAccount = _accounts!.first;
+        }
+      } else {
+        _accounts = [];
       }
-    } else {
-      _accounts = [];
-    }
 
-    _isLoading = false;
-    notifyListeners();
+    } catch (e) {
+      // ---- 错误处理逻辑 ----
+      // ApiService 已经弹了 Toast，这里我们只需要处理好本 Notifier 的状态即可
+      print('Failed to fetch accounts: $e'); // 可以在 debug 时打印错误
+      _accounts = []; // 将列表设置为空，避免 UI 显示旧数据
+      // 你也可以根据需求设置一个专门的错误状态变量
+    } finally {
+      // ---- 无论成功还是失败，最终都必须执行的逻辑 ----
+      _isLoading = false;
+      notifyListeners(); // 通知 UI 停止加载并刷新界面
+    }
   }
+
 
   void clearData(){
     _accounts = null;

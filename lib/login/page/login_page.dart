@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:Kupool/net/dio_client.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -36,6 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _passwordController.removeListener(_updateButtonState);
     _emailController.dispose();
     _passwordController.dispose();
+    AuthInterceptor.reset();
     super.dispose();
   }
 

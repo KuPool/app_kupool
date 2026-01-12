@@ -14,7 +14,6 @@ final userPanelProvider = FutureProvider.autoDispose
     'subaccount_id': args.subaccountId,
     'coin': args.coin,
   };
-
   final response = await ApiService().get(
     '/v1/dashboard/info',
     queryParameters: params,

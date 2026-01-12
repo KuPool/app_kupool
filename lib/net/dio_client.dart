@@ -48,7 +48,7 @@ class DioClient {
       // 设置代理
       client.findProxy = (uri) {
         // 代理到你的电脑IP和Charles端口
-        return 'PROXY 192.168.110.15:8888';
+        return 'PROXY 192.168.110.93:8888';
       };
       // 信任Charles的自签名证书，抓取 https 请求
       client.badCertificateCallback =
