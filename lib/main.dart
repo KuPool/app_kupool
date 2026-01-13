@@ -8,6 +8,8 @@ import 'package:Kupool/my/page/my_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/net/env_config.dart';
 import 'package:Kupool/user_panel/page/user_panel_page.dart';
+import 'package:Kupool/user_panel/provider/chart_notifier.dart';
+import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
@@ -33,10 +35,12 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
+        // By providing the notifiers here, they are available to the entire app.
         return MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => DogeLtcListNotifier()),
-            // You can add providers for BTC and other coins here in the future
+            ChangeNotifierProvider(create: (_) => UserPanelNotifier()),
+            ChangeNotifierProvider(create: (_) => ChartNotifier()),
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],
@@ -71,7 +75,6 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
   @override
   void initState() {
     super.initState();
-    // After the first frame, check the initial login state and fetch data if needed.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authNotifierProvider).value;
       if (user != null) {
@@ -90,7 +93,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
 
   final List<String> _titles = [
     '',
-    'doge_ltc', // Default title, will be replaced
+    'doge_ltc',
     '矿机',
     '收益',
     '我的',
@@ -142,7 +145,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
                     ),
                   ),
                   Text(
-                    appBarTitle, // Use the dynamic title
+                    appBarTitle,
                     style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
                   ),
                 ],

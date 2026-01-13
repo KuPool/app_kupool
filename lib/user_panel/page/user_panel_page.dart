@@ -1,62 +1,77 @@
+import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
+import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/my/page/sub_account_create.dart';
 import 'package:Kupool/net/auth_notifier.dart';
+import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import '../../drawer/model/sub_account_mini_info_entity.dart';
-import '../../drawer/page/doge_ltc_list_page.dart';
 import '../model/subAccount_panel_entity.dart';
 import '../widgets/chart_for_TH.dart';
 import '../widgets/toggle_switch.dart';
 
-class UserPanelPage extends ConsumerWidget {
+// Reverted to a simple ConsumerWidget that only displays state.
+class UserPanelPage extends ConsumerStatefulWidget {
   const UserPanelPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserPanelPage> createState() => _UserPanelPageState();
+}
+
+class _UserPanelPageState extends ConsumerState<UserPanelPage> {
+  SubAccountMiniInfoList? _previousSelectedAccount;
+  @override
+  Widget build(BuildContext context) {
 
     final authState = ref.watch(authNotifierProvider);
-    SubAccountMiniInfoList? selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
+    final panelNotifier = context.watch<UserPanelNotifier>();
 
+    final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
+    // 检查 selectedAccount 是否真的发生了变化
+    if (selectedAccount != null && selectedAccount.id != 0 && selectedAccount != _previousSelectedAccount) {
+      // 使用 addPostFrameCallback 将网络请求推迟到 build 周期之后
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        // 安全地调用数据获取方法
+        context.read<UserPanelNotifier>().fetchPanelData(
+          subaccountId: selectedAccount.id!,
+          coin: selectedAccount.defaultCoin!,
+        );
+
+      });
+      // 更新追踪变量
+      _previousSelectedAccount = selectedAccount;
+    }
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
       body: authState.when(
         data: (user) {
-          // Layer 1: Check for sub-accounts
           if (user != null && (user.userInfo?.subaccounts ?? 0) == 0) {
             return _buildEmptyState(context);
           }
-          
-          // Layer 2: Check for miners (assuming a field like totalMiners exists)
-          if (selectedAccount != null && (selectedAccount.miningInfo?.activeWorkers ?? 0) == 1) {
+
+          if (selectedAccount != null && (selectedAccount.miningInfo?.activeWorkers ?? 0) == 0) {
             return _buildAddMinerGuide();
           }
 
-          // Layer 3: Fetch and display panel data
-          final panelDataAsync = ref.watch(userPanelProvider((
-          subaccountId: selectedAccount?.miningInfo?.subaccountId ?? 0,
-          coin: selectedAccount?.miningInfo?.coinType ?? "ltc",
-          )));
-          return panelDataAsync.when(
-            data: (panelData) {
-              if (panelData == null) {
-                // This case now handles null data from the API call, not the guide.
-                return const Center(child: Text('暂无面板数据')); 
-              }
-              return _buildUserPanelContent(panelData);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
-          );
+          if (panelNotifier.isLoading && panelNotifier.panelData == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final panelData = panelNotifier.panelData;
+          if (panelData == null) {
+            return const Center(child: Text('请在抽屉中选择一个子账户以查看数据'));
+          }
+          return _buildUserPanelContent(panelData);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('请重新登录')),
       ),
     );
   }
@@ -116,21 +131,21 @@ class UserPanelPage extends ConsumerWidget {
       child: Column(
         children: [
           _buildInfoCard(
-            iconPath: ImageUtils.panelSl, // 替换图标
+            iconPath: ImageUtils.panelSl,
             iconColor: const Color(0xFF00D187),
             title: '算力',
             child: _buildHashrateContent(panelData),
           ),
           SizedBox(height: 12.h),
           _buildInfoCard(
-            iconPath: ImageUtils.panelKj, // 替换图标
+            iconPath: ImageUtils.panelKj,
             iconColor: const Color(0xFF3375E0),
             title: '矿机',
             child: _buildMinersContent(panelData),
           ),
           SizedBox(height: 12.h),
           _buildInfoCard(
-            iconPath: ImageUtils.panelWksy, // 替换图标
+            iconPath: ImageUtils.panelWksy,
             iconColor: const Color(0xFFF5A623),
             title: '挖矿收益',
             child: _buildRevenueContent(panelData),
@@ -143,28 +158,30 @@ class UserPanelPage extends ConsumerWidget {
   }
 
   Widget _buildChartCard() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column( // Use Column for vertical arrangement
-        children: [
-          Row( // First child: the header row
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('算力图表', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorTitleOne)),
-              const ToggleSwitch(),
-            ],
-          ),
-          SizedBox(height: 8.h), // Add some space
-          const SizedBox(
-            // height: 200.h, // Give the chart a fixed height
-            child: ChartForTHPage(), // Second child: the chart
-          ),
-          _buildChartLegend(),
-        ],
+    return ChangeNotifierProvider(
+      create: (_) => ChartNotifier(),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('算力图表', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorTitleOne)),
+                const ToggleSwitch(),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            const SizedBox(
+              child: ChartForTHPage(),
+            ),
+            _buildChartLegend(),
+          ],
+        ),
       ),
     );
   }
@@ -177,7 +194,7 @@ class UserPanelPage extends ConsumerWidget {
           children: [
             Container(
               width: 16,
-              height: 4, 
+              height: 4,
               decoration: BoxDecoration(
                 color: ColorUtils.mainColor,
                 borderRadius: BorderRadius.circular(2),
@@ -192,7 +209,7 @@ class UserPanelPage extends ConsumerWidget {
           children: [
             Container(
               width: 16,
-              height: 4, 
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.red,
                 borderRadius: BorderRadius.circular(2),

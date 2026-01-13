@@ -105,12 +105,13 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
       itemCount: accounts.length,
       itemBuilder: (context, index) {
         final item = accounts[index];
-        final hashrate = '${item.miningInfo?.hashrate ?? '0.00 '}H/s'.trim();
+        final hashrate = '${item.miningInfo?.hashrate ?? '0.00'}H/s'.trim();
 
         return Column(
           children: [
             InkWell(
               onTap: () {
+                // The UI only needs to update the state and close the drawer.
                 context.read<DogeLtcListNotifier>().selectAccount(item);
                 Navigator.pop(context);
               },
@@ -159,7 +160,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
           ),
           Row(
             children: [
-              Text(hashrate, style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT1)),
+              Text(hashrate, style: TextStyle(fontSize: 15, color: ColorUtils.colorT1)),
               SizedBox(width: 8.w),
               if (isSelected)
                 Image.asset(ImageUtils.subAccountSelect, width: 18, height: 18)

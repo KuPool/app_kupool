@@ -138,36 +138,40 @@ class ResponseInterceptor extends Interceptor {
       try {
         baseResponse = BaseResponse.fromJson(response.data, (json) => json);
       } catch (e) {
-        super.onResponse(response, handler);
-        return;
+        return handler.next(response); // Not a standard response, pass it through.
       }
 
       if (baseResponse.code == 0) {
         if (response.requestOptions.returnRawData) {
-          super.onResponse(response, handler);
+          return handler.next(response);
         } else {
-          // 如果业务成功，但data为null，则返回true表示成功，否则返回data本身
           response.data = baseResponse.data ?? true;
-          super.onResponse(response, handler);
+          return handler.next(response);
         }
       } else {
         final businessException = BusinessException(baseResponse.code, baseResponse.msg);
-        handler.reject(DioException(
+        final error = DioException(
           requestOptions: response.requestOptions,
           error: businessException,
-          type: DioExceptionType.badResponse,
-        ));
+          // Use `unknown` to prevent retry interceptors from retrying a business logic error.
+          type: DioExceptionType.unknown,
+        );
+        // 附加一个 "disableRetry" 标志给 RetryInterceptor
+        // 这会告诉 dio-smart-retry 拦截器：这是一个业务逻辑错误，不要重试！
+        error.requestOptions.extra['disableRetry'] = true;
+        return handler.reject(error);
       }
     } else {
-      super.onResponse(response, handler);
+      return handler.next(response);
     }
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    super.onError(err, handler);
+    return handler.next(err);
   }
 }
+
 
 class AuthInterceptor extends Interceptor {
   static const String _userSessionKey = 'user_session';
@@ -213,8 +217,6 @@ class AuthInterceptor extends Interceptor {
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       }
-      // By returning without calling handler.next() or super.onError(),
-      // we "swallow" the error and prevent it from propagating to the UI.
       return;
     }
     super.onError(err, handler);

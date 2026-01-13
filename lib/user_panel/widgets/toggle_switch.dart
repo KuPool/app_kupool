@@ -1,23 +1,56 @@
+import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
+import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
+import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 
 class ToggleSwitch extends StatefulWidget {
   const ToggleSwitch({super.key});
 
   @override
-  _ToggleSwitchState createState() => _ToggleSwitchState();
+  State<ToggleSwitch> createState() => _ToggleSwitchState();
 }
 
 class _ToggleSwitchState extends State<ToggleSwitch> {
-  bool isSelected = true; // true for '15 分钟'
-
+  SubAccountMiniInfoList? _previousSelectedAccount;
   @override
   Widget build(BuildContext context) {
+    // 1. Watch the ChartNotifier for the current dimension
+    final chartNotifier = context.watch<ChartNotifier>();
+    final dimension = chartNotifier.dimension;
+    var is15mSelected = dimension == '15m';
+
+    // 2. Watch the DogeLtcListNotifier to get the selected account for the onTap callback
+    final SubAccountMiniInfoList? selectedAccount =
+        context.watch<DogeLtcListNotifier>().selectedAccount;
+
+    if (selectedAccount != null && selectedAccount.id != 0 && selectedAccount != _previousSelectedAccount) {
+      // 使用 addPostFrameCallback 将网络请求推迟到 build 周期之后
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        // 安全地调用数据获取方法
+        context.read<ChartNotifier>().changeDimension(
+          newDimension: "15m",
+          subaccountId: selectedAccount.id!,
+          coin: selectedAccount.defaultCoin!,
+        );
+      });
+      // 更新追踪变量
+      _previousSelectedAccount = selectedAccount;
+    }
+
     return GestureDetector(
       onTap: () {
-        setState(() {
-          isSelected = !isSelected;
-        });
+        // If no account is selected, do nothing.
+        if (selectedAccount == null) return;
+
+        final newDimension = is15mSelected ? '1d' : '15m';
+        context.read<ChartNotifier>().changeDimension(
+              newDimension: newDimension,
+              subaccountId: selectedAccount.id!,
+              coin: selectedAccount.defaultCoin!,
+            );
       },
       child: Container(
         width: 160,
@@ -25,28 +58,27 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(40 / 2),
-          color: Color(0xff767680).withAlpha(30), // Light gray track color from the image
+          color: const Color(0xff767680).withAlpha(30),
         ),
         child: Stack(
           children: [
-            // Animated blue selection thumb
             AnimatedAlign(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              alignment: isSelected ? Alignment.centerLeft : Alignment.centerRight,
+              alignment:
+                  is15mSelected ? Alignment.centerLeft : Alignment.centerRight,
               child: Container(
-                width: 160 / 2, // Takes up half the space
+                width: 160 / 2,
                 decoration: BoxDecoration(
                   color: ColorUtils.mainColor,
                   borderRadius: BorderRadius.circular(40 / 2),
                 ),
               ),
             ),
-            // Text labels that animate their style (color and weight)
             Row(
               children: [
-                _buildToggleOption('15 分钟', isSelected),
-                _buildToggleOption('1 天', !isSelected),
+                _buildToggleOption('15 分钟', is15mSelected),
+                _buildToggleOption('1 天', !is15mSelected),
               ],
             ),
           ],
@@ -55,7 +87,6 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
     );
   }
 
-  // Helper widget for text options to avoid repetition
   Widget _buildToggleOption(String text, bool selected) {
     return Expanded(
       child: Center(

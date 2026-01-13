@@ -23,6 +23,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_smart_dialog: ^4.9.7+2
   provider: ^6.1.5+1
+  intl: ^0.20.2
 
 
 dev_dependencies:
