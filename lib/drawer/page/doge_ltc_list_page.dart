@@ -43,7 +43,7 @@ class DogeLtcListNotifier with ChangeNotifier {
         var resultModel = SubAccountMiniInfoEntity.fromJson(response);
         _accounts = resultModel.list;
         // 只有在首次加载且没有选中账户时，才设置默认选中
-        if (_accounts != null && _accounts!.isNotEmpty && _selectedAccount == null) {
+        if (_accounts != null && _accounts!.isNotEmpty) {
           _selectedAccount = _accounts!.first;
         }
       } else {
