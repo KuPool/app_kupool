@@ -57,7 +57,7 @@ class DioClient {
     };
 
     _dio.interceptors.addAll([
-      AuthInterceptor(),
+      AuthInterceptor(_dio),
       ResponseInterceptor(),
       LogInterceptor(
         requestBody: true,
@@ -138,7 +138,7 @@ class ResponseInterceptor extends Interceptor {
       try {
         baseResponse = BaseResponse.fromJson(response.data, (json) => json);
       } catch (e) {
-        return handler.next(response); // Not a standard response, pass it through.
+        return handler.next(response);
       }
 
       if (baseResponse.code == 0) {
@@ -153,12 +153,8 @@ class ResponseInterceptor extends Interceptor {
         final error = DioException(
           requestOptions: response.requestOptions,
           error: businessException,
-          // Use `unknown` to prevent retry interceptors from retrying a business logic error.
           type: DioExceptionType.unknown,
         );
-        // 附加一个 "disableRetry" 标志给 RetryInterceptor
-        // 这会告诉 dio-smart-retry 拦截器：这是一个业务逻辑错误，不要重试！
-        error.requestOptions.extra['disableRetry'] = true;
         return handler.reject(error);
       }
     } else {
@@ -172,14 +168,13 @@ class ResponseInterceptor extends Interceptor {
   }
 }
 
-
 class AuthInterceptor extends Interceptor {
-  static const String _userSessionKey = 'user_session';
-  static bool _isNavigating = false;
+  final Dio _dio;
+  AuthInterceptor(this._dio);
 
-  static void reset() {
-    _isNavigating = false;
-  }
+  static const String _userSessionKey = 'user_session';
+  // Use a Completer as an async lock to prevent multiple refresh calls.
+  static Completer<String?>? _completer;
 
   @override
   Future<void> onRequest(
@@ -190,35 +185,102 @@ class AuthInterceptor extends Interceptor {
     if (userJson != null) {
       try {
         final user = LoginModelEntity.fromJson(jsonDecode(userJson));
-        final accessToken = user.accessToken;
 
-        if (accessToken != null && accessToken.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $accessToken';
+        final refreshTokenExpires = DateTime.fromMillisecondsSinceEpoch((user.refreshTokenExpiresAt ?? 0) * 1000);
+        if (refreshTokenExpires.isBefore(DateTime.now())) {
+           await prefs.remove(_userSessionKey);
+           _navigateToLogin();
+           final error = DioException(requestOptions: options, error: 'Refresh token expired. Please log in again.');
+           return handler.reject(error);
+        }
+
+        if (user.accessToken != null && user.accessToken!.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer ${user.accessToken}';
         }
       } catch (e) {
         debugPrint('AuthInterceptor: Failed to decode user session: $e');
+        await prefs.remove(_userSessionKey);
       }
     }
-    super.onRequest(options, handler);
+    return handler.next(options);
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
-      if (_isNavigating) {
-        return; // Already handling navigation, do nothing.
-      }
-      _isNavigating = true;
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode != 401 || err.requestOptions.path == '/v1/refresh_token') {
+      return handler.next(err);
+    }
 
+    if (_completer == null) {
+      _completer = Completer<String?>();
+      try {
+        final newAccessToken = await _refreshToken();
+        _completer!.complete(newAccessToken);
+      } catch (e) {
+        _completer!.completeError(e);
+      }
+    }
+
+    try {
+      final newAccessToken = await _completer!.future;
+      if (newAccessToken == null) {
+        // If refresh failed, reject the original request.
+        return handler.reject(err);
+      }
+
+      err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+      final response = await _dio.fetch(err.requestOptions);
+      return handler.resolve(response);
+    } on DioException catch(e) {
+      return handler.next(e);
+    } finally {
+       if (_completer?.isCompleted ?? false) {
+        _completer = null;
+      }
+    }
+  }
+
+  Future<String?> _refreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString(_userSessionKey);
+    if (userJson == null) throw Exception('No user session found.');
+
+    final user = LoginModelEntity.fromJson(jsonDecode(userJson));
+    final refreshToken = user.refreshToken;
+
+    if (refreshToken == null || refreshToken.isEmpty) throw Exception('No refresh token available.');
+
+    try {
+      final refreshDio = Dio(BaseOptions(baseUrl: EnvConfig.baseUrl));
+      final response = await refreshDio.post(
+        '/v1/refresh_token',
+        data: {'refresh_token': refreshToken},
+      );
+      
+      BaseResponse baseResponse = BaseResponse.fromJson(response.data, (json) => json);
+
+      if (baseResponse.code == 0) {
+        print("刷了一下");
+        final newTokens = LoginModelEntity.fromJson(baseResponse.data);
+        await prefs.setString(_userSessionKey, jsonEncode(newTokens.toJson()));
+        return newTokens.accessToken;
+      } else {
+        throw DioException(requestOptions: response.requestOptions, error: baseResponse.msg);
+      }
+    } catch (e) {
+      await prefs.remove(_userSessionKey);
+      _navigateToLogin();
+      rethrow;
+    }
+  }
+  
+  void _navigateToLogin() {
       final navigator = NavigationService.navigatorKey.currentState;
-      if (navigator != null) {
+      if (navigator != null && navigator.canPop()) {
         navigator.popUntil((route) => route.isFirst);
         navigator.push(
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       }
-      return;
-    }
-    super.onError(err, handler);
   }
 }

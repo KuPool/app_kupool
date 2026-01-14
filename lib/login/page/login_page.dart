@@ -37,7 +37,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _passwordController.removeListener(_updateButtonState);
     _emailController.dispose();
     _passwordController.dispose();
-    AuthInterceptor.reset();
     super.dispose();
   }
 

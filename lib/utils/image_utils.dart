@@ -9,6 +9,7 @@ class ImageUtils {
   static const String homeDoge = '${_imageBasePath}home/doge.png';
   static const String homeLtc = '${_imageBasePath}home/ltc.png';
   static const String homeBtc = '${_imageBasePath}home/btc.png';
+  static const String homeCoinWa = '${_imageBasePath}home/coin_wa.png';
 
 
   // panel
@@ -17,6 +18,12 @@ class ImageUtils {
   static const String panelWksy = '${_imageBasePath}panel/panel_wksy.png';
   static const String panelKj = '${_imageBasePath}panel/panel_kj.png';
   static const String panelSl = '${_imageBasePath}panel/panel_sl.png';
+  static const String panelLian = '${_imageBasePath}panel/panel_lian.png';
+  static const String panelSet = '${_imageBasePath}panel/panel_set.png';
+  static const String panelLook = '${_imageBasePath}panel/panel_look.png';
+
+
+
 
 
   // earn

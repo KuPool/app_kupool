@@ -5,9 +5,12 @@ import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +19,6 @@ import '../model/subAccount_panel_entity.dart';
 import '../widgets/chart_for_TH.dart';
 import '../widgets/toggle_switch.dart';
 
-// Reverted to a simple ConsumerWidget that only displays state.
 class UserPanelPage extends ConsumerStatefulWidget {
   const UserPanelPage({super.key});
 
@@ -26,33 +28,31 @@ class UserPanelPage extends ConsumerStatefulWidget {
 
 class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
+  String _selectedPoolRegion = '亚洲'; // State for the region toggle
+
   @override
   Widget build(BuildContext context) {
-
     final authState = ref.watch(authNotifierProvider);
     final panelNotifier = context.watch<UserPanelNotifier>();
+    final dogeLtcListNotifier = context.watch<DogeLtcListNotifier>();
+    final selectedAccount = dogeLtcListNotifier.selectedAccount;
 
-    final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
-
-    // 检查 selectedAccount 是否真的发生了变化
     if (selectedAccount != null && selectedAccount.id != 0 && selectedAccount != _previousSelectedAccount) {
-      // 使用 addPostFrameCallback 将网络请求推迟到 build 周期之后
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        // 安全地调用数据获取方法
-        context.read<UserPanelNotifier>().fetchPanelData(
-          subaccountId: selectedAccount.id!,
-          coin: selectedAccount.selectCoin,
-        );
-
+        if (mounted) {
+          context.read<UserPanelNotifier>().fetchPanelData(
+                subaccountId: selectedAccount.id!,
+                coin: selectedAccount.selectCoin,
+              );
+        }
       });
-      // 更新追踪变量
       _previousSelectedAccount = selectedAccount;
     }
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
       body: authState.when(
         data: (user) {
-          if (user != null && (user.userInfo?.subaccounts ?? 0) == 0) {
+          if (user != null && isEmpty(dogeLtcListNotifier.accounts)) {
             return _buildEmptyState(context);
           }
 
@@ -71,56 +71,264 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           return _buildUserPanelContent(panelData);
         },
         loading: () => const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
-        error: (err, stack) => Center(child: Text('请重新登录')),
+        error: (err, stack) => const Center(child: Text('请重新登录')),
       ),
     );
   }
 
   Widget _buildAddMinerGuide() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 100, left: 16.0, right: 16.0),
+    final workerName = '${_previousSelectedAccount?.name ?? 'subaccount'}.001';
+    final poolUrl = _selectedPoolRegion == '亚洲'
+        ? 'stratum+ssl://ltcssl-cn.kupool.com:7777'
+        : 'stratum+ssl://ltcssl.kupool.com:7777';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Text(
-              "您需要添加矿机到矿池，然后开始挖矿",
-              style: TextStyle(fontSize: 16.sp, color: ColorUtils.colorTitleOne),
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              children: [
+                _buildStepItem(
+                  ImageUtils.panelLian, 
+                  '01、连接矿机所在的局域网',
+                  '电脑连接至矿机所在的局域网，登录矿机后台，填写您的子账户（密码建议留空），保存即可，矿机将在在一分钟内自动添加到矿池网站页面。',
+                ),
+                const SizedBox(height: 20),
+                _buildStepItem(
+                  ImageUtils.panelSet,
+                  '02、配置矿机',
+                  '矿机名规则为：子账户+英文句号+编号，例如，您的子账户是${_previousSelectedAccount?.name ?? 'subaccount'}，可以设置矿机名为${_previousSelectedAccount?.name ?? 'subaccount'}.001、${_previousSelectedAccount?.name ?? 'subaccount'}.002，以此类推，一个矿机名对应一台矿机。',
+                ),
+                const SizedBox(height: 20),
+                _buildStepItem(
+                  ImageUtils.panelLook,
+                  '03、查看算力',
+                   '矿机名规则为：子账户+英文句号+编号，例如，您的子账户是${_previousSelectedAccount?.name ?? 'subaccount'}，可以设置矿机名为${_previousSelectedAccount?.name ?? 'subaccount'}.001、${_previousSelectedAccount?.name ?? 'subaccount'}.002，以此类推，一个矿机名对应一台矿机。',
+                ),
+              ],
             ),
           ),
-          Text(
-            '''1、电脑连接至矿机所在的局域网，获取矿机IP，登录至矿机后台。\n\n2、进入矿机配置页面，参照示例设置挖矿地址、矿工名，密码可为空，并保存配置。矿机名（worker）命名规则：子账户+英文句号+您想为矿机设置的编号。如果您的子账户为，那矿机名可以设置为 ${_previousSelectedAccount?.name ?? ''}.001\n\n3、保存配置等待生效，矿机将在5分钟内自动添加至矿池网站页面。''',
-            style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+          const SizedBox(height: 10),
+          _buildMinerConfigExample(poolUrl, workerName),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStepItem(String iconPath, String title, String description) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset(
+              iconPath,
+              width: 24.r,
+              height: 24.r,
+              // color: ColorUtils.mainColor,
+            ),
+            SizedBox(width: 8,),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                color: ColorUtils.colorTitleOne,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        SizedBox(height: 8,),
+        Text(
+          description,
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.colorNoteT1,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMinerConfigExample(String poolUrl, String workerName) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '矿机配置示例',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+              ),
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: ColorUtils.widgetBgColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    _buildRegionButton('亚洲'),
+                    _buildRegionButton('全球'),
+                  ],
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildConfigRow('Pool URL', poolUrl, showCopyButton: true),
+          const SizedBox(height: 16),
+          _buildConfigRow('Worker', workerName),
+          const SizedBox(height: 16),
+          _buildConfigRow('Password', '建议不填'),
         ],
       ),
     );
   }
 
+  Widget _buildRegionButton(String region) {
+    bool isSelected = _selectedPoolRegion == region;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPoolRegion = region;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? ColorUtils.mainColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          region,
+          style: TextStyle(
+            color: isSelected ? Colors.white : ColorUtils.colorT2,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfigRow(String title, String value, {bool showCopyButton = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          decoration: BoxDecoration(
+            color: ColorUtils.widgetBgColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+                ),
+              ),
+              if (showCopyButton)
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    ToastUtils.show("已复制");
+                  },
+                  child: Text(
+                    '复制',
+                    style: TextStyle(fontSize: 14, color: ColorUtils.mainColor),
+                  ),
+                ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
   Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('您还没有子账户', style: TextStyle(fontSize: 16, color: ColorUtils.colorNoteT1)),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SubAccountCreatePage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ColorUtils.mainColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              ImageUtils.homeCoinWa,
+              width: 120.r,
+              height: 120.r,
             ),
-            child: const Text('+创建子账户',style: TextStyle(color: Colors.white,fontSize: 14),),
-          ),
-        ],
+            SizedBox(height: 24.h),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.colorTitleOne,
+                ),
+                children: <TextSpan>[
+                  TextSpan(text: '挖矿', style: TextStyle(color: ColorUtils.mainColor)),
+                  const TextSpan(text: '并赚取收益'),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '欢迎加入 Kupool 矿池，准备开始您的挖矿之旅了吗？\n首先请创建您的第一个子账户，点击这里开始创建。',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: ColorUtils.colorT2,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: 32.h),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SubAccountCreatePage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorUtils.mainColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  '添加子账户',
+                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
