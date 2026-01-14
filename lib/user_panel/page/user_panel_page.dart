@@ -4,13 +4,12 @@ import 'package:Kupool/my/page/sub_account_create.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
+import 'package:Kupool/user_panel/widgets/add_miner_guide.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
-import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +27,6 @@ class UserPanelPage extends ConsumerStatefulWidget {
 
 class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
-  String _selectedPoolRegion = '亚洲'; // State for the region toggle
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +55,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           }
 
           if (selectedAccount != null && (selectedAccount.miningInfo?.activeWorkers ?? 0) == 0) {
-            return _buildAddMinerGuide();
+            return AddMinerGuide(workerName: '${selectedAccount.name ?? 'subaccount'}.001');
           }
 
           if (panelNotifier.isLoading && panelNotifier.panelData == null) {
@@ -73,196 +71,6 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
         loading: () => const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
         error: (err, stack) => const Center(child: Text('请重新登录')),
       ),
-    );
-  }
-
-  Widget _buildAddMinerGuide() {
-    final workerName = '${_previousSelectedAccount?.name ?? 'subaccount'}.001';
-    final poolUrl = _selectedPoolRegion == '亚洲'
-        ? 'stratum+ssl://ltcssl-cn.kupool.com:7777'
-        : 'stratum+ssl://ltcssl.kupool.com:7777';
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Column(
-              children: [
-                _buildStepItem(
-                  ImageUtils.panelLian, 
-                  '01、连接矿机所在的局域网',
-                  '电脑连接至矿机所在的局域网，登录矿机后台，填写您的子账户（密码建议留空），保存即可，矿机将在在一分钟内自动添加到矿池网站页面。',
-                ),
-                const SizedBox(height: 20),
-                _buildStepItem(
-                  ImageUtils.panelSet,
-                  '02、配置矿机',
-                  '矿机名规则为：子账户+英文句号+编号，例如，您的子账户是${_previousSelectedAccount?.name ?? 'subaccount'}，可以设置矿机名为${_previousSelectedAccount?.name ?? 'subaccount'}.001、${_previousSelectedAccount?.name ?? 'subaccount'}.002，以此类推，一个矿机名对应一台矿机。',
-                ),
-                const SizedBox(height: 20),
-                _buildStepItem(
-                  ImageUtils.panelLook,
-                  '03、查看算力',
-                   '矿机名规则为：子账户+英文句号+编号，例如，您的子账户是${_previousSelectedAccount?.name ?? 'subaccount'}，可以设置矿机名为${_previousSelectedAccount?.name ?? 'subaccount'}.001、${_previousSelectedAccount?.name ?? 'subaccount'}.002，以此类推，一个矿机名对应一台矿机。',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildMinerConfigExample(poolUrl, workerName),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildStepItem(String iconPath, String title, String description) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              iconPath,
-              width: 24.r,
-              height: 24.r,
-              // color: ColorUtils.mainColor,
-            ),
-            SizedBox(width: 8,),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: ColorUtils.colorTitleOne,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        SizedBox(height: 8,),
-        Text(
-          description,
-          style: TextStyle(
-            fontSize: 12,
-            color: ColorUtils.colorNoteT1,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMinerConfigExample(String poolUrl, String workerName) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '矿机配置示例',
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-              ),
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: ColorUtils.widgetBgColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    _buildRegionButton('亚洲'),
-                    _buildRegionButton('全球'),
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildConfigRow('Pool URL', poolUrl, showCopyButton: true),
-          const SizedBox(height: 16),
-          _buildConfigRow('Worker', workerName),
-          const SizedBox(height: 16),
-          _buildConfigRow('Password', '建议不填'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRegionButton(String region) {
-    bool isSelected = _selectedPoolRegion == region;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedPoolRegion = region;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? ColorUtils.mainColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(
-          region,
-          style: TextStyle(
-            color: isSelected ? Colors.white : ColorUtils.colorT2,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConfigRow(String title, String value, {bool showCopyButton = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          decoration: BoxDecoration(
-            color: ColorUtils.widgetBgColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  value,
-                  style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
-                ),
-              ),
-              if (showCopyButton)
-                InkWell(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: value));
-                    ToastUtils.show("已复制");
-                  },
-                  child: Text(
-                    '复制',
-                    style: TextStyle(fontSize: 14, color: ColorUtils.mainColor),
-                  ),
-                ),
-            ],
-          ),
-        )
-      ],
     );
   }
 
