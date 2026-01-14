@@ -22,6 +22,8 @@ class ImageUtils {
   // earn
   static const String earnBottomBar = '${_imageBasePath}earn/earn_bottom_bar.png';
   static const String machineBottomBar = '${_imageBasePath}machine/machine_bottom_bar.png';
+  static const String arrowDown = '${_imageBasePath}machine/arrow_down.png';
+
   // mine
   static const String mineBottomBar = '${_imageBasePath}mine/mine_bottom_bar.png';
   static const String subAccountSelect = '${_imageBasePath}mine/sub_account_select.png';

@@ -71,6 +71,10 @@ SubAccountMiniInfoList $SubAccountMiniInfoListFromJson(
   if (remark != null) {
     subAccountMiniInfoList.remark = remark;
   }
+  final String? selectCoin = jsonConvert.convert<String>(json['selectCoin']);
+  if (selectCoin != null) {
+    subAccountMiniInfoList.selectCoin = selectCoin;
+  }
   final String? defaultCoin = jsonConvert.convert<String>(json['default_coin']);
   if (defaultCoin != null) {
     subAccountMiniInfoList.defaultCoin = defaultCoin;
@@ -106,6 +110,7 @@ Map<String, dynamic> $SubAccountMiniInfoListToJson(
   data['uid'] = entity.uid;
   data['name'] = entity.name;
   data['remark'] = entity.remark;
+  data['selectCoin'] = entity.selectCoin;
   data['default_coin'] = entity.defaultCoin;
   data['is_hidden'] = entity.isHidden;
   data['is_default'] = entity.isDefault;
@@ -121,6 +126,7 @@ extension SubAccountMiniInfoListExtension on SubAccountMiniInfoList {
     int? uid,
     String? name,
     String? remark,
+    String? selectCoin,
     String? defaultCoin,
     int? isHidden,
     int? isDefault,
@@ -133,6 +139,7 @@ extension SubAccountMiniInfoListExtension on SubAccountMiniInfoList {
       ..uid = uid ?? this.uid
       ..name = name ?? this.name
       ..remark = remark ?? this.remark
+      ..selectCoin = selectCoin ?? this.selectCoin
       ..defaultCoin = defaultCoin ?? this.defaultCoin
       ..isHidden = isHidden ?? this.isHidden
       ..isDefault = isDefault ?? this.isDefault

@@ -30,6 +30,7 @@ class ColorUtils {
   static const Color color64 = Color(0xFF646464);
   static const Color color888 = Color(0xFF888888);
   static const Color colorInputIcon1 = Color(0xFFb2b3b5);
+  static const Color colorCcc = Color(0xFFcccccc);
 
 
   // TODO: Add your custom app colors here

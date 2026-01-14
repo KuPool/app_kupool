@@ -4,6 +4,7 @@ import 'package:Kupool/earnings/page/earnings_page.dart';
 import 'package:Kupool/home/page/home_page.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/mining_machine/page/mining_machine_page.dart';
+import 'package:Kupool/mining_machine/provider/mining_machine_notifier.dart';
 import 'package:Kupool/my/page/my_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/net/env_config.dart';
@@ -35,12 +36,12 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        // By providing the notifiers here, they are available to the entire app.
         return MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => DogeLtcListNotifier()),
             ChangeNotifierProvider(create: (_) => UserPanelNotifier()),
             ChangeNotifierProvider(create: (_) => ChartNotifier()),
+            ChangeNotifierProvider(create: (_) => MiningMachineNotifier()),
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],
@@ -127,28 +128,30 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
               backgroundColor: Colors.white,
               elevation: 0,
               scrolledUnderElevation: 0,
-              leading: Row(
-                children: [
-                  Builder(
-                    builder: (context) => InkWell(
-                      onTap: () {
-                        Scaffold.of(context).openDrawer();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16, right: 2),
-                        child: Image.asset(
-                          ImageUtils.panelMenu,
-                          width: 24,
-                          height: 24,
+              leading: Builder(
+                builder: (context) {
+                  return GestureDetector(
+                    onTap: (){
+                      Scaffold.of(context).openDrawer();
+                    },
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16, right: 2),
+                          child: Image.asset(
+                            ImageUtils.panelMenu,
+                            width: 24,
+                            height: 24,
+                          ),
                         ),
-                      ),
+                        Text(
+                          appBarTitle,
+                          style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    appBarTitle,
-                    style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
-                  ),
-                ],
+                  );
+                }
               ),
               leadingWidth: 150.w,
             ),

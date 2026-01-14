@@ -72,6 +72,7 @@ class DogeLtcListNotifier with ChangeNotifier {
   void selectAccount(SubAccountMiniInfoList account) {
     if (_selectedAccount != account) {
       _selectedAccount = account;
+      _selectedAccount?.selectCoin = _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc";
       notifyListeners();
     }
   }
@@ -92,7 +93,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
     final listNotifier = context.watch<DogeLtcListNotifier>();
 
     if (listNotifier.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
     }
 
     final accounts = listNotifier.accounts;

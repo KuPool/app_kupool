@@ -8,6 +8,7 @@ import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/home/model/home_coin_info_entity.dart';
 import 'package:Kupool/home/model/home_price_entity.dart';
 import 'package:Kupool/json_serializable_model/login_model_entity.dart';
+import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
 import 'package:Kupool/user_panel/model/panel_chart_hashrate_entity.dart';
 import 'package:Kupool/user_panel/model/subAccount_panel_entity.dart';
 
@@ -231,6 +232,18 @@ class JsonConvert {
       return data.map<LoginModelUserInfo>((Map<String, dynamic> e) =>
           LoginModelUserInfo.fromJson(e)).toList() as M;
     }
+    if (<MinerListEntity>[] is M) {
+      return data.map<MinerListEntity>((Map<String, dynamic> e) =>
+          MinerListEntity.fromJson(e)).toList() as M;
+    }
+    if (<MinerListList>[] is M) {
+      return data.map<MinerListList>((Map<String, dynamic> e) =>
+          MinerListList.fromJson(e)).toList() as M;
+    }
+    if (<MinerListStatistics>[] is M) {
+      return data.map<MinerListStatistics>((Map<String, dynamic> e) =>
+          MinerListStatistics.fromJson(e)).toList() as M;
+    }
     if (<PanelChartHashrateEntity>[] is M) {
       return data.map<PanelChartHashrateEntity>((Map<String, dynamic> e) =>
           PanelChartHashrateEntity.fromJson(e)).toList() as M;
@@ -287,6 +300,9 @@ class JsonConvertClassCollection {
     (HomePricePriceTrmp).toString(): HomePricePriceTrmp.fromJson,
     (LoginModelEntity).toString(): LoginModelEntity.fromJson,
     (LoginModelUserInfo).toString(): LoginModelUserInfo.fromJson,
+    (MinerListEntity).toString(): MinerListEntity.fromJson,
+    (MinerListList).toString(): MinerListList.fromJson,
+    (MinerListStatistics).toString(): MinerListStatistics.fromJson,
     (PanelChartHashrateEntity).toString(): PanelChartHashrateEntity.fromJson,
     (PanelChartHashrateTicks).toString(): PanelChartHashrateTicks.fromJson,
     (SubAccountPanelEntity).toString(): SubAccountPanelEntity.fromJson,

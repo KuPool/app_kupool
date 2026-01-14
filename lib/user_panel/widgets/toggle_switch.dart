@@ -33,7 +33,7 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
         context.read<ChartNotifier>().changeDimension(
           newDimension: "15m",
           subaccountId: selectedAccount.id!,
-          coin: selectedAccount.defaultCoin!,
+          coin: selectedAccount.selectCoin,
         );
       });
       // 更新追踪变量
@@ -49,7 +49,7 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
         context.read<ChartNotifier>().changeDimension(
               newDimension: newDimension,
               subaccountId: selectedAccount.id!,
-              coin: selectedAccount.defaultCoin!,
+              coin: selectedAccount.selectCoin,
             );
       },
       child: Container(

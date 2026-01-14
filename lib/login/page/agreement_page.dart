@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../utils/color_utils.dart';
+
 /// 应用内的H5页面，用于显示用户协议等
 class AgreementPage extends StatefulWidget {
   final String title;
@@ -55,7 +57,7 @@ class _AgreementPageState extends State<AgreementPage> {
           WebViewWidget(controller: _controller),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: ColorUtils.mainColor,),
             ),
         ],
       ),

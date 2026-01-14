@@ -29,6 +29,7 @@ class SubAccountMiniInfoList {
 	int? uid;
 	String? name;
   String? remark;
+  String selectCoin = "ltc";
 	@JSONField(name: 'default_coin')
 	String? defaultCoin;
 	@JSONField(name: 'is_hidden')

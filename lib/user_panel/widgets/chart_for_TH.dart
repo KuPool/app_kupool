@@ -30,7 +30,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       if(selectedAccount == null) return;
       context.read<ChartNotifier>().changeDimension(
         subaccountId: selectedAccount.id!,
-        coin: selectedAccount.defaultCoin!,
+        coin: selectedAccount.selectCoin,
         newDimension: "15m",
       );
 
@@ -44,7 +44,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
 
 
     if (chartNotifier.isLoading && chartNotifier.chartData == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
     }
 
     final chartData = chartNotifier.chartData;

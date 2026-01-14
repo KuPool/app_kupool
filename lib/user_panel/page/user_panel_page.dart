@@ -41,7 +41,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
         // 安全地调用数据获取方法
         context.read<UserPanelNotifier>().fetchPanelData(
           subaccountId: selectedAccount.id!,
-          coin: selectedAccount.defaultCoin!,
+          coin: selectedAccount.selectCoin,
         );
 
       });
@@ -61,7 +61,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           }
 
           if (panelNotifier.isLoading && panelNotifier.panelData == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
           }
 
           final panelData = panelNotifier.panelData;
@@ -70,7 +70,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           }
           return _buildUserPanelContent(panelData);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
         error: (err, stack) => Center(child: Text('请重新登录')),
       ),
     );
@@ -91,7 +91,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
             ),
           ),
           Text(
-            '''1、电脑连接至矿机所在的局域网，获取矿机IP，登录至矿机后台。\n\n2、进入矿机配置页面，参照示例设置挖矿地址、矿工名，密码可为空，并保存配置。矿机名（worker）命名规则：子账户+英文句号+您想为矿机设置的编号。如果您的子账户为，那矿机名可以设置为 .001\n\n3、保存配置等待生效，矿机将在5分钟内自动添加至矿池网站页面。''',
+            '''1、电脑连接至矿机所在的局域网，获取矿机IP，登录至矿机后台。\n\n2、进入矿机配置页面，参照示例设置挖矿地址、矿工名，密码可为空，并保存配置。矿机名（worker）命名规则：子账户+英文句号+您想为矿机设置的编号。如果您的子账户为，那矿机名可以设置为 ${_previousSelectedAccount?.name ?? ''}.001\n\n3、保存配置等待生效，矿机将在5分钟内自动添加至矿池网站页面。''',
             style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
           ),
         ],
@@ -328,6 +328,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
           ...revenues.map((entry) => Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
                   child: _buildDecimalText(entry.key),
