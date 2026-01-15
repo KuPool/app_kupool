@@ -24,6 +24,7 @@ dependencies:
   flutter_smart_dialog: ^4.9.7+2
   provider: ^6.1.5+1
   intl: ^0.20.2
+  easy_refresh: ^3.4.0
 
 
 dev_dependencies:

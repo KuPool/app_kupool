@@ -3,6 +3,8 @@ import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
 import 'package:Kupool/mining_machine/provider/mining_machine_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/widgets/app_refresh.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
@@ -19,6 +21,22 @@ class MiningMachinePage extends StatefulWidget {
 
 class _MiningMachinePageState extends State<MiningMachinePage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
+  late EasyRefreshController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = EasyRefreshController(
+      controlFinishRefresh: true,
+      controlFinishLoad: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -82,8 +100,8 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Expanded(child: _buildStatusCard(stats?.total?.toString() ?? '0', '全部', 'live', notifier)),
-            Expanded(child: _buildStatusCard(stats?.live?.toString() ?? '0', '活跃', 'active', notifier)),
+            Expanded(child: _buildStatusCard(stats?.total?.toString() ?? '0', '全部', 'all', notifier)),
+            Expanded(child: _buildStatusCard(stats?.live?.toString() ?? '0', '活跃', 'live', notifier)),
             Expanded(child: _buildStatusCard(stats?.inactive?.toString() ?? '0', '不活跃', 'inactive', notifier)),
             Expanded(child: _buildStatusCard(stats?.dead?.toString() ?? '0', '失效', 'dead', notifier)),
           ],
@@ -139,18 +157,47 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
   }
 
   Widget _buildMinersTable(MiningMachineNotifier notifier) {
+    final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
+
     return Container(
       color: Colors.white,
       margin: const EdgeInsets.only(left: 8, right: 8),
       child: Column(
         children: [
           _buildTableHeader(notifier),
-          if (notifier.isLoading)
-            const Expanded(child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)))
-          else
-            Expanded(
+          Expanded(
+            child: EasyRefresh(
+              controller: _controller,
+              header: const AppRefreshHeader(),
+              footer: const AppRefreshFooter(),
+              onRefresh: () async {
+                if (selectedAccount != null) {
+                  await notifier.fetchMiners(
+                    subaccountId: selectedAccount.id!,
+                    coin: selectedAccount.defaultCoin!,
+                    isPullToRefresh: true,
+                  );
+                  _controller.finishRefresh();
+                  _controller.resetFooter();
+                } else {
+                  _controller.finishRefresh(IndicatorResult.fail);
+                }
+              },
+              onLoad: () async {
+                if (selectedAccount != null && notifier.hasMore) {
+                  await notifier.fetchMiners(
+                    subaccountId: selectedAccount.id!,
+                    coin: selectedAccount.defaultCoin!,
+                    isLoadMore: true,
+                  );
+                  _controller.finishLoad(notifier.hasMore ? IndicatorResult.success : IndicatorResult.noMore);
+                } else {
+                  _controller.finishLoad(IndicatorResult.noMore);
+                }
+              },
               child: _buildMinerListView(notifier),
             ),
+          ),
         ],
       ),
     );
@@ -158,8 +205,13 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
 
   Widget _buildMinerListView(MiningMachineNotifier notifier) {
     final miners = notifier.miners;
-    if (miners == null || miners.isEmpty) {
-      return const Center(child: Text('暂无矿机数据'));
+    if (notifier.isLoading && miners.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+    }
+    if (miners.isEmpty) {
+      _controller.finishRefresh();
+      _controller.finishLoad();
+      return const Center(child: Text('没有矿机数据'));
     }
 
     return ListView.builder(
@@ -168,7 +220,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
       itemBuilder: (context, index) {
         final miner = miners[index];
         final rejectionRateValue = double.tryParse(miner.rejectRate ?? '0') ?? 0.0;
-        final isHighRejection = rejectionRateValue > 1; // Example threshold
+        final isHighRejection = rejectionRateValue > 1;
 
         return Column(
           children: [

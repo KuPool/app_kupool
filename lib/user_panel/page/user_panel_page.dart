@@ -272,9 +272,9 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildDataColumn(data.realtimeHashrate ?? '0', "${data.realtimeHashrateUnit ?? ''}H/s", '近 15 分钟',),
-        _buildDataColumn(data.hour24Hashrate ?? '0', "${data.hour24HashrateUnit ?? ''}H/s", '近 24 小时'),
-        _buildDataColumn(data.yesterdayAcceptHashrate ?? '0', "${data.yesterdayAcceptHashrateUnit ?? ''}H/s", '昨日结算算力'),
+        Expanded(child: _buildDataColumn(data.realtimeHashrate ?? "0", "${data.realtimeHashrateUnit ?? ''}H/s", '近 15 分钟',)),
+        Expanded(child: _buildDataColumn(data.hour24Hashrate ?? '0', "${data.hour24HashrateUnit ?? ''}H/s", '近 24 小时')),
+        Expanded(child: _buildDataColumn(data.yesterdayAcceptHashrate ?? '0', "${data.yesterdayAcceptHashrateUnit ?? ''}H/s", '昨日结算算力')),
       ],
     );
   }
@@ -284,21 +284,19 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildDataColumn(totalMiners.toString(), '', '全部'),
-        _buildDataColumn((data.activeMiners ?? 0).toString(), '', '活跃', valueColor: const Color(0xFF04AC36)),
-        _buildDataColumn((data.inactiveMiners ?? 0).toString(), '', '不活跃', valueColor: const Color(0xFFFF383C)),
-        _buildDataColumn((data.deadMiners ?? 0).toString(), '', '失效', valueColor: Colors.grey),
+        Expanded(child: _buildDataColumn(totalMiners.toString(), '', '全部')),
+        Expanded(child: _buildDataColumn((data.activeMiners ?? 0).toString(), '', '活跃', valueColor: const Color(0xFF04AC36))),
+        Expanded(child: _buildDataColumn((data.inactiveMiners ?? 0).toString(), '', '不活跃', valueColor: const Color(0xFFFF383C))),
+        Expanded(child: _buildDataColumn((data.deadMiners ?? 0).toString(), '', '失效', valueColor: Colors.grey)),
       ],
     );
   }
 
   Widget _buildRevenueContent(SubAccountPanelEntity data) {
     return Row(
-      // mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(
           child: _buildRevenueColumn('昨日收益', [
-            // 使用 MapEntry 确保顺序和内容正确
             MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
             MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
           ]),
@@ -306,7 +304,6 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
         SizedBox(width: 12,),
         Expanded(
           child: _buildRevenueColumn('今日已挖 (预估)', [
-            // 使用 MapEntry 确保顺序和内容正确
             MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
             MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
           ]),
@@ -315,18 +312,19 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     );
   }
 
-  Widget _buildDataColumn(String value, String unit, String label, {Color? valueColor,Color unitColor = ColorUtils.color888}) {
+  Widget _buildDataColumn(String value, String unit, String label, {Color? valueColor, Color unitColor = ColorUtils.color888}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor)),
-            SizedBox(width: 4),
-            Text(unit, style: TextStyle(fontSize: 12, color: unitColor)),
-          ],
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? ColorUtils.colorT1),
+            children: <TextSpan>[
+              TextSpan(text: value),
+              TextSpan(text: ' $unit', style: TextStyle(fontSize: 12, color: unitColor)),
+            ],
+          ),
         ),
         SizedBox(height: 4.h),
         Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2)),
