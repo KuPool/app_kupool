@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
-class EcologicalEarningsPage extends StatelessWidget {
+class EcologicalEarningsPage extends StatefulWidget {
   const EcologicalEarningsPage({super.key});
+
+  @override
+  State<EcologicalEarningsPage> createState() => _EcologicalEarningsPageState();
+}
+
+class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:Kupool/drawer/main_drawer.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/page/earnings_page.dart';
+import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/home/page/home_page.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/mining_machine/page/mining_machine_page.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider(create: (_) => UserPanelNotifier()),
             ChangeNotifierProvider(create: (_) => ChartNotifier()),
             ChangeNotifierProvider(create: (_) => MiningMachineNotifier()),
+            ChangeNotifierProvider(create: (_) => StandardEarningsNotifier()),
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],
@@ -74,19 +76,16 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
   int _currentIndex = 0;
   SubAccountCoinType _selectedCoinType = SubAccountCoinType.dogeLtc;
   late final TabController _earningsTabController;
-  late final List<Widget> _pages;
+  
+  // 1. Use a Map to cache pages for lazy loading.
+  final Map<int, Widget> _pageCache = {};
 
   @override
   void initState() {
     super.initState();
     _earningsTabController = TabController(length: 2, vsync: this);
-    _pages = [
-      const HomePage(),
-      const UserPanelPage(),
-      const MiningMachinePage(),
-      EarningsPage(tabController: _earningsTabController),
-      const MyPage(),
-    ];
+    // 2. Initially, only create the first page.
+    _pageCache[0] = const HomePage();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authNotifierProvider).value;
@@ -109,6 +108,30 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
     '收益',
     '我的',
   ];
+
+  // Helper to get or create a page.
+  Widget _getPage(int index) {
+    if (!_pageCache.containsKey(index)) {
+      // Create page on first access.
+      switch (index) {
+        case 1:
+          _pageCache[index] = const UserPanelPage();
+          break;
+        case 2:
+          _pageCache[index] = const MiningMachinePage();
+          break;
+        case 3:
+          _pageCache[index] = EarningsPage(tabController: _earningsTabController);
+          break;
+        case 4:
+          _pageCache[index] = const MyPage();
+          break;
+        default:
+          _pageCache[index] = const HomePage();
+      }
+    }
+    return _pageCache[index]!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,9 +196,14 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
           context.read<DogeLtcListNotifier>().fetchAccounts(coinType:_selectedCoinType);
         },
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+      // 3. Use a Stack with Offstage for lazy loading and state preservation.
+      body: Stack(
+        children: _pageCache.keys.map((index) {
+          return Offstage(
+            offstage: _currentIndex != index,
+            child: _pageCache[index],
+          );
+        }).toList(),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -190,11 +218,14 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
             } else {
               setState(() {
                 _currentIndex = index;
+                // 4. Trigger page creation and initial data fetch on first tap.
+                _getPage(index);
               });
             }
           } else {
             setState(() {
               _currentIndex = index;
+              _getPage(index);
             });
           }
         },

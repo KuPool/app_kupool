@@ -30,6 +30,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
+    // Initial fetch is now handled by MainTabBar's onTap
   }
 
   @override
@@ -43,6 +44,8 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     super.didChangeDependencies();
     final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
+    // This ensures that when the user switches accounts in the drawer,
+    // this page, if already initialized, will fetch new data.
     if (selectedAccount != null && selectedAccount != _previousSelectedAccount) {
       _previousSelectedAccount = selectedAccount;
       WidgetsBinding.instance.addPostFrameCallback((_) {

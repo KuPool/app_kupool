@@ -17,17 +17,26 @@ class MiningMachineNotifier with ChangeNotifier {
   // Pagination state
   int _page = 1;
   bool _hasMore = true;
-  final int _pageSize = 20; // Define page size
+  final int _pageSize = 20;
+
+  // Lazy loading flag
+  bool _isInitialized = false;
 
   // State for sorting and filtering
   String _sortField = 'miner_name'; 
   bool _sortAscending = true; 
-  String _activeType = 'live'; // Default to 'live' (active)
+  String _activeType = 'live'; 
 
   String get sortField => _sortField;
   bool get sortAscending => _sortAscending;
   String get activeType => _activeType;
   bool get hasMore => _hasMore;
+
+  Future<void> initialFetch({required int subaccountId, required String coin}) async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+    await fetchMiners(subaccountId: subaccountId, coin: coin);
+  }
 
   Future<void> fetchMiners({
     required int subaccountId,
@@ -62,7 +71,6 @@ class MiningMachineNotifier with ChangeNotifier {
       'miner_name': '',
     };
 
-    // Only add active_type if it's not 'all'
     if (_activeType != 'all') {
       params['active_type'] = _activeType;
     }
