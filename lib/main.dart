@@ -13,6 +13,7 @@ import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -69,13 +70,24 @@ class MainTabBar extends ConsumerStatefulWidget {
   ConsumerState<MainTabBar> createState() => _MainTabBarState();
 }
 
-class _MainTabBarState extends ConsumerState<MainTabBar> {
+class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStateMixin {
   int _currentIndex = 0;
   SubAccountCoinType _selectedCoinType = SubAccountCoinType.dogeLtc;
+  late final TabController _earningsTabController;
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _earningsTabController = TabController(length: 2, vsync: this);
+    _pages = [
+      const HomePage(),
+      const UserPanelPage(),
+      const MiningMachinePage(),
+      EarningsPage(tabController: _earningsTabController),
+      const MyPage(),
+    ];
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authNotifierProvider).value;
       if (user != null) {
@@ -84,13 +96,11 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
     });
   }
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const UserPanelPage(),
-    const MiningMachinePage(),
-    const EarningsPage(),
-    const MyPage(),
-  ];
+  @override
+  void dispose() {
+    _earningsTabController.dispose();
+    super.dispose();
+  }
 
   final List<String> _titles = [
     '',
@@ -153,7 +163,8 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
                   );
                 }
               ),
-              leadingWidth: 150.w,
+              leadingWidth: 120.w,
+              title: _currentIndex == 3 ? _buildEarningsTabBar() : const SizedBox.shrink(),
             ),
       drawer: MainDrawer(
         selectedCoinType: _selectedCoinType,
@@ -223,4 +234,12 @@ class _MainTabBarState extends ConsumerState<MainTabBar> {
       ),
     );
   }
+
+  Widget _buildEarningsTabBar() {
+    return CustomTabBar(
+      controller: _earningsTabController,
+      tabs: const ['收益', '生态收益'],
+    );
+  }
+
 }
