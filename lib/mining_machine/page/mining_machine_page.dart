@@ -103,8 +103,8 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Expanded(child: _buildStatusCard(stats?.total?.toString() ?? '0', '全部', 'all', notifier)),
-            Expanded(child: _buildStatusCard(stats?.live?.toString() ?? '0', '活跃', 'live', notifier)),
+            Expanded(child: _buildStatusCard(stats?.total?.toString() ?? '0', '全部', 'live', notifier)),
+            Expanded(child: _buildStatusCard(stats?.active?.toString() ?? '0', '活跃', 'active', notifier)),
             Expanded(child: _buildStatusCard(stats?.inactive?.toString() ?? '0', '不活跃', 'inactive', notifier)),
             Expanded(child: _buildStatusCard(stats?.dead?.toString() ?? '0', '失效', 'dead', notifier)),
           ],

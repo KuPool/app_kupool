@@ -68,12 +68,9 @@ class MiningMachineNotifier with ChangeNotifier {
       'order_type': _sortAscending ? 'asc' : 'desc',
       'page': _page,
       'page_size': _pageSize,
+      "active_type": _activeType,
       'miner_name': '',
     };
-
-    if (_activeType != 'all') {
-      params['active_type'] = _activeType;
-    }
 
     try {
       final response = await ApiService().get(
