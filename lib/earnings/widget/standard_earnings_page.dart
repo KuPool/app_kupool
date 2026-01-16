@@ -156,11 +156,24 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final record = currentRecords[index];
-                      return _buildRecordRow(
-                        date: (record.datetime ?? '').split(' ').first,
-                        status: record.status?.toString() ?? '',
-                        amount: record.amount ?? '0',
-                        currency: (record.coin ?? '').toUpperCase(),
+                      final isLast = index == currentRecords.length - 1;
+                      return Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          children: [
+                            _buildRecordRow(
+                              date: (record.datetime ?? '').split(' ').first,
+                              status: record.status,
+                              amount: record.amount ?? '0',
+                              currency: (record.coin ?? '').toUpperCase(),
+                              direction: record.direction ?? "",
+                            ),
+                            if (!isLast)
+                              Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                          ],
+                        ),
                       );
                     },
                     childCount: currentRecords.length,
@@ -171,6 +184,67 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         },
       ),
     );
+  }
+
+  Widget statusConvertForWidget(int? code, String direction) {
+
+    if(code == null){
+      return SizedBox.shrink();
+    }
+    String statusStr = "";
+    switch (code) {
+      case 0:
+        statusStr = '未入账';
+       return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+         color: const Color(0xFFF53F3F),
+         fontSize: 12,
+         fontWeight: FontWeight.w400,
+       ),);
+
+      case 10:
+        statusStr = '已审核';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case 20:
+        statusStr = '准备发款';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+
+      case 21:
+        statusStr = '发款中';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case 30:
+        statusStr = direction == 'i' ? '已入账' : '已支付';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: direction == 'i' ? ColorUtils.mainColor : const Color(0xFF00C490),
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case -1:
+        statusStr = '已取消';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: const Color(0xFFF53F3F),
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      default:
+        return SizedBox.shrink();
+    }
   }
 
   Widget _buildRecordsSectionHeader() {
@@ -336,15 +410,17 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     );
   }
 
-  Widget _buildRecordRow({required String date, required String status, required String amount, required String currency}) {
+  Widget _buildRecordRow({required String date,required int? status,required String direction, required String amount, required String currency,}) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      // margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
           Expanded(flex: 2, child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1))),
-          Expanded(flex: 1, child: Text(status, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, color: _getStatusColor(status)))),
+          Expanded(flex: 2,
+              child: statusConvertForWidget(status, direction)
+          ),
           Expanded(
             flex: 5,
             child: Row(
