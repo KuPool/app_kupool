@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 class CustomTabBar extends StatelessWidget {
   final TabController controller;
   final List<String> tabs;
+  final Function(int) onTabSelected; // New callback
 
   const CustomTabBar({
     super.key,
     required this.controller,
     required this.tabs,
+    required this.onTabSelected, // New required parameter
   });
 
   @override
@@ -52,7 +54,10 @@ class CustomTabBar extends StatelessWidget {
     return InkWell(
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      onTap: () => controller.animateTo(index),
+      onTap: () {
+        controller.animateTo(index);
+        onTabSelected(index); // Call the callback on tap
+      },
       child: Padding(
         padding: const EdgeInsets.only(right: 24, bottom: 9, top: 8), // Spacing between tabs
         child: Text(

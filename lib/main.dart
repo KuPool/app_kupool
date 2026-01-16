@@ -14,6 +14,7 @@ import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/logger.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -269,7 +270,9 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
   Widget _buildEarningsTabBar() {
     return CustomTabBar(
       controller: _earningsTabController,
-      tabs: const ['收益', '生态收益'],
+      tabs: const ['收益', '生态收益'], onTabSelected: (int p1) {
+      LogPrint.i("收益-生态收益':" + "$p1");
+    },
     );
   }
 

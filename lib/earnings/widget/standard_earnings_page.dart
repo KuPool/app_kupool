@@ -4,10 +4,14 @@ import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/logger.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../utils/image_utils.dart';
+import '../../widgets/custom_tab_bar.dart';
 
 class StandardEarningsPage extends StatefulWidget {
   const StandardEarningsPage({super.key});
@@ -20,6 +24,10 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   late TabController _recordsTabController;
   late EasyRefreshController _refreshController;
   SubAccountMiniInfoList? _previousSelectedAccount;
+
+  final leftPadding = 10.0;
+  final rightPadding = 10.0;
+
 
   @override
   void initState() {
@@ -58,6 +66,9 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1);
+    }
+    if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
+      notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
   }
 
@@ -104,79 +115,85 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
     // Show loading indicator only when fetching for the first time.
     if (notifier.isSummaryLoading && notifier.dogeInfo == null && notifier.ltcInfo == null) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
     }
 
-    return EasyRefresh.builder(
-      controller: _refreshController,
-      header: const AppRefreshHeader(),
-      footer: const AppRefreshFooter(),
-      onRefresh: _onRefresh,
-      onLoad: _onLoad,
-      childBuilder: (context, physics) {
-        return CustomScrollView(
-          physics: physics,
-          slivers: <Widget>[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: _buildCombinedEarningsCard(notifier),
-              ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverHeaderDelegate(
-                child: _buildRecordsSectionHeader(),
-                height: 120.0, 
-              ),
-            ),
-            if (notifier.isRecordsLoading && currentRecords.isEmpty)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (currentRecords.isEmpty)
-              const SliverFillRemaining(
-                child: Center(child: Text('暂无记录')),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final record = currentRecords[index];
-                    return _buildRecordRow(
-                      date: record.datetime ?? '',
-                      status: record.status?.toString() ?? '',
-                      amount: record.amount ?? '0',
-                      currency: record.coin ?? '',
-                    );
-                  },
-                  childCount: currentRecords.length,
+    return Scaffold(
+      backgroundColor: ColorUtils.widgetBgColor,
+      body: EasyRefresh.builder(
+        controller: _refreshController,
+        header: const AppRefreshHeader(),
+        footer: const AppRefreshFooter(),
+        onRefresh: _onRefresh,
+        onLoad: _onLoad,
+        childBuilder: (context, physics) {
+          return CustomScrollView(
+            physics: physics,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:  EdgeInsets.fromLTRB(leftPadding, 10, rightPadding, 0),
+                  child: _buildCombinedEarningsCard(notifier),
                 ),
               ),
-          ],
-        );
-      },
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverHeaderDelegate(
+                  child: _buildRecordsSectionHeader(),
+                  height: 116.0,
+                ),
+              ),
+              if (notifier.isRecordsLoading && currentRecords.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
+                )
+              else if (currentRecords.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: Text('暂无记录')),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final record = currentRecords[index];
+                      return _buildRecordRow(
+                        date: (record.datetime ?? '').split(' ').first,
+                        status: record.status?.toString() ?? '',
+                        amount: record.amount ?? '0',
+                        currency: (record.coin ?? '').toUpperCase(),
+                      );
+                    },
+                    childCount: currentRecords.length,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 
   Widget _buildRecordsSectionHeader() {
      return Container(
-      margin: const EdgeInsets.all(10.0),
+      margin:  EdgeInsets.only(left: leftPadding,right: rightPadding,top: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 20, top: 8, bottom: 8),
+            padding: const EdgeInsets.only(left: 16, top: 8, bottom: 12),
             child: AnimatedBuilder(
               animation: _recordsTabController.animation!,
-              builder: (context, _) => _buildCustomTabBar(),
+              builder: (context, _) => CustomTabBar(controller: _recordsTabController,tabs: const ["收益记录","支付记录"],
+                onTabSelected: (int p1) {
+                  LogPrint.i("收益记录-支付记录" + "$p1");
+                  context.read<StandardEarningsNotifier>().setSelectIndex(p1);
+                },),
             ),
           ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
            _buildRecordsHeader(),
         ],
       ),
@@ -188,32 +205,32 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 1, blurRadius: 10)],
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(left: 8,right: 8,top: 10,bottom: 6),
             child: _buildTitledContent(
               title: '昨日收益',
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildEarningRow(notifier.dogeInfo?.yesterdayEarnings ?? '0.00', 'DOGE', amountSize: 20, currencySize: 16),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 2),
                   _buildEarningRow(notifier.ltcInfo?.yesterdayEarnings ?? '0.00', 'LTC', amountSize: 20, currencySize: 16),
                 ],
               ),
             ),
           ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(left: 6,right: 6,bottom: 6,top: 6),
             child: Row(
               children: [
                 Expanded(
                   child: _buildInnerCard(
                     title: '累计已支付',
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildEarningRow(notifier.dogeInfo?.totalPaid ?? '0.00', 'DOGE'),
                         const SizedBox(height: 8),
@@ -222,16 +239,17 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 4),
                 Expanded(
                   child: _buildInnerCard(
                     title: '账户余额',
                     hasInfoIcon: false,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                         _buildEarningRow(notifier.dogeInfo?.balance ?? '0.00', 'DOGE'),
+                         _buildEarningRow(notifier.dogeInfo?.balance ?? '0.00', 'DOGE',),
                          const SizedBox(height: 8),
-                         _buildEarningRow(notifier.ltcInfo?.balance ?? '0.00', 'LTC'),
+                         _buildEarningRow(notifier.ltcInfo?.balance ?? '0.00', 'LTC',),
                       ],
                     ),
                   ),
@@ -246,7 +264,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   
   Widget _buildInnerCard({required String title, required Widget child, bool hasInfoIcon = true}) {
     return Container(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.only(left: 6,right: 6,top: 8,bottom: 8),
         decoration: BoxDecoration(
           color: const Color(0xFFF9F9F9),
           borderRadius: BorderRadius.circular(8),
@@ -264,7 +282,11 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
             if (hasInfoIcon)
               const Padding(
                 padding: EdgeInsets.only(left: 4),
-                child: Icon(Icons.info_outline, size: 16, color: ColorUtils.colorT2),
+                child: Image(
+                  image: AssetImage(ImageUtils.infoIcon),
+                  width: 14,
+                  height: 14,
+                ),
               ),
           ],
         ),
@@ -278,101 +300,37 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(amount, style: TextStyle(fontSize: amountSize ?? 15, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
-        const SizedBox(width: 8),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(amount, style: TextStyle(fontSize: amountSize ?? 15, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
+          ),
+        ),
+        const SizedBox(width: 4),
         Text(currency, style: TextStyle(fontSize: currencySize ?? 12, color: ColorUtils.color888)),
       ],
     );
   }
 
-  double _getTextWidth(String text, TextStyle style) {
-    final TextPainter textPainter = TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: TextDirection.ltr)..layout();
-    return textPainter.size.width;
-  }
-
-  Widget _buildCustomTabBar() {
-    const double indicatorWidth = 16;
-    const double spacing = 24;
-
-    final tabTexts = ['收益记录', '支付记录'];
-    final tabWidths = tabTexts.map((text) => _getTextWidth(text, const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))).toList();
-
-    final startX = (tabWidths[0] - indicatorWidth) / 2;
-    final endX = tabWidths[0] + spacing + (tabWidths[1] - indicatorWidth) / 2;
-
-    final animation = _recordsTabController.animation!;
-    final currentX = ui.lerpDouble(startX, endX, animation.value)!;
-
-    return Stack(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildTabItem(text: tabTexts[0], index: 0),
-            const SizedBox(width: spacing),
-            _buildTabItem(text: tabTexts[1], index: 1),
-          ],
-        ),
-        Positioned(
-          bottom: 0,
-          left: currentX,
-          child: Container(
-            height: 3,
-            width: indicatorWidth,
-            decoration: BoxDecoration(
-              color: ColorUtils.mainColor,
-              borderRadius: BorderRadius.circular(1.5),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabItem({required String text, required int index}) {
-    final animation = _recordsTabController.animation!;
-    final double selectionFactor = (1.0 - (animation.value - index).abs()).clamp(0.0, 1.0);
-    final Color textColor = Color.lerp(ColorUtils.colorT2, ColorUtils.mainColor, selectionFactor)!;
-    final FontWeight fontWeight = FontWeight.lerp(FontWeight.normal, FontWeight.w600, selectionFactor)!;
-
-    return InkWell(
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      onTap: () => _recordsTabController.animateTo(index),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Column(
-          children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 14,
-                color: textColor,
-                fontWeight: fontWeight,
-              ),
-            ),
-            const SizedBox(height: 9), // Space for indicator
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecordsHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.white, // Match the card color
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: ColorUtils.colorHeadBg,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Text('挖矿日期', style: TextStyle(fontSize: 12, color: ColorUtils.colorT2)),
+              Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
               const SizedBox(width: 4),
-              const Icon(Icons.info_outline, size: 14, color: ColorUtils.colorT2),
+              Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
             ],
           ),
-          Text('数额', style: TextStyle(fontSize: 12, color: ColorUtils.colorT2)),
+          Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
         ],
       ),
     );
@@ -382,12 +340,13 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
           Expanded(flex: 2, child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1))),
           Expanded(flex: 1, child: Text(status, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, color: _getStatusColor(status)))),
           Expanded(
-            flex: 4,
+            flex: 5,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -435,7 +394,7 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor, // Match scaffold background
+      color: ColorUtils.widgetBgColor, // Match scaffold background
       child: child,
     );
   }

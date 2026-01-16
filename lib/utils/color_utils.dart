@@ -19,6 +19,7 @@ class ColorUtils {
   static const Color colorTableHear = Color(0xFF666666);
   static const Color colorBg1 = Color(0xFFFFFFFF);
   static const Color colorEXBg1 = Color(0xFFF3F3F3);
+  static const Color colorHeadBg = Color(0xFFF1F1F1);
   static const Color colorEXBg2 = Color(0xFFF6F6F6);
   static const Color colorNoteT1 = Color(0xFF888888);
   static const Color colorT2 = Color(0xFF444444);

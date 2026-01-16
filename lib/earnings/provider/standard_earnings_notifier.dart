@@ -54,6 +54,15 @@ class StandardEarningsNotifier with ChangeNotifier {
     await refreshAll(subaccountId, 0);
   }
 
+  // tab selectIndex
+  int selectIndex = 0;
+  setSelectIndex(int index){
+    if(selectIndex != index){
+      selectIndex = index;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchSummary(int subaccountId) async {
     _isSummaryLoading = true;
     notifyListeners();

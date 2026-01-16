@@ -50,7 +50,12 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
     final chartData = chartNotifier.chartData;
 
     if (chartData == null || chartData.ticks == null || chartData.ticks!.isEmpty) {
-      return const Center(child: Text('暂无图表数据'));
+      return SizedBox(
+        height: 140,
+        child: Center(
+          child: const Text('暂无图表数据'),
+        ),
+      );
     }
 
     return Stack(

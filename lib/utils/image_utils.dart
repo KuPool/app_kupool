@@ -28,6 +28,9 @@ class ImageUtils {
 
   // earn
   static const String earnBottomBar = '${_imageBasePath}earn/earn_bottom_bar.png';
+  static const String infoIcon = '${_imageBasePath}earn/info_icon.png';
+
+  // machine
   static const String machineBottomBar = '${_imageBasePath}machine/machine_bottom_bar.png';
   static const String arrowDown = '${_imageBasePath}machine/arrow_down.png';
 

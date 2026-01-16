@@ -209,7 +209,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
   Widget _buildMinerListView(MiningMachineNotifier notifier) {
     final miners = notifier.miners;
     if (notifier.isLoading && miners.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
     }
     if (miners.isEmpty) {
       _controller.finishRefresh();
