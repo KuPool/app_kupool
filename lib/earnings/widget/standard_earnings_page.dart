@@ -64,7 +64,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
   void _handleTabSelection() {
     if (_recordsTabController.indexIsChanging) return;
-    setState(() {}); // Rebuild to update which list is shown
     final notifier = context.read<StandardEarningsNotifier>();
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
