@@ -172,7 +172,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
             child: EasyRefresh(
               controller: _controller,
               header: const AppRefreshHeader(),
-              footer: const AppRefreshFooter(),
+              footer: AppRefreshFooter(),
               onRefresh: () async {
                 if (selectedAccount != null) {
                   await notifier.fetchMiners(

@@ -22,6 +22,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:provider/provider.dart';
 
+import 'earnings/provider/ecological_earnings_notifier.dart';
 import 'net/navigation_service.dart';
 
 void main() {
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider(create: (_) => ChartNotifier()),
             ChangeNotifierProvider(create: (_) => MiningMachineNotifier()),
             ChangeNotifierProvider(create: (_) => StandardEarningsNotifier()),
+            ChangeNotifierProvider(create: (_) => EcologicalEarningsNotifier()),
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],

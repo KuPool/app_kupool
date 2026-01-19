@@ -13,20 +13,76 @@ class AppRefreshHeader extends ClassicHeader {
     super.processedText = '刷新成功',
     super.failedText = '刷新失败',
     super.messageText = '上次更新 %T',
+    super.textStyle = const TextStyle(fontSize: 14),
   });
 }
 
-/// A unified classic footer for the application.
-class AppRefreshFooter extends ClassicFooter {
-  const AppRefreshFooter({
-    super.key,
-    super.dragText = '上拉加载',
-    super.armedText = '释放加载',
-    super.readyText = '加载中...',
-    super.processingText = '加载中...',
-    super.processedText = '加载成功',
-    super.failedText = '加载失败',
-    super.noMoreText = '没有更多数据了',
-    super.showMessage = false,
-  });
+/// A unified footer for the application that shows a centered text for "noMore".
+/// A unified custom footer for the application.
+class AppRefreshFooter extends BuilderFooter {
+  AppRefreshFooter({
+    super.triggerOffset = 52.0,
+    super.infiniteOffset = 60,
+    super.clamping = false,
+
+    super.position = IndicatorPosition.behind,
+    super.processedDuration = Duration.zero, // 加载成功后立即消失
+  }) : super(
+    builder: (context, state) {
+      Widget widget;
+      const textStyle = TextStyle(fontSize: 14, color: Colors.black87);
+      final iconColor = Colors.black87;
+
+      // 根据状态返回不同的 Widget
+      switch (state.mode) {
+        case IndicatorMode.drag:
+          widget = const Text('上拉加载', style: textStyle);
+          break;
+        case IndicatorMode.armed:
+          widget = const Text('释放加载', style: textStyle);
+          break;
+        case IndicatorMode.ready:
+        case IndicatorMode.processing:
+          widget = Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // SizedBox(
+              //   width: 20,
+              //   height: 20,
+              //   child: CircularProgressIndicator(strokeWidth: 2.0, color: iconColor),
+              // ),
+              // const SizedBox(width: 10),
+              const Text('加载中...', style: textStyle),
+            ],
+          );
+          break;
+        case IndicatorMode.processed:
+          if (state.result == IndicatorResult.fail) {
+            widget = const Text('加载失败', style: textStyle);
+          } else if (state.result == IndicatorResult.noMore) {
+            // 如果加载成功但没有更多数据了，也显示 "没有更多数据了"
+            widget = const Text('没有更多数据了', style: textStyle);
+          } else {
+            // 加载成功，快速消失
+            widget = const SizedBox();
+          }
+          break;
+        // case IndicatorMode.done:
+        //   widget = const Text('没有更多数据了', style: textStyle);
+        //   break;
+        default: // idle
+          widget = const SizedBox();
+          break;
+      }
+
+      // 返回一个固定高度、居中的容器来包裹状态 Widget
+      return SizedBox(
+        height: state.offset,
+        child: Align(
+          alignment: Alignment.center,
+          child: widget,
+        ),
+      );
+    },
+  );
 }

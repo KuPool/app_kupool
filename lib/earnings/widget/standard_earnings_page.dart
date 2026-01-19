@@ -167,7 +167,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         child: EasyRefresh.builder(
           controller: _refreshController,
           header: const AppRefreshHeader(),
-          footer: const AppRefreshFooter(),
+          footer: AppRefreshFooter(),
           onRefresh: _onRefresh,
           onLoad: _onLoad,
           childBuilder: (context, physics) {
