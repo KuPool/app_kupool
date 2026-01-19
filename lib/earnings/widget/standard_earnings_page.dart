@@ -4,11 +4,12 @@ import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
-import 'package:Kupool/utils/logger.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 import '../../utils/image_utils.dart';
 import '../../widgets/custom_tab_bar.dart';
@@ -24,6 +25,11 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   late TabController _recordsTabController;
   late EasyRefreshController _refreshController;
   SubAccountMiniInfoList? _previousSelectedAccount;
+  OverlayEntry? _overlayEntry;
+
+  final GlobalKey _yesterdayEarningsKey = GlobalKey();
+  final GlobalKey _cumulativePaymentKey = GlobalKey();
+  final GlobalKey _wkDatePaymentKey = GlobalKey();
 
   final leftPadding = 10.0;
   final rightPadding = 10.0;
@@ -46,8 +52,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     super.didChangeDependencies();
     final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
-    // This ensures that when the user switches accounts in the drawer,
-    // this page, if already initialized, will fetch new data.
     if (selectedAccount != null && selectedAccount != _previousSelectedAccount) {
       _previousSelectedAccount = selectedAccount;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,24 +64,64 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
   void _handleTabSelection() {
     if (_recordsTabController.indexIsChanging) return;
+    setState(() {}); // Rebuild to update which list is shown
     final notifier = context.read<StandardEarningsNotifier>();
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
 
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1);
-    }
-    if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
-      notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
+    } else if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
+       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
   }
 
   @override
   void dispose() {
+    _removeTooltip();
     _recordsTabController.removeListener(_handleTabSelection);
     _recordsTabController.dispose();
     _refreshController.dispose();
     super.dispose();
+  }
+
+  void _showTooltip(BuildContext context, GlobalKey key, String message) {
+    _removeTooltip();
+    final overlay = Overlay.of(context);
+    final renderBox = key.currentContext!.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    const tooltipWidth = 220.0;
+    const screenPadding = 10.0;
+
+    // double left = offset.dx + size.width / 2 - tooltipWidth / 2;
+    // left = left.clamp(screenPadding, screenWidth - tooltipWidth - screenPadding);
+    double left = offset.dx - 14;
+
+    double arrowX = offset.dx + size.width / 2 - left;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: offset.dy + size.height + 5, // Position below the icon
+        left: left,
+        child: GestureDetector(
+          onTap: _removeTooltip, // Allow tapping the tooltip to dismiss
+          child: Material(
+            color: Colors.transparent,
+            child: _TooltipWidget(message: message, arrowX: arrowX+2, width: tooltipWidth),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(_overlayEntry!);
+  }
+
+  void _removeTooltip() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   Future<void> _onRefresh() async {
@@ -113,75 +157,77 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     final bool isEarningTab = _recordsTabController.index == 0;
     final List<EarningsRecordList> currentRecords = isEarningTab ? notifier.earningRecords : notifier.paymentRecords;
 
-    // Show loading indicator only when fetching for the first time.
     if (notifier.isSummaryLoading && notifier.dogeInfo == null && notifier.ltcInfo == null) {
         return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
     }
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
-      body: EasyRefresh.builder(
-        controller: _refreshController,
-        header: const AppRefreshHeader(),
-        footer: const AppRefreshFooter(),
-        onRefresh: _onRefresh,
-        onLoad: _onLoad,
-        childBuilder: (context, physics) {
-          return CustomScrollView(
-            physics: physics,
-            slivers: <Widget>[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding:  EdgeInsets.fromLTRB(leftPadding, 10, rightPadding, 0),
-                  child: _buildCombinedEarningsCard(notifier),
-                ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverHeaderDelegate(
-                  child: _buildRecordsSectionHeader(),
-                  height: 116.0,
-                ),
-              ),
-              if (notifier.isRecordsLoading && currentRecords.isEmpty)
-                const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
-                )
-              else if (currentRecords.isEmpty)
-                const SliverFillRemaining(
-                  child: Center(child: Text('暂无记录')),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final record = currentRecords[index];
-                      final isLast = index == currentRecords.length - 1;
-                      return Container(
-                        color: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
-                          children: [
-                            _buildRecordRow(
-                              date: (record.datetime ?? '').split(' ').first,
-                              status: record.status,
-                              amount: record.amount ?? '0',
-                              currency: (record.coin ?? '').toUpperCase(),
-                              direction: record.direction ?? "",
-                            ),
-                            if (!isLast)
-                              Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
-                          ],
-                        ),
-                      );
-                    },
-                    childCount: currentRecords.length,
+      body: GestureDetector(
+        onTap: _removeTooltip, // Dismiss tooltip when tapping outside
+        child: EasyRefresh.builder(
+          controller: _refreshController,
+          header: const AppRefreshHeader(),
+          footer: const AppRefreshFooter(),
+          onRefresh: _onRefresh,
+          onLoad: _onLoad,
+          childBuilder: (context, physics) {
+            return CustomScrollView(
+              physics: physics,
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding:  EdgeInsets.fromLTRB(leftPadding, 10, rightPadding, 0),
+                    child: _buildCombinedEarningsCard(notifier),
                   ),
                 ),
-            ],
-          );
-        },
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverHeaderDelegate(
+                    child: _buildRecordsSectionHeader(),
+                    height: 116.0,
+                  ),
+                ),
+                if (notifier.isRecordsLoading && currentRecords.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
+                  )
+                else if (currentRecords.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('暂无记录')),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final record = currentRecords[index];
+                        final isLast = index == currentRecords.length - 1;
+                        return Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Column(
+                            children: [
+                              _buildRecordRow(
+                                date: (record.datetime ?? '').split(' ').first,
+                                status: record.status,
+                                amount: record.amount ?? '0',
+                                currency: (record.coin ?? '').toUpperCase(),
+                                direction: record.direction ?? "",
+                              ),
+                              if (!isLast)
+                                Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                            ],
+                          ),
+                        );
+                      },
+                      childCount: currentRecords.length,
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -261,11 +307,10 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
             padding: const EdgeInsets.only(left: 16, top: 8, bottom: 12),
             child: AnimatedBuilder(
               animation: _recordsTabController.animation!,
-              builder: (context, _) => CustomTabBar(controller: _recordsTabController,tabs: const ["收益记录","支付记录"],
-                onTabSelected: (int p1) {
-                  LogPrint.i("收益记录-支付记录" + "$p1");
-                  context.read<StandardEarningsNotifier>().setSelectIndex(p1);
-                },),
+              builder: (context, _) => CustomTabBar(controller: _recordsTabController,tabs: const ["收益记录","支付记录"], 
+              onTabSelected: (int p1) {
+                context.read<StandardEarningsNotifier>().setSelectIndex(p1);
+              },),
             ),
           ),
            _buildRecordsHeader(),
@@ -286,6 +331,8 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
             padding: const EdgeInsets.only(left: 8,right: 8,top: 10,bottom: 6),
             child: _buildTitledContent(
               title: '昨日收益',
+              tooltipMessage: '当前的收益预估数据是按照FPPS模式计算给出的理论参考值, 可能与实际收入存在略微差异。',
+              infoKey: _yesterdayEarningsKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -303,6 +350,8 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                 Expanded(
                   child: _buildInnerCard(
                     title: '累计已支付',
+                    tooltipMessage: '累计已支付是矿池已经成功支付到您指定地址的收益总额。',
+                    infoKey: _cumulativePaymentKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -336,17 +385,17 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     );
   }
   
-  Widget _buildInnerCard({required String title, required Widget child, bool hasInfoIcon = true}) {
+  Widget _buildInnerCard({required String title, required Widget child, bool hasInfoIcon = true, String? tooltipMessage, GlobalKey? infoKey}) {
     return Container(
         padding: const EdgeInsets.only(left: 6,right: 6,top: 8,bottom: 8),
         decoration: BoxDecoration(
           color: const Color(0xFFF9F9F9),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: _buildTitledContent(title: title, hasInfoIcon: hasInfoIcon, child: child));
+        child: _buildTitledContent(title: title, hasInfoIcon: hasInfoIcon, child: child, tooltipMessage: tooltipMessage, infoKey: infoKey));
   }
 
-  Widget _buildTitledContent({required String title, required Widget child, bool hasInfoIcon = true}) {
+  Widget _buildTitledContent({required String title, required Widget child, bool hasInfoIcon = true, String? tooltipMessage, GlobalKey? infoKey}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -354,12 +403,20 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
           children: [
             Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
             if (hasInfoIcon)
-              const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Image(
-                  image: AssetImage(ImageUtils.infoIcon),
-                  width: 14,
-                  height: 14,
+              GestureDetector(
+                key: infoKey,
+                onTap: () {
+                  if (tooltipMessage != null && infoKey != null) {
+                    _showTooltip(context, infoKey, tooltipMessage);
+                  }
+                },
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Image(
+                    image: AssetImage(ImageUtils.infoIcon),
+                    width: 14,
+                    height: 14,
+                  ),
                 ),
               ),
           ],
@@ -401,7 +458,13 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
             children: [
               Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
               const SizedBox(width: 4),
-              Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+              GestureDetector(
+                  key: _wkDatePaymentKey,
+                  onTap: () {
+                    _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
+                  },
+                  child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14)
+              ),
             ],
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
@@ -453,6 +516,31 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   }
 }
 
+class _TooltipWidget extends StatelessWidget {
+  final String message;
+  final double arrowX;
+  final double width;
+
+  const _TooltipWidget({required this.message, required this.arrowX, required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: CustomPaint(
+        painter: _TooltipPainter(arrowX: arrowX),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+          child: Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // A custom delegate for creating a sticky header.
 class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
@@ -478,5 +566,58 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverHeaderDelegate oldDelegate) {
     return height != oldDelegate.height || child != oldDelegate.child;
+  }
+}
+
+class _TooltipPainter extends CustomPainter {
+  final double arrowX;
+  _TooltipPainter({required this.arrowX});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    const arrowHeight = 6.0;
+    const arrowWidth = 12.0;
+    const radius = 10.0;
+
+    final path = Path()
+      ..moveTo(arrowX - arrowWidth / 2, arrowHeight)
+      ..lineTo(arrowX, 0)
+      ..lineTo(arrowX + arrowWidth / 2, arrowHeight)
+      ..lineTo(radius, arrowHeight)
+      ..arcToPoint(
+        const Offset(0, arrowHeight + radius),
+        radius: const Radius.circular(radius),
+        clockwise: false,
+      )
+      ..lineTo(0, size.height - radius)
+      ..arcToPoint(
+        Offset(radius, size.height),
+        radius: const Radius.circular(radius),
+        clockwise: false,
+      )
+      ..lineTo(size.width - radius, size.height)
+      ..arcToPoint(
+        Offset(size.width, size.height - radius),
+        radius: const Radius.circular(radius),
+        clockwise: false,
+      )
+      ..lineTo(size.width, arrowHeight + radius)
+      ..arcToPoint(
+        Offset(size.width - radius, arrowHeight),
+        radius: const Radius.circular(radius),
+        clockwise: false,
+      )
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_TooltipPainter oldDelegate) {
+    return arrowX != oldDelegate.arrowX;
   }
 }

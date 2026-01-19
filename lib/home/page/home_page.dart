@@ -69,7 +69,7 @@ class HomePage extends ConsumerWidget {
         backgroundColor: Colors.white,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Column(
             children: [
               _buildTopBanner(context),
@@ -83,7 +83,7 @@ class HomePage extends ConsumerWidget {
                 loading: () => const HomeSkeletonWidget(),
                 error: (err, stack) => const HomeErrorWidget(),
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 24),
             ],
           ),
         ),
@@ -94,7 +94,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildTopBanner(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      margin: EdgeInsets.only(top: 12.w),
+      margin: EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -123,8 +123,8 @@ class HomePage extends ConsumerWidget {
         }
       },
       child: Container(
-        margin: EdgeInsets.only(top: 12.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        margin: EdgeInsets.only(top: 12),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
@@ -175,8 +175,8 @@ class HomePage extends ConsumerWidget {
 
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
-      margin: EdgeInsets.only(top: 12.w),
+      padding: EdgeInsets.symmetric(vertical: 12),
+      margin: EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
@@ -185,16 +185,16 @@ class HomePage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text('挖矿币种',
                 style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.normal,
                     color: ColorUtils.colorT1)),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 16),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: _buildCoinHeader(flexes),
           ),
           _buildCoinRow(
@@ -281,7 +281,7 @@ class HomePage extends ConsumerWidget {
       required String dailyEarning,
       required String poolHashrate}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -326,8 +326,8 @@ class HomePage extends ConsumerWidget {
     var ltcModel = homeData.coinInfo.ltc;
 
     return Container(
-      padding: EdgeInsets.all(16.w),
-      margin: EdgeInsets.only(top: 0, left: 12.w, right: 12.w),
+      padding: EdgeInsets.all(16),
+      margin: EdgeInsets.only(top: 0, left: 12, right: 12),
       decoration: BoxDecoration(
         color: ColorUtils.widgetBgColor, 
         borderRadius: BorderRadius.circular(16.r),
@@ -421,7 +421,7 @@ class HomePage extends ConsumerWidget {
 
   Widget _buildInfoRow(String title, {required Widget value}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
+      padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start, // 1. 添加 start 对齐
         children: [

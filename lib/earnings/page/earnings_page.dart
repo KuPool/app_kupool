@@ -1,5 +1,6 @@
 import 'package:Kupool/earnings/widget/ecological_earnings_page.dart';
 import 'package:Kupool/earnings/widget/standard_earnings_page.dart';
+import 'package:Kupool/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 
 class EarningsPage extends StatelessWidget {
@@ -9,12 +10,15 @@ class EarningsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TabBarView(
-      controller: tabController,
-      children: const <Widget>[
-        StandardEarningsPage(),
-        EcologicalEarningsPage(),
-      ],
+    return Container(
+      color: ColorUtils.widgetBgColor,
+      child: TabBarView(
+        controller: tabController,
+        children: const <Widget>[
+          StandardEarningsPage(),
+          EcologicalEarningsPage(),
+        ],
+      ),
     );
   }
 }

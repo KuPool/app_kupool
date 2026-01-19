@@ -143,7 +143,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
 
   Widget _buildUserPanelContent(SubAccountPanelEntity panelData) {
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Column(
         children: [
           _buildInfoCard(
@@ -152,21 +152,21 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
             title: '算力',
             child: _buildHashrateContent(panelData),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 12),
           _buildInfoCard(
             iconPath: ImageUtils.panelKj,
             iconColor: const Color(0xFF3375E0),
             title: '矿机',
             child: _buildMinersContent(panelData),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 12),
           _buildInfoCard(
             iconPath: ImageUtils.panelWksy,
             iconColor: const Color(0xFFF5A623),
             title: '挖矿收益',
             child: _buildRevenueContent(panelData),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 12),
           _buildChartCard(),
         ],
       ),
@@ -242,7 +242,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   Widget _buildInfoCard(
       {required String iconPath, required Color iconColor, required String title, required Widget child}) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.only(left: 16,top: 20,right: 16,bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
