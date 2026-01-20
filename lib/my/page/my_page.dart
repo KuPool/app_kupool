@@ -1,4 +1,7 @@
+import 'package:Kupool/my/page/about_kupool_page.dart';
+import 'package:Kupool/my/page/language_selection_page.dart';
 import 'package:Kupool/my/page/personal_info_page.dart';
+import 'package:Kupool/my/page/security_settings_page.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +40,7 @@ class MyPage extends StatelessWidget {
         builder: (context) {
           return GestureDetector(
             onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => PersonalInfoPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage()));
             },
             child: Row(
               children: [
@@ -81,13 +84,31 @@ class MyPage extends StatelessWidget {
       child: Column(
         children: [
           _buildMenuItem(iconPath: ImageUtils.mySubAccount, title: '子账户管理'),
-          Divider(height: 1, color: Colors.grey.shade200, indent: 52.w),
-          _buildMenuItem(iconPath: ImageUtils.mySecurity, title: '安全设置'),
-          Divider(height: 1, color: Colors.grey.shade200, indent: 52.w),
-          _buildMenuItem(
-            iconPath: ImageUtils.myLanguage,
-            title: '选择语言',
-            trailing: Text('简体中文', style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT2)),
+          Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
+          Builder(
+            builder: (context) {
+              return GestureDetector(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SecuritySettingsPage()));
+                  },
+                  child: _buildMenuItem(iconPath: ImageUtils.mySecurity, title: '安全设置')
+              );
+            }
+          ),
+          Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
+          Builder(
+            builder: (context) {
+              return GestureDetector(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageSelectionPage()));
+                },
+                child: _buildMenuItem(
+                  iconPath: ImageUtils.myLanguage,
+                  title: '选择语言',
+                  trailing: Text('简体中文', style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT2)),
+                ),
+              );
+            }
           ),
         ],
       ),
@@ -103,36 +124,39 @@ class MyPage extends StatelessWidget {
       child: Column(
         children: [
           _buildMenuItem(iconPath: ImageUtils.myHelp, title: '帮助中心'),
-          Divider(height: 1, color: Colors.grey.shade200, indent: 52.w),
-          _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 Kupool'),
+          Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
+          Builder(
+            builder: (context) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutKupoolPage()));
+                },
+                child: _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 Kupool'),
+              );
+            }
+          ),
         ],
       ),
     );
   }
 
   Widget _buildMenuItem({required String iconPath, required String title, Widget? trailing}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          child: Row(
-            children: [
-              Image.asset(iconPath, width: 24.w, height: 24.w),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT1),
-                ),
-              ),
-              if (trailing != null) trailing,
-              SizedBox(width: 8.w),
-              Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
-            ],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
+        children: [
+          Image.asset(iconPath, width: 24.w, height: 24.w),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT1),
+            ),
           ),
-        ),
+          if (trailing != null) trailing,
+          SizedBox(width: 8.w),
+          Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
+        ],
       ),
     );
   }
