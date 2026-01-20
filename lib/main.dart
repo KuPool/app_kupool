@@ -80,14 +80,12 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
   SubAccountCoinType _selectedCoinType = SubAccountCoinType.dogeLtc;
   late final TabController _earningsTabController;
   
-  // 1. Use a Map to cache pages for lazy loading.
   final Map<int, Widget> _pageCache = {};
 
   @override
   void initState() {
     super.initState();
     _earningsTabController = TabController(length: 2, vsync: this);
-    // 2. Initially, only create the first page.
     _pageCache[0] = const HomePage();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -112,10 +110,8 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
     '我的',
   ];
 
-  // Helper to get or create a page.
   Widget _getPage(int index) {
     if (!_pageCache.containsKey(index)) {
-      // Create page on first access.
       switch (index) {
         case 1:
           _pageCache[index] = const UserPanelPage();
@@ -158,7 +154,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
     }
 
     return Scaffold(
-      appBar: _currentIndex == 0
+      appBar: _currentIndex == 0 || _currentIndex == 4
           ? null
           : AppBar(
               backgroundColor: Colors.white,
@@ -199,7 +195,6 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
           context.read<DogeLtcListNotifier>().fetchAccounts(coinType:_selectedCoinType);
         },
       ),
-      // 3. Use a Stack with Offstage for lazy loading and state preservation.
       body: Stack(
         children: _pageCache.keys.map((index) {
           return Offstage(
@@ -221,7 +216,6 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
             } else {
               setState(() {
                 _currentIndex = index;
-                // 4. Trigger page creation and initial data fetch on first tap.
                 _getPage(index);
               });
             }

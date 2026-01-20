@@ -10,7 +10,8 @@ class ImageUtils {
   static const String homeLtc = '${_imageBasePath}home/ltc.png';
   static const String homeBtc = '${_imageBasePath}home/btc.png';
   static const String homeCoinWa = '${_imageBasePath}home/coin_wa.png';
-
+  static const String kupoolLogo = '${_imageBasePath}home/kupoolLogo.png';
+  static const String homeBanner = '${_imageBasePath}home/homeBanner.png';
 
   // panel
   static const String panelBottomBar = '${_imageBasePath}panel/panel_bottom_bar.png';
@@ -21,9 +22,6 @@ class ImageUtils {
   static const String panelLian = '${_imageBasePath}panel/panel_lian.png';
   static const String panelSet = '${_imageBasePath}panel/panel_set.png';
   static const String panelLook = '${_imageBasePath}panel/panel_look.png';
-
-
-
 
 
   // earn
@@ -37,9 +35,11 @@ class ImageUtils {
   // mine
   static const String mineBottomBar = '${_imageBasePath}mine/mine_bottom_bar.png';
   static const String subAccountSelect = '${_imageBasePath}mine/sub_account_select.png';
-
-  static const String kupoolLogo = '${_imageBasePath}home/kupoolLogo.png';
-  static const String homeBanner = '${_imageBasePath}home/homeBanner.png';
+  static const String mySubAccount = '${_imageBasePath}mine/mine_sub_account.png';
+  static const String mySecurity = '${_imageBasePath}mine/mine_safe.png';
+  static const String myLanguage = '${_imageBasePath}mine/mine_laun.png';
+  static const String myHelp = '${_imageBasePath}mine/mine_help.png';
+  static const String myAbout = '${_imageBasePath}mine/mine_about.png';
 
   // login
   static const String loginLogo = '${_imageBasePath}login/login_logo.png';
