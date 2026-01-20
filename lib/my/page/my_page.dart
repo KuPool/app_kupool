@@ -2,6 +2,7 @@ import 'package:Kupool/my/page/about_kupool_page.dart';
 import 'package:Kupool/my/page/language_selection_page.dart';
 import 'package:Kupool/my/page/personal_info_page.dart';
 import 'package:Kupool/my/page/security_settings_page.dart';
+import 'package:Kupool/my/page/sub_account_management_page.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,16 @@ class MyPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildMenuItem(iconPath: ImageUtils.mySubAccount, title: '子账户管理'),
+          Builder(
+            builder: (context) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountManagementPage()));
+                },
+                child: _buildMenuItem(iconPath: ImageUtils.mySubAccount, title: '子账户管理'),
+              );
+            }
+          ),
           Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
           Builder(
             builder: (context) {

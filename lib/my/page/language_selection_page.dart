@@ -24,7 +24,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       ),
       backgroundColor: ColorUtils.widgetBgColor,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 24.h),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,

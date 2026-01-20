@@ -17,7 +17,7 @@ class PersonalInfoPage extends StatelessWidget {
       ),
       backgroundColor: ColorUtils.widgetBgColor,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 24.h),
         child: Column(
           children: [
             _buildInfoCard(context),

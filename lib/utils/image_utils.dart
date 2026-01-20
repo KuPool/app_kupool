@@ -40,6 +40,8 @@ class ImageUtils {
   static const String myLanguage = '${_imageBasePath}mine/mine_laun.png';
   static const String myHelp = '${_imageBasePath}mine/mine_help.png';
   static const String myAbout = '${_imageBasePath}mine/mine_about.png';
+  static const String myAccountYC = '${_imageBasePath}mine/sub_account_yc.png';
+
 
   // login
   static const String loginLogo = '${_imageBasePath}login/login_logo.png';
