@@ -30,8 +30,7 @@ class AppRefreshFooter extends BuilderFooter {
   }) : super(
     builder: (context, state) {
       Widget widget;
-      const textStyle = TextStyle(fontSize: 14, color: Colors.black87);
-      final iconColor = Colors.black87;
+      const textStyle = TextStyle(fontSize: 14, color: Colors.black54);
 
       // 根据状态返回不同的 Widget
       switch (state.mode) {
@@ -61,17 +60,19 @@ class AppRefreshFooter extends BuilderFooter {
             widget = const Text('加载失败', style: textStyle);
           } else if (state.result == IndicatorResult.noMore) {
             // 如果加载成功但没有更多数据了，也显示 "没有更多数据了"
-            widget = const Text('没有更多数据了', style: textStyle);
+            widget =  Text('没有更多数据了', style: textStyle);
           } else {
             // 加载成功，快速消失
             widget = const SizedBox();
           }
           break;
-        // case IndicatorMode.done:
-        //   widget = const Text('没有更多数据了', style: textStyle);
-        //   break;
-        default: // idle
-          widget = const SizedBox();
+        default:
+          if (state.result == IndicatorResult.noMore) {
+            // 如果加载成功但没有更多数据了，也显示 "没有更多数据了"
+            widget =  Text('没有更多数据了', style: textStyle);
+          }else{
+            widget = const SizedBox();
+          }
           break;
       }
 

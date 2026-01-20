@@ -42,7 +42,7 @@ class StandardEarningsNotifier with ChangeNotifier {
   bool _hasMorePayments = true;
   bool get hasMorePayments => _hasMorePayments;
 
-  final int _pageSize = 10;
+  final int _pageSize = 30;
 
   // Lazy loading flag
   bool _isInitialized = false;
@@ -116,10 +116,10 @@ class StandardEarningsNotifier with ChangeNotifier {
 
         if (isEarning) {
           _earningPage = currentPage;
-          _hasMoreEarnings = newRecords.length == _pageSize;
+          _hasMoreEarnings = newRecords.length < (recordEntity.total??0);
         } else {
           _paymentPage = currentPage;
-          _hasMorePayments = newRecords.length == _pageSize;
+          _hasMorePayments = newRecords.length < (recordEntity.total??0);
         }
       }
     } catch (e) {

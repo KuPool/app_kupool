@@ -117,11 +117,12 @@ class EcologicalEarningsNotifier with ChangeNotifier {
           isEarning ? _earningRecords = newRecords : _paymentRecords = newRecords;
         }
 
-        bool hasMore = newRecords.length >= _pageSize;
         if (isEarning) {
-          _hasMoreEarnings = hasMore;
+          _earningPage = currentPage;
+          _hasMoreEarnings = newRecords.length < (recordEntity.total??0);
         } else {
-          _hasMorePayments = hasMore;
+          _paymentPage = currentPage;
+          _hasMorePayments = newRecords.length < (recordEntity.total??0);
         }
       }
     } catch (e) {
