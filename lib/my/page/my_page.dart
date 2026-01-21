@@ -38,40 +38,40 @@ class MyPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Builder(
-        builder: (context) {
-          return GestureDetector(
-            onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage()));
-            },
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24.r,
-                  backgroundColor: Colors.grey.shade200,
-                  child: Icon(Icons.person, size: 32.r, color: Colors.grey.shade400),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Testuser@kupool.com',
-                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorT1),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Kupool ID: 466102032212',
-                        style: TextStyle(fontSize: 13.sp, color: ColorUtils.colorT2),
-                      ),
-                    ],
+          builder: (context) {
+            return GestureDetector(
+              onTap: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage()));
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24.r,
+                    child:
+                    Image.asset(ImageUtils.mineHeader, width: 48.w, height: 48.w),
                   ),
-                ),
-                Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
-              ],
-            ),
-          );
-        }
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Testuser@kupool.com',
+                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorT1),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Kupool ID: 466102032212',
+                          style: TextStyle(fontSize: 13.sp, color: ColorUtils.colorT2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
+                ],
+              ),
+            );
+          }
       ),
     );
   }
@@ -85,40 +85,40 @@ class MyPage extends StatelessWidget {
       child: Column(
         children: [
           Builder(
-            builder: (context) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountManagementPage()));
-                },
-                child: _buildMenuItem(iconPath: ImageUtils.mySubAccount, title: '子账户管理'),
-              );
-            }
-          ),
-          Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
-          Builder(
-            builder: (context) {
-              return GestureDetector(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SecuritySettingsPage()));
+              builder: (context) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountManagementPage()));
                   },
-                  child: _buildMenuItem(iconPath: ImageUtils.mySecurity, title: '安全设置')
-              );
-            }
+                  child: _buildMenuItem(iconPath: ImageUtils.mySubAccount, title: '子账户管理'),
+                );
+              }
           ),
           Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
           Builder(
-            builder: (context) {
-              return GestureDetector(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageSelectionPage()));
-                },
-                child: _buildMenuItem(
-                  iconPath: ImageUtils.myLanguage,
-                  title: '选择语言',
-                  trailing: Text('简体中文', style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT2)),
-                ),
-              );
-            }
+              builder: (context) {
+                return GestureDetector(
+                    onTap: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SecuritySettingsPage()));
+                    },
+                    child: _buildMenuItem(iconPath: ImageUtils.mySecurity, title: '安全设置')
+                );
+              }
+          ),
+          Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
+          Builder(
+              builder: (context) {
+                return GestureDetector(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageSelectionPage()));
+                  },
+                  child: _buildMenuItem(
+                    iconPath: ImageUtils.myLanguage,
+                    title: '选择语言',
+                    trailing: Text('简体中文', style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT2)),
+                  ),
+                );
+              }
           ),
         ],
       ),
@@ -136,14 +136,14 @@ class MyPage extends StatelessWidget {
           _buildMenuItem(iconPath: ImageUtils.myHelp, title: '帮助中心'),
           Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
           Builder(
-            builder: (context) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutKupoolPage()));
-                },
-                child: _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 Kupool'),
-              );
-            }
+              builder: (context) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutKupoolPage()));
+                  },
+                  child: _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 Kupool'),
+                );
+              }
           ),
         ],
       ),

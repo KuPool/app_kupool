@@ -2,6 +2,8 @@ import 'package:Kupool/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../utils/image_utils.dart';
+
 class PersonalInfoPage extends StatelessWidget {
   const PersonalInfoPage({super.key});
 
@@ -39,8 +41,7 @@ class PersonalInfoPage extends StatelessWidget {
         children: [
           _buildInfoRow('头像', trailing: CircleAvatar(
             radius: 16,
-            backgroundColor: Colors.grey.shade300,
-            child: Icon(Icons.person, size: 20, color: Colors.white),
+            child:  Image.asset(ImageUtils.mineHeader, width: 32, height: 32),
           )),
           _buildInfoRow('用户名', value: 'Testuser'),
           _buildInfoRow('邮箱', value: 'Testuser@kupool.com'),
