@@ -116,10 +116,10 @@ class StandardEarningsNotifier with ChangeNotifier {
 
         if (isEarning) {
           _earningPage = currentPage;
-          _hasMoreEarnings = newRecords.length < (recordEntity.total??0);
+          _hasMoreEarnings = _earningRecords.length < (recordEntity.total??0);
         } else {
           _paymentPage = currentPage;
-          _hasMorePayments = newRecords.length < (recordEntity.total??0);
+          _hasMorePayments = _paymentRecords.length < (recordEntity.total??0);
         }
       }
     } catch (e) {

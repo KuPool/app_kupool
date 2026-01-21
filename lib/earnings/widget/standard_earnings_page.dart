@@ -85,7 +85,10 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   }
 
   void _showTooltip(BuildContext context, GlobalKey key, String message) {
-    _removeTooltip();
+    if (_overlayEntry != null) {
+      _removeTooltip();
+      return;
+    }
     final overlay = Overlay.of(context);
     final renderBox = key.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
@@ -203,7 +206,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                         final isLast = index == currentRecords.length - 1;
                         return Container(
                           color: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           child: Column(
                             children: [
@@ -325,6 +328,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 8,right: 8,top: 10,bottom: 6),
@@ -397,28 +401,36 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   Widget _buildTitledContent({required String title, required Widget child, bool hasInfoIcon = true, String? tooltipMessage, GlobalKey? infoKey}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
-            if (hasInfoIcon)
-              GestureDetector(
-                key: infoKey,
-                onTap: () {
-                  if (tooltipMessage != null && infoKey != null) {
-                    _showTooltip(context, infoKey, tooltipMessage);
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.only(left: 4),
-                  child: Image(
-                    image: AssetImage(ImageUtils.infoIcon),
-                    width: 14,
-                    height: 14,
+        GestureDetector(
+          onTap: (){
+            if (hasInfoIcon){
+              if (tooltipMessage != null && infoKey != null) {
+                _showTooltip(context, infoKey, tooltipMessage);
+              }
+            }
+          },
+          child: Container(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
+                if (hasInfoIcon)
+                  Container(
+                    key: infoKey,
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 4),
+                      child: Image(
+                        image: AssetImage(ImageUtils.infoIcon),
+                        width: 14,
+                        height: 14,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         child,
@@ -444,7 +456,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
   Widget _buildRecordsHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: ColorUtils.colorHeadBg,
@@ -453,18 +465,23 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
-              const SizedBox(width: 4),
-              GestureDetector(
-                  key: _wkDatePaymentKey,
-                  onTap: () {
-                    _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
-                  },
-                  child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14)
+          GestureDetector(
+            onTap: () {
+              _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
+                  const SizedBox(width: 4),
+                  Container(
+                    key: _wkDatePaymentKey,
+                    child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
         ],
@@ -479,18 +496,19 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       // margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1))),
-          Expanded(flex: 2,
-              child: statusConvertForWidget(status, direction)
-          ),
-          Expanded(
-            flex: 5,
-            child: Row(
+          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
+          SizedBox(width: 36.w,),
+          statusConvertForWidget(status, direction),
+          SizedBox(width: 10,),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child:
+            Row(
+              // crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Expanded(child: Text(amount, textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne))),
+                Text("12345678909876543345678", textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
                 const SizedBox(width: 4),
                 Text(currency, style: const TextStyle(fontSize: 12, color: ColorUtils.color888)),
               ],

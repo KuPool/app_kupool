@@ -18,6 +18,7 @@ import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/utils/logger.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -26,7 +27,11 @@ import 'package:provider/provider.dart';
 import 'earnings/provider/ecological_earnings_notifier.dart';
 import 'net/navigation_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   EnvConfig.setEnvironment(Environment.test);
   runApp(const ProviderScope(child: MyApp()));
 }
