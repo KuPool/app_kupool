@@ -25,8 +25,8 @@ class ToastUtils {
   // }
 
   /// 显示一个简单的文字 Toast,时间 ，位置可选
-  static void show(String message,{Duration? displayTime,Alignment alignment = Alignment.center,}) {
-    SmartDialog.showToast(message,displayTime: displayTime,alignment: alignment);
+  static void show(String message,{Duration? displayTime,Alignment alignment = Alignment.center,VoidCallback? onDismiss}) {
+    SmartDialog.showToast(message,displayTime: displayTime,alignment: alignment,onDismiss: onDismiss);
   }
 
   /// 显示加载中的对话框

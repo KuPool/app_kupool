@@ -1,6 +1,7 @@
 import 'package:Kupool/home/page/home_page.dart';
 import 'package:Kupool/login/page/register_page.dart';
 import 'package:Kupool/main.dart';
+import 'package:Kupool/my/provider/user_info_notifier.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:Kupool/net/dio_client.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -50,35 +52,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _login() {
     final email = _emailController.text;
 
-    // 国际邮箱格式校验
     final bool isEmailValid = RegExp(
             r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
         .hasMatch(email);
 
     if (!isEmailValid) {
       ToastUtils.show('请输入有效的邮箱地址');
-      return; // 校验失败，中断登录流程
+      return;
     }
 
-    // 调用Notifier执行登录，UI将通过ref.watch和ref.listen响应状态变化
     ref.read(authNotifierProvider.notifier).signIn(
           email,
           _passwordController.text,
         );
   }
 
-  // 优化：修改正则表达式以禁止输入空格
   final _asciiFormatter = FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
 
   @override
   Widget build(BuildContext context) {
-    // 使用ref.listen来处理副作用，如导航、弹窗等
     ref.listen(authNotifierProvider, (previous, next) {
-      // 仅在登录成功时执行导航
       next.when(
         data: (user) {
           if (user != null && mounted) {
-            // 销毁所有路由并回到首页
+            context.read<UserInfoNotifier>().fetchUserInfo(); // Fetch user info on successful login
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainTabBar()),
@@ -91,7 +88,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
     });
 
-    // 使用ref.watch来监听状态变化，并重建UI
     final authState = ref.watch(authNotifierProvider);
 
     return Scaffold(
@@ -109,7 +105,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            // 这里可以添加其他标题内容
           ],
         ),
       ),
@@ -117,7 +112,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();
         },
-        behavior: HitTestBehavior.opaque, // 确保空白区域也可以点击
+        behavior: HitTestBehavior.opaque, 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -7,6 +7,7 @@ import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/mining_machine/page/mining_machine_page.dart';
 import 'package:Kupool/mining_machine/provider/mining_machine_notifier.dart';
 import 'package:Kupool/my/page/my_page.dart';
+import 'package:Kupool/my/provider/user_info_notifier.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/net/env_config.dart';
 import 'package:Kupool/user_panel/page/user_panel_page.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider(create: (_) => MiningMachineNotifier()),
             ChangeNotifierProvider(create: (_) => StandardEarningsNotifier()),
             ChangeNotifierProvider(create: (_) => EcologicalEarningsNotifier()),
+            ChangeNotifierProvider(create: (_) => UserInfoNotifier()),
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],

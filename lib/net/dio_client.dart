@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:Kupool/json_serializable_model/login_model_entity.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/base_response.dart';
 import 'package:Kupool/net/business_exception.dart';
@@ -12,6 +11,9 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../json_serializable_model/login_model_entity.dart';
+import '../main.dart';
 
 extension RequestOptionsExtension on RequestOptions {
   static const String _returnRawDataKey = 'returnRawData';
@@ -43,18 +45,18 @@ class DioClient {
 
     // *** Charles 抓包代理配置 ***
     // 注意：此配置仅用于开发调试，发布时请务必移除！
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
-      // 设置代理
-      client.findProxy = (uri) {
-        // 代理到你的电脑IP和Charles端口
-        return 'PROXY 192.168.110.93:8888';
-      };
-      // 信任Charles的自签名证书，抓取 https 请求
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-      return client;
-    };
+    // (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    //   final client = HttpClient();
+    //   // 设置代理
+    //   client.findProxy = (uri) {
+    //     // 代理到你的电脑IP和Charles端口
+    //     return 'PROXY 192.168.110.93:8888';
+    //   };
+    //   // 信任Charles的自签名证书，抓取 https 请求
+    //   client.badCertificateCallback =
+    //       (X509Certificate cert, String host, int port) => true;
+    //   return client;
+    // };
     // *** Charles 抓包代理配置 ***
 
     _dio.interceptors.addAll([
@@ -173,6 +175,8 @@ class AuthInterceptor extends Interceptor {
   final Dio _dio;
   AuthInterceptor(this._dio);
 
+  static final StreamController<void> onTokenRefreshed = StreamController.broadcast();
+
   static const String _userSessionKey = 'user_session';
   // Use a Completer as an async lock to prevent multiple refresh calls.
   static Completer<String?>? _completer;
@@ -264,6 +268,7 @@ class AuthInterceptor extends Interceptor {
         print("刷了一下");
         final newTokens = LoginModelEntity.fromJson(baseResponse.data);
         await prefs.setString(_userSessionKey, jsonEncode(newTokens.toJson()));
+        onTokenRefreshed.add(null);
         return newTokens.accessToken;
       } else {
         throw DioException(requestOptions: response.requestOptions, error: baseResponse.msg);
@@ -278,9 +283,10 @@ class AuthInterceptor extends Interceptor {
   void _navigateToLogin() {
       final navigator = NavigationService.navigatorKey.currentState;
       if (navigator != null && navigator.canPop()) {
-        navigator.popUntil((route) => route.isFirst);
-        navigator.push(
-          MaterialPageRoute(builder: (context) => const LoginPage()),
+        Navigator.pushAndRemoveUntil(
+          navigator.context,
+          MaterialPageRoute(builder: (context) => const MainTabBar()),
+              (route) => false,
         );
       }
   }

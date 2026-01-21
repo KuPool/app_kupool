@@ -1,25 +1,62 @@
+import 'dart:async';
+
+import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/my/page/about_kupool_page.dart';
 import 'package:Kupool/my/page/language_selection_page.dart';
 import 'package:Kupool/my/page/personal_info_page.dart';
 import 'package:Kupool/my/page/security_settings_page.dart';
 import 'package:Kupool/my/page/sub_account_management_page.dart';
+import 'package:Kupool/my/provider/user_info_notifier.dart';
+import 'package:Kupool/net/auth_notifier.dart';
+import 'package:Kupool/net/dio_client.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
-class MyPage extends StatelessWidget {
+class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
 
   @override
+  ConsumerState<MyPage> createState() => _MyPageState();
+}
+
+class _MyPageState extends ConsumerState<MyPage> {
+  StreamSubscription? _tokenRefreshSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserInfoNotifier>().fetchUserInfo();
+    });
+
+    _tokenRefreshSubscription = AuthInterceptor.onTokenRefreshed.stream.listen((_) {
+      if (mounted) {
+        context.read<UserInfoNotifier>().fetchUserInfo();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tokenRefreshSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userInfo = context.watch<UserInfoNotifier>().userInfo;
+
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
           children: [
-            _buildUserInfoCard(),
+            _buildUserInfoCard(userInfo?.email, userInfo?.kupoolId.toString()),
             SizedBox(height: 12.h),
             _buildSettingsList(),
             SizedBox(height: 12.h),
@@ -30,49 +67,49 @@ class MyPage extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInfoCard() {
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Builder(
-          builder: (context) {
-            return GestureDetector(
-              onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage()));
-              },
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24.r,
-                    child:
-                    Image.asset(ImageUtils.mineHeader, width: 48.w, height: 48.w),
+  Widget _buildUserInfoCard(String? email, String? kupoolId) {
+    return Builder(
+      builder: (context) {
+        return GestureDetector(
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage()));
+          },
+          child: Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24.r,
+                  child:
+                  Image.asset(ImageUtils.mineHeader, width: 48.w, height: 48.w),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        email ?? '--',
+                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorT1),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Kupool ID: ${kupoolId ?? '--'}',
+                        style: TextStyle(fontSize: 13.sp, color: ColorUtils.colorT2),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Testuser@kupool.com',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: ColorUtils.colorT1),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Kupool ID: 466102032212',
-                          style: TextStyle(fontSize: 13.sp, color: ColorUtils.colorT2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
-                ],
-              ),
-            );
-          }
-      ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
 

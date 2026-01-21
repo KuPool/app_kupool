@@ -1,14 +1,23 @@
+import 'package:Kupool/my/provider/user_info_notifier.dart';
+import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
+import '../../json_serializable_model/login_model_entity.dart';
+import '../../main.dart';
 import '../../utils/image_utils.dart';
 
-class PersonalInfoPage extends StatelessWidget {
+class PersonalInfoPage extends ConsumerWidget {
   const PersonalInfoPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userInfo = context.watch<UserInfoNotifier>().userInfo;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('个人信息', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
@@ -22,16 +31,16 @@ class PersonalInfoPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 24.h),
         child: Column(
           children: [
-            _buildInfoCard(context),
+            _buildInfoCard(context, userInfo),
             const Spacer(),
-            _buildLogoutButton(context),
+            _buildLogoutButton(context, ref),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoCard(BuildContext context) {
+  Widget _buildInfoCard(BuildContext context, LoginModelUserInfo? userInfo) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -43,9 +52,9 @@ class PersonalInfoPage extends StatelessWidget {
             radius: 16,
             child:  Image.asset(ImageUtils.mineHeader, width: 32, height: 32),
           )),
-          _buildInfoRow('用户名', value: 'Testuser'),
-          _buildInfoRow('邮箱', value: 'Testuser@kupool.com'),
-          _buildInfoRow('Kupool ID', value: '466102032212', hasDivider: false),
+          // _buildInfoRow('用户名', value: userInfo?.name ?? '--'),
+          _buildInfoRow('邮箱', value: userInfo?.email ?? '--'),
+          _buildInfoRow('Kupool ID', value: userInfo?.kupoolId?.toString() ?? '--', hasDivider: false),
         ],
       ),
     );
@@ -75,13 +84,13 @@ class PersonalInfoPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context) {
+  Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
     return Container(
       height: 34,
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
       child: OutlinedButton(
-        onPressed: () => _showLogoutDialog(context),
+        onPressed: () => _showLogoutDialog(context, ref),
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: ColorUtils.colorRed,width: 0.5),
           shape: RoundedRectangleBorder(
@@ -96,7 +105,7 @@ class PersonalInfoPage extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -152,9 +161,17 @@ class PersonalInfoPage extends StatelessWidget {
                             ),
                           ),
                           child: Text('退出', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                          onPressed: () {
-                            // Add logout logic here
-                            Navigator.of(context).pop();
+                          onPressed: () async {
+                            ToastUtils.showLoading(message: "正在退出...");
+                            await ref.read(authNotifierProvider.notifier).signOut();
+                            ToastUtils.dismiss();
+                            ToastUtils.show("退出成功,为你跳转...",onDismiss: (){
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => const MainTabBar()),
+                                    (route) => false, // 移除所有路由
+                              );
+                            });
                           },
                         ),
                       ),
