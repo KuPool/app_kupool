@@ -22,14 +22,14 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   late EasyRefreshController _refreshController;
 
   final List<Map<String, String>> _coins = [
-    {'name': 'BELLS', 'icon': ImageUtils.panelMenu},
-    {'name': 'LKY', 'icon': ImageUtils.panelMenu},
-    {'name': 'PEP', 'icon': ImageUtils.panelMenu},
-    {'name': 'SHIC', 'icon': ImageUtils.panelMenu},
-    {'name': 'TRMP', 'icon': ImageUtils.panelMenu},
-    {'name': 'DIGO', 'icon': ImageUtils.panelMenu},
-    {'name': 'JKC', 'icon': ImageUtils.panelMenu},
-    {'name': 'CRC', 'icon': ImageUtils.panelMenu},
+    {'name': 'BELLS', 'icon': ImageUtils.coinBells},
+    {'name': 'LKY', 'icon': ImageUtils.coin_lky},
+    {'name': 'PEP', 'icon': ImageUtils.coin_pep},
+    {'name': 'SHIC', 'icon': ImageUtils.coin_shic},
+    {'name': 'TRMP', 'icon': ImageUtils.coin_trmp},
+    {'name': 'DIGO', 'icon': ImageUtils.coin_dingo},
+    {'name': 'JKC', 'icon': ImageUtils.coin_jkc},
+    {'name': 'CRC', 'icon': ImageUtils.coin_crc},
   ];
 
   @override

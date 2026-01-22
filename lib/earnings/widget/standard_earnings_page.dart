@@ -4,16 +4,13 @@ import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-
-import '../../utils/image_utils.dart';
-import '../../widgets/custom_tab_bar.dart';
+import 'package:provider/provider.dart';
 
 class StandardEarningsPage extends StatefulWidget {
   const StandardEarningsPage({super.key});
@@ -490,39 +487,48 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     );
   }
 
-  Widget _buildRecordRow({required String date,required int? status,required String direction, required String amount, required String currency,}) {
+  Widget _buildRecordRow({
+    required String date,
+    required int? status,
+    required String direction,
+    required String amount,
+    required String currency,
+  }) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 13),
-      // margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
-          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
-          SizedBox(width: 36.w,),
+          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
+          SizedBox(width: 30.w,),
           statusConvertForWidget(status, direction),
-          SizedBox(width: 10,),
+          SizedBox(width: 16.w,),
           Expanded(
-            child: AutoSizeText(amount,maxLines: 1,textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: RichText(
+                maxLines: 1,
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: amount,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne),
+                    ),
+                    TextSpan(
+                      text: ' $currency',
+                      style: const TextStyle(fontSize: 12, color: ColorUtils.color888),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 2),
-          Text(currency, style: const TextStyle(fontSize: 12, color: ColorUtils.color888)),
         ],
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case '1': // 已支付
-        return Colors.green;
-      case '0': // 待支付
-        return ColorUtils.mainColor;
-      case '2': // 未入账
-        return Colors.red;
-      default:
-        return ColorUtils.colorT2;
-    }
-  }
 }
 
 class _TooltipWidget extends StatelessWidget {

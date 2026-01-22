@@ -4,7 +4,6 @@ import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
 import 'package:Kupool/mining_machine/provider/mining_machine_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -268,7 +267,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
 
     return Expanded(
-      // flex: flex,
+      flex: flex,
       child: Container(
         child: InkWell(
           onTap: () {
@@ -342,7 +341,10 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Expanded(flex: 2,child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerLeft,child: Text(name,maxLines: 1, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)))),
+          Expanded(flex: 2,child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerLeft,child: Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Text(name,maxLines: 1, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
+          ))),
           Expanded(flex: 2,child: _buildHashrateWidget(realtimeHashrate)),
           Expanded(flex: 2,child: _buildHashrateWidget(dailyHashrate,)),
           Expanded(flex: 2,child: FittedBox(fit: BoxFit.scaleDown,child: Text(rejectionRate,textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: rejectionColor)))),

@@ -28,6 +28,18 @@ class ImageUtils {
   static const String earnBottomBar = '${_imageBasePath}earn/earn_bottom_bar.png';
   static const String infoIcon = '${_imageBasePath}earn/info_icon.png';
 
+  static const String coinBells = '${_imageBasePath}earn/BELLS.png';
+  static const String coin_crc = '${_imageBasePath}earn/CRC.png';
+  static const String coin_dingo = '${_imageBasePath}earn/DINGO.png';
+  static const String coin_lky = '${_imageBasePath}earn/LKY.png';
+  static const String coin_pep = '${_imageBasePath}earn/PEP.png';
+  static const String coin_shic = '${_imageBasePath}earn/SHIC.png';
+  static const String coin_trmp = '${_imageBasePath}earn/TRMP.png';
+  static const String coin_jkc = '${_imageBasePath}earn/JKC.png';
+  static const String coin_ltc = '${_imageBasePath}earn/LTC.png';
+  static const String coin_doge = '${_imageBasePath}earn/DOGE.png';
+
+
   // machine
   static const String machineBottomBar = '${_imageBasePath}machine/machine_bottom_bar.png';
   static const String arrowDown = '${_imageBasePath}machine/arrow_down.png';

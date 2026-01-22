@@ -350,8 +350,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
-                  // child: _buildDecimalText(entry.key),
-                  child: _buildDecimalText("67890.987890"),
+                  child: _buildDecimalText(entry.key),
                 ),
                 SizedBox(width: 4),
                 Text(entry.value, style: TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold)),
