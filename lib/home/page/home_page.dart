@@ -149,7 +149,7 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildMiningCoinsSection(BuildContext context, HomeDataState homeData) {
-    const List<int> flexes = [5, 3, 4];
+    const List<int> flexes = [3, 3, 4];
     var coinInfoModel = homeData.coinInfo.ltc;
     var poolHash = FormatUtils.formatHashrate(coinInfoModel?.poolHash);
 
@@ -194,7 +194,7 @@ class HomePage extends ConsumerWidget {
           ),
           SizedBox(height: 16),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 12),
             child: _buildCoinHeader(flexes),
           ),
           _buildCoinRow(
@@ -214,21 +214,22 @@ class HomePage extends ConsumerWidget {
   Widget _buildCoinHeader(List<int> flexes) {
     return Row(
       children: [
-        SizedBox(width: 60), 
+        SizedBox(width: 56),
         Expanded(
             flex: flexes[0],
             child: Text('币种',
-                style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear))),
+                style: TextStyle(fontSize: 12, color: ColorUtils.colorTableHear))),
         Expanded(
             flex: flexes[1],
             child: Text('日收益',
-                style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear))),
+                textAlign: TextAlign.right,
+                style: TextStyle(fontSize: 12, color: ColorUtils.colorTableHear))),
         Expanded(
           flex: flexes[2],
           child: Text(
             '矿池算力',
             textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 12.sp, color: ColorUtils.colorTableHear),
+            style: TextStyle(fontSize: 12, color: ColorUtils.colorTableHear),
           ),
         ),
       ],
@@ -238,14 +239,14 @@ class HomePage extends ConsumerWidget {
   Widget _buildCoinIcons(List<String> icons) {
     if (icons.length > 1) {
       return SizedBox(
-        width: 48.w,
-        height: 32.h,
+        width: 48,
+        height: 32,
         child: Stack(
           children: [
             Positioned(
-              left: 16.w,
+              left: 16,
               child: CircleAvatar(
-                radius: 16.r,
+                radius: 16,
                 backgroundImage: AssetImage(icons[1]),
                 backgroundColor: Colors.transparent,
               ),
@@ -253,7 +254,7 @@ class HomePage extends ConsumerWidget {
             Positioned(
               left: 0,
               child: CircleAvatar(
-                radius: 16.r,
+                radius: 16,
                 backgroundImage: AssetImage(icons[0]),
                 backgroundColor: Colors.transparent,
               ),
@@ -263,10 +264,10 @@ class HomePage extends ConsumerWidget {
       );
     } else {
       return SizedBox(
-        width: 48.w,
-        height: 32.h,
+        width: 48,
+        height: 32,
         child: CircleAvatar(
-          radius: 16.r,
+          radius: 16,
           backgroundImage: AssetImage(icons.first),
           backgroundColor: Colors.transparent,
         ),
@@ -283,38 +284,39 @@ class HomePage extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        // crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            flex: flexes[0],
+          SizedBox(
+            width: 56,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildCoinIcons(icons),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Text(coinName,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                          color: ColorUtils.colorT1,
-                        )
-                  ),
-                ),
               ],
             ),
           ),
           Expanded(
+            flex: flexes[0],
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(coinName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: ColorUtils.colorT1,
+                  )
+              ),
+            ),
+          ),
+          SizedBox(width: 6,),
+          Expanded(
               flex: flexes[1],
-              child: Text(dailyEarning, textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1))),
+              child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text(dailyEarning, textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1)))),
+          SizedBox(width: 6,),
           Expanded(
             flex: flexes[2],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end, 
-              children: [
-                Text(poolHashrate, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,overflow: TextOverflow.ellipsis)),
-              ],
-            ),
+            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text("${poolHashrate}H/s",textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,))),
           ),
         ],
       ),
@@ -326,7 +328,7 @@ class HomePage extends ConsumerWidget {
     var ltcModel = homeData.coinInfo.ltc;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(12),
       margin: EdgeInsets.only(top: 0, left: 12, right: 12),
       decoration: BoxDecoration(
         color: ColorUtils.widgetBgColor, 
@@ -394,9 +396,13 @@ class HomePage extends ConsumerWidget {
         Text(region, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
         SizedBox(width: 8),
         Expanded(
-          child: Text(
-            address,
-            style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              address,
+              style: TextStyle(fontSize: 14,color: ColorUtils.colorT1),
+            ),
           ),
         ),
         InkWell(
@@ -428,7 +434,7 @@ class HomePage extends ConsumerWidget {
           Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorTableHear)),
           SizedBox(width: 16), // 2. 添加间距
           Expanded(
-            child: value, // 3. 用 Expanded 包裹 value，使其可以换行
+            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: value), // 3. 用 Expanded 包裹 value，使其可以换行
           ),
         ],
       ),

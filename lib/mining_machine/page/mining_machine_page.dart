@@ -23,7 +23,7 @@ class MiningMachinePage extends StatefulWidget {
 class _MiningMachinePageState extends State<MiningMachinePage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
   late EasyRefreshController _controller;
-  
+
   @override
   void initState() {
     super.initState();

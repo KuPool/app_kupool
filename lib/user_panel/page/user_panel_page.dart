@@ -273,7 +273,9 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(child: _buildDataColumn(data.realtimeHashrate ?? "0", "${data.realtimeHashrateUnit ?? ''}H/s", '近 15 分钟',)),
+        SizedBox(width: 6,),
         Expanded(child: _buildDataColumn(data.hour24Hashrate ?? '0', "${data.hour24HashrateUnit ?? ''}H/s", '近 24 小时')),
+        SizedBox(width: 6,),
         Expanded(child: _buildDataColumn(data.yesterdayAcceptHashrate ?? '0', "${data.yesterdayAcceptHashrateUnit ?? ''}H/s", '昨日结算算力')),
       ],
     );
@@ -316,14 +318,17 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? ColorUtils.colorT1),
-            children: <TextSpan>[
-              TextSpan(text: value),
-              TextSpan(text: ' $unit', style: TextStyle(fontSize: 12, color: unitColor)),
-            ],
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? ColorUtils.colorT1),
+              children: [
+                TextSpan(text: value),
+                TextSpan(text: ' $unit', style: TextStyle(fontSize: 12, color: unitColor)),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 4.h),
@@ -345,7 +350,8 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
-                  child: _buildDecimalText(entry.key),
+                  // child: _buildDecimalText(entry.key),
+                  child: _buildDecimalText("67890.987890"),
                 ),
                 SizedBox(width: 4),
                 Text(entry.value, style: TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold)),
@@ -370,13 +376,16 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       final integerPart = parts[0];
       final decimalPart = parts[1];
 
-      return RichText(
-        text: TextSpan(// 继承默认文本样式
-          children: <TextSpan>[
-            TextSpan(text: integerPart, style: intStyle),
-            TextSpan(text: '.', style: decimalStyle), // 小数点本身也用小号字体
-            TextSpan(text: decimalPart, style: decimalStyle),
-          ],
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: RichText(
+          text: TextSpan(// 继承默认文本样式
+            children: <TextSpan>[
+              TextSpan(text: integerPart, style: intStyle),
+              TextSpan(text: '.', style: decimalStyle), // 小数点本身也用小号字体
+              TextSpan(text: decimalPart, style: decimalStyle),
+            ],
+          ),
         ),
       );
     } else {
