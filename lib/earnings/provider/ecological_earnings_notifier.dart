@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class EcologicalEarningsNotifier with ChangeNotifier {
   // --- State ---
-  String _selectedCoin = 'LKY'; // Default coin
+  String _selectedCoin = 'BELLS'; // Default coin
   String get selectedCoin => _selectedCoin;
 
   EarningsInfoEntity? _summaryInfo;

@@ -165,8 +165,8 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   Widget _buildCoinSelectionChips(EcologicalEarningsNotifier notifier) {
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      height: 56,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _coins.length,
@@ -183,17 +183,18 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
                 notifier.changeCoin(coin['name']!, selectedAccount.id!);
               }
             },
-            selectedColor: ColorUtils.mainColor.withOpacity(0.1),
-            backgroundColor: Colors.white,
+            selectedColor: ColorUtils.mainColor.withValues(alpha: 0.1),
+            backgroundColor: Color(0xFFE6E6E6),
             labelStyle: TextStyle(
+              fontSize: 14,
               color: isSelected ? ColorUtils.mainColor : Colors.black87,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: isSelected ? ColorUtils.mainColor : Colors.grey.shade300),
+              side: BorderSide(color: isSelected ? ColorUtils.mainColor : Colors.transparent),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           );
         },
       ),
