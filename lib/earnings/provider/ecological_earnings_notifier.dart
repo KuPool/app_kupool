@@ -19,6 +19,9 @@ class EcologicalEarningsNotifier with ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+  
+  bool _hasError = false;
+  bool get hasError => _hasError;
 
   int _earningPage = 1;
   bool _hasMoreEarnings = true;
@@ -49,25 +52,31 @@ class EcologicalEarningsNotifier with ChangeNotifier {
   Future<void> changeCoin(String newCoin, int subaccountId) async {
     if (_selectedCoin == newCoin) return;
     _selectedCoin = newCoin.toUpperCase();
-    // Reset all data and states
-    _summaryInfo = null;
-    _earningRecords = [];
-    _paymentRecords = [];
     _earningPage = 1;
     _paymentPage = 1;
     _hasMoreEarnings = true;
     _hasMorePayments = true;
-    notifyListeners(); // Notify to show loading indicators
+    _hasError = false;
+    _isLoading = true;
+    notifyListeners();
     await refreshAll(subaccountId, 0);
   }
 
   Future<void> refreshAll(int subaccountId, int currentTabIndex) async {
     _isLoading = true;
+    _hasError = false; // Reset error state
     notifyListeners();
-    await Future.wait([
-      _fetchSummary(subaccountId),
-      fetchRecords(subaccountId: subaccountId, type: currentTabIndex, isLoadMore: false),
-    ]);
+    try {
+      await Future.wait([
+        _fetchSummary(subaccountId),
+        fetchRecords(subaccountId: subaccountId, type: currentTabIndex, isLoadMore: false),
+      ]);
+    } catch (e) {
+      _hasError = true;
+      _summaryInfo = null;
+      _earningRecords = [];
+      _paymentRecords = [];
+    }
     _isLoading = false;
     notifyListeners();
   }
@@ -83,6 +92,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Failed to fetch eco summary for $_selectedCoin: $e');
+      rethrow; // Rethrow to be caught by refreshAll
     }
   }
 
@@ -127,6 +137,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Failed to fetch eco records for $_selectedCoin: $e');
+       rethrow; // Rethrow to be caught by refreshAll
     }
     notifyListeners();
   }

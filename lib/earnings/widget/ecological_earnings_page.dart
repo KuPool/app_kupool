@@ -8,7 +8,6 @@ import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EcologicalEarningsPage extends StatefulWidget {
   const EcologicalEarningsPage({super.key});
@@ -98,67 +97,75 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     final bool isEarningTab = _recordsTabController.index == 0;
     final List<EarningsRecordList> currentRecords = isEarningTab ? notifier.earningRecords : notifier.paymentRecords;
 
-    if (notifier.isLoading && notifier.summaryInfo == null) {
-        return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
-    }
-
-    return EasyRefresh.builder(
-      controller: _refreshController,
-      header: const AppRefreshHeader(),
-      footer: AppRefreshFooter(),
-      onRefresh: _onRefresh,
-      onLoad: _onLoad,
-      childBuilder: (context, physics) {
-        return CustomScrollView(
-          physics: physics,
-          slivers: <Widget>[
-            SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                child: _buildCombinedEarningsCard(notifier),
-              ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverHeaderDelegate(
-                child: _buildRecordsSectionHeader(),
-                height: 116.0,
-              ),
-            ),
-            if (notifier.isLoading && currentRecords.isEmpty)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)))
-            else if (currentRecords.isEmpty)
-              const SliverFillRemaining(child: Center(child: Text('暂无记录')))
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final record = currentRecords[index];
-                    final isLast = index == currentRecords.length - 1;
-                    return Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Column(
-                        children: [
-                          _buildRecordRow(
-                            date: (record.datetime ?? '').split(' ').first,
-                            status: record.status?.toString() ?? '',
-                            amount: record.amount ?? '0',
-                            currency: (record.coin ?? '').toUpperCase(),
-                          ),
-                          if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
-                        ],
+    return Stack(
+      children: [
+        EasyRefresh.builder(
+          controller: _refreshController,
+          header: const AppRefreshHeader(),
+          footer: AppRefreshFooter(),
+          onRefresh: _onRefresh,
+          onLoad: _onLoad,
+          childBuilder: (context, physics) {
+            return CustomScrollView(
+              physics: physics,
+              slivers: <Widget>[
+                SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
+                if (notifier.hasError)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('数据丢失，下拉重新加载')),
+                  )
+                else ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: _buildCombinedEarningsCard(notifier),
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverHeaderDelegate(
+                      child: _buildRecordsSectionHeader(),
+                      height: 116.0,
+                    ),
+                  ),
+                  if (currentRecords.isEmpty)
+                    const SliverFillRemaining(child: Center(child: Text('暂无记录')))
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final record = currentRecords[index];
+                          final isLast = index == currentRecords.length - 1;
+                          return Container(
+                            color: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Column(
+                              children: [
+                                _buildRecordRow(
+                                  date: (record.datetime ?? '').split(' ').first,
+                                  status: record.status?.toString() ?? '',
+                                  amount: record.amount ?? '0',
+                                  currency: (record.coin ?? '').toUpperCase(),
+                                ),
+                                if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: currentRecords.length,
                       ),
-                    );
-                  },
-                  childCount: currentRecords.length,
-                ),
-              ),
-          ],
-        );
-      },
+                    ),
+                  ]
+              ],
+            );
+          },
+        ),
+        if (notifier.isLoading)
+          const Center(
+            child: CircularProgressIndicator(color: ColorUtils.mainColor,),
+          ),
+      ],
     );
   }
 
@@ -324,8 +331,6 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
           Row(
             children: [
               Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
-              const SizedBox(width: 4),
-              Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
             ],
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
