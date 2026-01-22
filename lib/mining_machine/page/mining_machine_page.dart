@@ -4,6 +4,7 @@ import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
 import 'package:Kupool/mining_machine/provider/mining_machine_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,7 +23,7 @@ class MiningMachinePage extends StatefulWidget {
 class _MiningMachinePageState extends State<MiningMachinePage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
   late EasyRefreshController _controller;
-
+  
   @override
   void initState() {
     super.initState();
@@ -245,17 +246,18 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
   Widget _buildTableHeader(MiningMachineNotifier notifier) {
     return Container(
       margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
         color: ColorUtils.widgetBgColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildHeaderCell('矿机名', 'miner_name', notifier, flex: 2),
-          _buildHeaderCell('实时算力', 'hash_15m', notifier, flex: 2, alignment: TextAlign.right),
-          _buildHeaderCell('日算力', 'hash_24h', notifier, flex: 2, alignment: TextAlign.right),
-          _buildHeaderCell('拒绝率', 'reject_rate', notifier, flex: 2, alignment: TextAlign.right),
+          _buildHeaderCell('矿机名', 'miner_name', notifier,flex: 2),
+          _buildHeaderCell('实时算力', 'hash_15m', notifier, flex: 2, alignment: TextAlign.left),
+          _buildHeaderCell('日算力', 'hash_24h', notifier, flex: 2, alignment: TextAlign.left),
+          _buildHeaderCell('拒绝率', 'reject_rate', notifier,flex: 2, alignment: TextAlign.center),
         ],
       ),
     );
@@ -266,36 +268,38 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
 
     return Expanded(
-      flex: flex,
-      child: InkWell(
-        onTap: () {
-          if (selectedAccount != null) {
-            notifier.changeSort(field, subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin);
-          }
-        },
-        child: Row(
-          mainAxisAlignment: alignment == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
-              ),
-            ),
-            const SizedBox(width: 2),
-            if (isSelected)
-              Transform.rotate(
-                angle: notifier.sortAscending ? math.pi : 0,
-                child: Image.asset(
-                  ImageUtils.arrowDown,
-                  width: 12,
-                  height: 12,
-                  color: ColorUtils.mainColor,
-                  gaplessPlayback: true,
+      // flex: flex,
+      child: Container(
+        child: InkWell(
+          onTap: () {
+            if (selectedAccount != null) {
+              notifier.changeSort(field, subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin);
+            }
+          },
+          child: Row(
+            mainAxisAlignment: alignment == TextAlign.center ? MainAxisAlignment.center : (alignment == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start),
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
                 ),
               ),
-          ],
+              const SizedBox(width: 2),
+              if (isSelected)
+                Transform.rotate(
+                  angle: notifier.sortAscending ? math.pi : 0,
+                  child: Image.asset(
+                    ImageUtils.arrowDown,
+                    width: 12,
+                    height: 12,
+                    color: ColorUtils.mainColor,
+                    gaplessPlayback: true,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -306,18 +310,24 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     final value = parts.isNotEmpty ? parts[0] : '';
     final unit = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
 
-    return Text.rich(
-      TextSpan(
-        style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
-        children: [
-          TextSpan(text: value),
-          TextSpan(
-            text: "${unit}H/s",
-            style: TextStyle(color: ColorUtils.color888, fontSize: 14),
-          ),
-        ],
+    // return FittedBox(fit: BoxFit.scaleDown,child: Text(text + "H/s", style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),));
+
+    return FittedBox(
+      alignment: alignment == TextAlign.left ? Alignment.centerLeft : Alignment.centerRight,
+      fit: BoxFit.scaleDown,
+      child: Text.rich(
+        TextSpan(
+          style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+          children: [
+            TextSpan(text: value),
+            TextSpan(
+              text: "${unit}H/s",
+              style: TextStyle(color: ColorUtils.color888, fontSize: 14),
+            ),
+          ],
+        ),
+        textAlign: alignment,
       ),
-      textAlign: alignment,
     );
   }
 
@@ -329,13 +339,13 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     required Color rejectionColor,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(name, textAlign: TextAlign.left, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1))),
-          Expanded(flex: 2, child: _buildHashrateWidget(realtimeHashrate, alignment: TextAlign.center)),
-          Expanded(flex: 2, child: _buildHashrateWidget(dailyHashrate, alignment: TextAlign.center)),
-          Expanded(flex: 1, child: Text(rejectionRate, textAlign: TextAlign.right, style: TextStyle(fontSize: 14, color: rejectionColor))),
+          Expanded(flex: 2,child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerLeft,child: Text(name,maxLines: 1, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)))),
+          Expanded(flex: 2,child: _buildHashrateWidget(realtimeHashrate)),
+          Expanded(flex: 2,child: _buildHashrateWidget(dailyHashrate,)),
+          Expanded(flex: 2,child: FittedBox(fit: BoxFit.scaleDown,child: Text(rejectionRate,textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: rejectionColor)))),
         ],
       ),
     );
