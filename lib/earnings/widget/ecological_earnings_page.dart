@@ -179,18 +179,30 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
         itemCount: _coins.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
+          final GlobalKey chipKey = GlobalKey();
           final coin = _coins[index];
           final bool isSelected = notifier.selectedCoin == coin['name'];
           return ChoiceChip(
+            key: chipKey,
             label: Text(coin['name']!),
             avatar: Image.asset(coin['icon']!, width: 24, height: 24),
             selected: isSelected,
+            showCheckmark: false,
             onSelected: (selected) {
               if (selected && selectedAccount != null) {
+                if (chipKey.currentContext != null) {
+                  // 这是核心代码！
+                  Scrollable.ensureVisible(
+                    chipKey.currentContext!,
+                    duration: const Duration(milliseconds: 300), // 滚动动画时长
+                    curve: Curves.easeInOut, // 滚动动画曲线
+                    alignment: 0.5, // 0.0 表示顶部对齐, 1.0 表示底部对齐, 0.5 表示居中
+                  );
+                }
                 notifier.changeCoin(coin['name']!, selectedAccount.id!);
               }
             },
-            selectedColor: ColorUtils.mainColor.withValues(alpha: 0.1),
+            selectedColor: ColorUtils.mainColor.withAlpha(30),
             backgroundColor: Color(0xFFE6E6E6),
             labelStyle: TextStyle(
               fontSize: 14,
@@ -266,10 +278,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
               ],
             ),
           )
-        ],
-      ),
-    );
-  }
+        ],      ),    );  }
   
   Widget _buildInnerCard({required String title, required Widget child, bool hasInfoIcon = true}) {
     return Container(
