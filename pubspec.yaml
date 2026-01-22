@@ -25,6 +25,7 @@ dependencies:
   provider: ^6.1.5+1
   intl: ^0.20.2
   easy_refresh: ^3.4.0
+  auto_size_text: ^3.0.0
 
 
 dev_dependencies:

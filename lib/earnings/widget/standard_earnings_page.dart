@@ -5,6 +5,7 @@ import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -500,20 +501,11 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
           SizedBox(width: 36.w,),
           statusConvertForWidget(status, direction),
           SizedBox(width: 10,),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child:
-            Row(
-              // crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.end,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text("12345678909876543345678", textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
-                const SizedBox(width: 4),
-                Text(currency, style: const TextStyle(fontSize: 12, color: ColorUtils.color888)),
-              ],
-            ),
+          Expanded(
+            child: AutoSizeText(amount,maxLines: 1,textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne)),
           ),
+          const SizedBox(width: 2),
+          Text(currency, style: const TextStyle(fontSize: 12, color: ColorUtils.color888)),
         ],
       ),
     );
