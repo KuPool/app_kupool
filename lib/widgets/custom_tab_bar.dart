@@ -55,6 +55,9 @@ class CustomTabBar extends StatelessWidget {
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       onTap: () {
+        if(controller.index == index){
+          return;
+        }
         controller.animateTo(index);
         onTabSelected(index); // Call the callback on tap
       },

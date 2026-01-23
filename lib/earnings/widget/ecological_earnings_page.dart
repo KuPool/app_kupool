@@ -19,7 +19,7 @@ class EcologicalEarningsPage extends StatefulWidget {
   State<EcologicalEarningsPage> createState() => _EcologicalEarningsPageState();
 }
 
-class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with SingleTickerProviderStateMixin {
+class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with SingleTickerProviderStateMixin,AutomaticKeepAliveClientMixin {
   late TabController _recordsTabController;
   late EasyRefreshController _refreshController;
   OverlayEntry? _overlayEntry;
@@ -47,8 +47,6 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
-    _recordsTabController.addListener(_handleTabSelection);
-
   }
 
   @override
@@ -67,14 +65,17 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   }
 
   void _handleTabSelection() {
-    if (_recordsTabController.indexIsChanging) return;
     final notifier = context.read<EcologicalEarningsNotifier>();
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
 
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
+      _refreshController.finishRefresh();
+      _refreshController.resetFooter();
       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1);
     } else if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
+      _refreshController.finishRefresh();
+      _refreshController.resetFooter();
       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
   }
@@ -82,7 +83,6 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   @override
   void dispose() {
     _removeTooltip();
-    _recordsTabController.removeListener(_handleTabSelection);
     _recordsTabController.dispose();
     _refreshController.dispose();
     super.dispose();
@@ -147,6 +147,8 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       await notifier.refreshAll(selectedAccount.id!, _recordsTabController.index);
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
+    }else {
+      _refreshController.finishRefresh(IndicatorResult.fail);
     }
   }
 
@@ -159,85 +161,91 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     if (selectedAccount != null && hasMore) {
       await notifier.fetchRecords(subaccountId: selectedAccount.id!, type: currentTabIndex, isLoadMore: true);
       _refreshController.finishLoad(notifier.hasMoreEarnings ? IndicatorResult.success : IndicatorResult.noMore);
+    }else {
+      _refreshController.finishLoad(IndicatorResult.noMore);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final notifier = context.watch<EcologicalEarningsNotifier>();
     final bool isEarningTab = _recordsTabController.index == 0;
     final List<EarningsRecordList> currentRecords = isEarningTab ? notifier.earningRecords : notifier.paymentRecords;
 
+    if(isEarningTab && !notifier.isRecordsLoading){
+      _refreshController.finishLoad(notifier.hasMoreEarnings ? IndicatorResult.success : IndicatorResult.noMore);
+    }else{
+      _refreshController.finishLoad(notifier.hasMorePayments ? IndicatorResult.success : IndicatorResult.noMore);
+    }
+
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
-      body: GestureDetector(
-        onTap: _removeTooltip,
-        child: EasyRefresh.builder(
-          controller: _refreshController,
-          header: const AppRefreshHeader(),
-          footer: AppRefreshFooter(),
-          onRefresh: _onRefresh,
-          onLoad: _onLoad,
-          childBuilder: (context, physics) {
-            return CustomScrollView(
-              physics: physics,
-              slivers: <Widget>[
-                SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
-                if (notifier.hasError)
-                  const SliverFillRemaining(
-                    child: Center(child: Text('网络异常，请下拉重新加载')),
-                  )
-                else ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                      child: _buildCombinedEarningsCard(notifier),
+      body: EasyRefresh.builder(
+        controller: _refreshController,
+        header: const AppRefreshHeader(),
+        footer: AppRefreshFooter(),
+        onRefresh: _onRefresh,
+        onLoad: _onLoad,
+        childBuilder: (context, physics) {
+          return CustomScrollView(
+            physics: physics,
+            slivers: <Widget>[
+              SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
+              if (notifier.hasError)
+                const SliverFillRemaining(
+                  child: Center(child: Text('网络异常，请下拉重新加载')),
+                )
+              else ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                    child: _buildCombinedEarningsCard(notifier),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverHeaderDelegate(
+                    child: _buildRecordsSectionHeader(),
+                    height: 116.0,
+                  ),
+                ),
+          if (notifier.isRecordsLoading && currentRecords.isEmpty)
+          const SliverFillRemaining(
+          child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
+          )
+          else if (currentRecords.isEmpty)
+                  const SliverFillRemaining(child: Center(child: Text('暂无记录')))
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final record = currentRecords[index];
+                        final isLast = index == currentRecords.length - 1;
+                        return Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Column(
+                            children: [
+                              _buildRecordRow(
+                                date: (record.datetime ?? '').split(' ').first,
+                                status: record.status?.toString() ?? '',
+                                amount: record.amount ?? '0',
+                                currency: (record.coin ?? '').toUpperCase(),
+                              ),
+                              if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                            ],
+                          ),
+                        );
+                      },
+                      childCount: currentRecords.length,
                     ),
                   ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SliverHeaderDelegate(
-                      child: _buildRecordsSectionHeader(),
-                      height: 116.0,
-                    ),
-                  ),
-            if (notifier.isRecordsLoading && currentRecords.isEmpty)
-            const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
-            )
-            else if (currentRecords.isEmpty)
-                    const SliverFillRemaining(child: Center(child: Text('暂无记录')))
-                  else
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final record = currentRecords[index];
-                          final isLast = index == currentRecords.length - 1;
-                          return Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            margin: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Column(
-                              children: [
-                                _buildRecordRow(
-                                  date: (record.datetime ?? '').split(' ').first,
-                                  status: record.status?.toString() ?? '',
-                                  amount: record.amount ?? '0',
-                                  currency: (record.coin ?? '').toUpperCase(),
-                                ),
-                                if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: currentRecords.length,
-                      ),
-                    ),
-                  ]
-              ],
-            );
-          },
-        ),
+                ]
+            ],
+          );
+        },
       ),
     );
   }
@@ -272,7 +280,16 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
                     alignment: 0.5, // 0.0 表示顶部对齐, 1.0 表示底部对齐, 0.5 表示居中
                   );
                 }
-                notifier.changeCoin(coin['name']!, selectedAccount.id!);
+                // 切换清空，重置
+                if(notifier.selectedCoin != coin['name']){
+                  _recordsTabController.index = 0;
+                  notifier.paymentRecords.clear();
+                  notifier.earningRecords.clear();
+                  _refreshController.finishRefresh();
+                  _refreshController.resetFooter();
+                  notifier.changeCoin(coin['name']!, selectedAccount.id!,0);
+                }
+
               }
             },
             selectedColor: ColorUtils.mainColor.withAlpha(30),
@@ -307,6 +324,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
             padding: const EdgeInsets.only(left: 16, top: 8, bottom: 12),
             child: CustomTabBar(controller: _recordsTabController,tabs: const ["收益记录","支付记录"], onTabSelected: (tapIndex){
               context.read<EcologicalEarningsNotifier>().setSelectIndex(tapIndex);
+              _handleTabSelection();
             }),
           ),
            _buildRecordsHeader(),
@@ -476,6 +494,10 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 
 class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {

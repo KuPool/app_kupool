@@ -32,7 +32,6 @@ class EcologicalEarningsNotifier with ChangeNotifier {
   bool get hasMorePayments => _hasMorePayments;
 
   final int _pageSize = 30;
-  bool _isInitialized = false;
 
   bool _isRecordsLoading = false;
   bool get isRecordsLoading => _isRecordsLoading;
@@ -46,7 +45,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
   }
   // --- Methods --
 
-  Future<void> changeCoin(String newCoin, int subaccountId) async {
+  Future<void> changeCoin(String newCoin, int subaccountId,int type) async {
     if (_selectedCoin == newCoin) return;
     _selectedCoin = newCoin.toUpperCase();
     _earningPage = 1;
@@ -56,7 +55,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
     _hasError = false;
     _isLoading = true;
     notifyListeners();
-    await refreshAll(subaccountId, 0);
+    await refreshAll(subaccountId, type);
   }
 
   Future<void> refreshAll(int subaccountId, int currentTabIndex) async {
@@ -88,6 +87,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
         _summaryInfo = EarningsInfoEntity.fromJson(response);
       }
     } catch (e) {
+      _summaryInfo = null;
       debugPrint('Failed to fetch eco summary for $_selectedCoin: $e');
     }finally{
       notifyListeners();
@@ -110,7 +110,6 @@ class EcologicalEarningsNotifier with ChangeNotifier {
        isEarning ? _earningPage = 1 : _paymentPage = 1;
        currentPage = 1;
     }
-
     try {
       final response = await ApiService().get('/v1/earnings/list', queryParameters: {
         'subaccount_id': subaccountId,

@@ -19,7 +19,7 @@ class StandardEarningsPage extends StatefulWidget {
   State<StandardEarningsPage> createState() => _StandardEarningsPageState();
 }
 
-class _StandardEarningsPageState extends State<StandardEarningsPage> with SingleTickerProviderStateMixin {
+class _StandardEarningsPageState extends State<StandardEarningsPage> with SingleTickerProviderStateMixin,AutomaticKeepAliveClientMixin {
   late TabController _recordsTabController;
   late EasyRefreshController _refreshController;
   SubAccountMiniInfoList? _previousSelectedAccount;
@@ -41,8 +41,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
-    _recordsTabController.addListener(_handleTabSelection);
-    // Initial data fetch is now handled by didChangeDependencies
   }
 
   @override
@@ -61,14 +59,17 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   }
 
   void _handleTabSelection() {
-    if (_recordsTabController.indexIsChanging) return;
     final notifier = context.read<StandardEarningsNotifier>();
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
 
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
+      _refreshController.finishRefresh();
+      _refreshController.resetFooter();
       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1);
     } else if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
+      _refreshController.finishRefresh();
+      _refreshController.resetFooter();
        notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
   }
@@ -76,7 +77,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   @override
   void dispose() {
     _removeTooltip();
-    _recordsTabController.removeListener(_handleTabSelection);
     _recordsTabController.dispose();
     _refreshController.dispose();
     super.dispose();
@@ -164,9 +164,16 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final notifier = context.watch<StandardEarningsNotifier>();
     final bool isEarningTab = _recordsTabController.index == 0;
     final List<EarningsRecordList> currentRecords = isEarningTab ? notifier.earningRecords : notifier.paymentRecords;
+
+    if(isEarningTab){
+      _refreshController.finishLoad(notifier.hasMoreEarnings ? IndicatorResult.success : IndicatorResult.noMore);
+    }else{
+      _refreshController.finishLoad(notifier.hasMorePayments ? IndicatorResult.success : IndicatorResult.noMore);
+    }
 
     if (notifier.isSummaryLoading && notifier.dogeInfo == null && notifier.ltcInfo == null) {
         return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
@@ -174,71 +181,68 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
-      body: GestureDetector(
-        onTap: _removeTooltip, // Dismiss tooltip when tapping outside
-        child: EasyRefresh.builder(
-          controller: _refreshController,
-          header: const AppRefreshHeader(),
-          footer: AppRefreshFooter(),
-          onRefresh: _onRefresh,
-          onLoad: _onLoad,
-          childBuilder: (context, physics) {
-            return CustomScrollView(
-              physics: physics,
-              slivers: <Widget>[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding:  EdgeInsets.fromLTRB(leftPadding, 10, rightPadding, 0),
-                    child: _buildCombinedEarningsCard(notifier),
+      body: EasyRefresh.builder(
+        controller: _refreshController,
+        header: const AppRefreshHeader(),
+        footer: AppRefreshFooter(),
+        onRefresh: _onRefresh,
+        onLoad: _onLoad,
+        childBuilder: (context, physics) {
+          return CustomScrollView(
+            physics: physics,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:  EdgeInsets.fromLTRB(leftPadding, 10, rightPadding, 0),
+                  child: _buildCombinedEarningsCard(notifier),
+                ),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverHeaderDelegate(
+                  child: _buildRecordsSectionHeader(),
+                  height: 116.0,
+                ),
+              ),
+              if (notifier.isRecordsLoading && currentRecords.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
+                )
+              else if (currentRecords.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: Text('暂无记录')),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final record = currentRecords[index];
+                      final isLast = index == currentRecords.length - 1;
+                      return Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          children: [
+                            _buildRecordRow(
+                              date: (record.datetime ?? '').split(' ').first,
+                              status: record.status,
+                              amount: record.amount ?? '0',
+                              currency: (record.coin ?? '').toUpperCase(),
+                              direction: record.direction ?? "",
+                            ),
+                            if (!isLast)
+                              Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                          ],
+                        ),
+                      );
+                    },
+                    childCount: currentRecords.length,
                   ),
                 ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverHeaderDelegate(
-                    child: _buildRecordsSectionHeader(),
-                    height: 116.0,
-                  ),
-                ),
-                if (notifier.isRecordsLoading && currentRecords.isEmpty)
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
-                  )
-                else if (currentRecords.isEmpty)
-                  const SliverFillRemaining(
-                    child: Center(child: Text('暂无记录')),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final record = currentRecords[index];
-                        final isLast = index == currentRecords.length - 1;
-                        return Container(
-                          color: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Column(
-                            children: [
-                              _buildRecordRow(
-                                date: (record.datetime ?? '').split(' ').first,
-                                status: record.status,
-                                amount: record.amount ?? '0',
-                                currency: (record.coin ?? '').toUpperCase(),
-                                direction: record.direction ?? "",
-                              ),
-                              if (!isLast)
-                                Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
-                            ],
-                          ),
-                        );
-                      },
-                      childCount: currentRecords.length,
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -321,6 +325,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
               builder: (context, _) => CustomTabBar(controller: _recordsTabController,tabs: const ["收益记录","支付记录"], 
               onTabSelected: (int p1) {
                 context.read<StandardEarningsNotifier>().setSelectIndex(p1);
+                _handleTabSelection();
               },),
             ),
           ),
@@ -539,6 +544,10 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 
 }
 
