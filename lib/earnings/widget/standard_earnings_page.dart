@@ -103,16 +103,27 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     double arrowX = offset.dx + size.width / 2 - left;
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: offset.dy + size.height + 5, // Position below the icon
-        left: left,
-        child: GestureDetector(
-          onTap: _removeTooltip, // Allow tapping the tooltip to dismiss
-          child: Material(
-            color: Colors.transparent,
-            child: _TooltipWidget(message: message, arrowX: arrowX+2, width: tooltipWidth),
+      builder: (context) => Stack(
+        children: [
+          GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: (){
+                _removeTooltip();
+              },
+              child: SizedBox(height:MediaQuery.of(context).size.height ,width: screenWidth,)
           ),
-        ),
+          Positioned(
+            top: offset.dy + size.height + 5, // Position below the icon
+            left: left,
+            child: GestureDetector(
+              onTap: _removeTooltip, // Allow tapping the tooltip to dismiss
+              child: Material(
+                color: Colors.transparent,
+                child: _TooltipWidget(message: message, arrowX: arrowX+2, width: tooltipWidth),
+              ),
+            ),
+          ),
+        ],
       ),
     );
 

@@ -183,9 +183,13 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
                             height: 24,
                           ),
                         ),
-                        Text(
-                          appBarTitle,
-                          style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
+                        Expanded(
+                          child: Text(
+                            appBarTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: ColorUtils.colorT1, fontSize: 15.sp),
+                          ),
                         ),
                       ],
                     ),

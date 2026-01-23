@@ -10,6 +10,8 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../drawer/model/sub_account_mini_info_entity.dart';
+
 class EcologicalEarningsPage extends StatefulWidget {
   const EcologicalEarningsPage({super.key});
 
@@ -21,9 +23,10 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   late TabController _recordsTabController;
   late EasyRefreshController _refreshController;
   OverlayEntry? _overlayEntry;
-
+  SubAccountMiniInfoList? _previousSelectedAccount;
   final GlobalKey _yesterdayEarningsKey = GlobalKey();
   final GlobalKey _cumulativePaymentKey = GlobalKey();
+  final GlobalKey _wkDatePaymentKey = GlobalKey();
 
   final List<Map<String, String>> _coins = [
     {'name': 'BELLS', 'icon': ImageUtils.coinBells},
@@ -45,13 +48,22 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       controlFinishLoad: true,
     );
     _recordsTabController.addListener(_handleTabSelection);
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
-      if (selectedAccount != null) {
-        context.read<EcologicalEarningsNotifier>().initialFetch(selectedAccount.id!);
-      }
-    });
+
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
+
+    if (selectedAccount != null && selectedAccount != _previousSelectedAccount) {
+      _previousSelectedAccount = selectedAccount;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<EcologicalEarningsNotifier>().refreshAll(selectedAccount.id!, _recordsTabController.index);
+        }
+      });
+    }
   }
 
   void _handleTabSelection() {
@@ -70,6 +82,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   @override
   void dispose() {
     _removeTooltip();
+    _recordsTabController.removeListener(_handleTabSelection);
     _recordsTabController.dispose();
     _refreshController.dispose();
     super.dispose();
@@ -94,16 +107,27 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     double arrowX = offset.dx + size.width / 2 - left;
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: offset.dy + size.height + 5, 
-        left: left,
-        child: GestureDetector(
-          onTap: _removeTooltip, 
-          child: Material(
-            color: Colors.transparent,
-            child: _TooltipWidget(message: message, arrowX: arrowX, width: tooltipWidth),
+      builder: (context) => Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: (){
+              _removeTooltip();
+            },
+              child: SizedBox(height:MediaQuery.of(context).size.height ,width: screenWidth,)
           ),
-        ),
+          Positioned(
+            top: offset.dy + size.height + 5,
+            left: left,
+            child: GestureDetector(
+              onTap: _removeTooltip,
+              child: Material(
+                color: Colors.transparent,
+                child: _TooltipWidget(message: message, arrowX: arrowX, width: tooltipWidth),
+              ),
+            ),
+          ),
+        ],
       ),
     );
 
@@ -148,75 +172,71 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       backgroundColor: ColorUtils.widgetBgColor,
       body: GestureDetector(
         onTap: _removeTooltip,
-        child: Stack(
-          children: [
-            EasyRefresh.builder(
-              controller: _refreshController,
-              header: const AppRefreshHeader(),
-              footer: AppRefreshFooter(),
-              onRefresh: _onRefresh,
-              onLoad: _onLoad,
-              childBuilder: (context, physics) {
-                return CustomScrollView(
-                  physics: physics,
-                  slivers: <Widget>[
-                    SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
-                    if (notifier.hasError)
-                      const SliverFillRemaining(
-                        child: Center(child: Text('数据丢失，下拉重新加载')),
-                      )
-                    else ...[
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                          child: _buildCombinedEarningsCard(notifier),
-                        ),
-                      ),
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _SliverHeaderDelegate(
-                          child: _buildRecordsSectionHeader(),
-                          height: 116.0,
-                        ),
-                      ),
-                      if (currentRecords.isEmpty)
-                        const SliverFillRemaining(child: Center(child: Text('暂无记录')))
-                      else
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final record = currentRecords[index];
-                              final isLast = index == currentRecords.length - 1;
-                              return Container(
-                                color: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                margin: const EdgeInsets.symmetric(horizontal: 10),
-                                child: Column(
-                                  children: [
-                                    _buildRecordRow(
-                                      date: (record.datetime ?? '').split(' ').first,
-                                      status: record.status?.toString() ?? '',
-                                      amount: record.amount ?? '0',
-                                      currency: (record.coin ?? '').toUpperCase(),
-                                    ),
-                                    if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
-                                  ],
+        child: EasyRefresh.builder(
+          controller: _refreshController,
+          header: const AppRefreshHeader(),
+          footer: AppRefreshFooter(),
+          onRefresh: _onRefresh,
+          onLoad: _onLoad,
+          childBuilder: (context, physics) {
+            return CustomScrollView(
+              physics: physics,
+              slivers: <Widget>[
+                SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
+                if (notifier.hasError)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('网络异常，请下拉重新加载')),
+                  )
+                else ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: _buildCombinedEarningsCard(notifier),
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverHeaderDelegate(
+                      child: _buildRecordsSectionHeader(),
+                      height: 116.0,
+                    ),
+                  ),
+            if (notifier.isRecordsLoading && currentRecords.isEmpty)
+            const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)),
+            )
+            else if (currentRecords.isEmpty)
+                    const SliverFillRemaining(child: Center(child: Text('暂无记录')))
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final record = currentRecords[index];
+                          final isLast = index == currentRecords.length - 1;
+                          return Container(
+                            color: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Column(
+                              children: [
+                                _buildRecordRow(
+                                  date: (record.datetime ?? '').split(' ').first,
+                                  status: record.status?.toString() ?? '',
+                                  amount: record.amount ?? '0',
+                                  currency: (record.coin ?? '').toUpperCase(),
                                 ),
-                              );
-                            },
-                            childCount: currentRecords.length,
-                          ),
-                        ),
-                      ]
-                  ],
-                );
-              },
-            ),
-            if (notifier.isLoading)
-              const Center(
-                child: CircularProgressIndicator(color: ColorUtils.mainColor,),
-              ),
-          ],
+                                if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: currentRecords.length,
+                      ),
+                    ),
+                  ]
+              ],
+            );
+          },
         ),
       ),
     );
@@ -410,10 +430,20 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
-            ],
+          GestureDetector(
+            onTap: () {
+              _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
+            },
+            child: Row(
+              children: [
+                Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
+                const SizedBox(width: 4),
+                Container(
+                  key: _wkDatePaymentKey,
+                  child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+                ),
+              ],
+            ),
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
         ],

@@ -44,17 +44,6 @@ class StandardEarningsNotifier with ChangeNotifier {
 
   final int _pageSize = 30;
 
-  // Lazy loading flag
-  bool _isInitialized = false;
-
-  Future<void> initialFetch(int subaccountId) async {
-    // Fetch only if it has not been initialized yet.
-    if (_isInitialized) return;
-    _isInitialized = true;
-    await refreshAll(subaccountId, 0);
-  }
-
-  // tab selectIndex
   int selectIndex = 0;
   setSelectIndex(int index){
     if(selectIndex != index){

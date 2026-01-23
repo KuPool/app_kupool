@@ -34,6 +34,9 @@ class EcologicalEarningsNotifier with ChangeNotifier {
   final int _pageSize = 30;
   bool _isInitialized = false;
 
+  bool _isRecordsLoading = false;
+  bool get isRecordsLoading => _isRecordsLoading;
+
   int selectIndex = 0;
   setSelectIndex(int index){
     if(selectIndex != index){
@@ -41,13 +44,7 @@ class EcologicalEarningsNotifier with ChangeNotifier {
       notifyListeners();
     }
   }
-  // --- Methods ---
-
-  Future<void> initialFetch(int subaccountId) async {
-    if (_isInitialized) return;
-    _isInitialized = true;
-    await refreshAll(subaccountId, 0);
-  }
+  // --- Methods --
 
   Future<void> changeCoin(String newCoin, int subaccountId) async {
     if (_selectedCoin == newCoin) return;
@@ -92,13 +89,18 @@ class EcologicalEarningsNotifier with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Failed to fetch eco summary for $_selectedCoin: $e');
-      rethrow; // Rethrow to be caught by refreshAll
+    }finally{
+      notifyListeners();
     }
   }
 
   Future<void> fetchRecords({required int subaccountId, required int type, bool isLoadMore = false}) async {
     final isEarning = type == 0;
     if (isLoadMore && (isEarning ? !_hasMoreEarnings : !_hasMorePayments)) return;
+    if (_isRecordsLoading) return;
+
+    _isRecordsLoading = true;
+    if (!isLoadMore) notifyListeners();
 
     int currentPage = isEarning ? _earningPage : _paymentPage;
     if (isLoadMore) {
@@ -137,8 +139,10 @@ class EcologicalEarningsNotifier with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Failed to fetch eco records for $_selectedCoin: $e');
-       rethrow; // Rethrow to be caught by refreshAll
+    }finally{
+      _isRecordsLoading = false;
+      notifyListeners();
     }
-    notifyListeners();
+
   }
 }
