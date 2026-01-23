@@ -79,9 +79,13 @@ class EcologicalEarningsNotifier with ChangeNotifier {
 
   Future<void> _fetchSummary(int subaccountId) async {
     try {
+      var selectCoin = _selectedCoin.toLowerCase();
+      if(selectCoin == 'bells'){
+        selectCoin = "bel";
+      }
       final response = await ApiService().get('/v1/earnings/info', queryParameters: {
         'subaccount_id': subaccountId,
-        'coin': _selectedCoin.toLowerCase(),
+        'coin': selectCoin,
       });
       if (response != null) {
         _summaryInfo = EarningsInfoEntity.fromJson(response);
@@ -111,9 +115,13 @@ class EcologicalEarningsNotifier with ChangeNotifier {
        currentPage = 1;
     }
     try {
+      var selectCoin = _selectedCoin.toLowerCase();
+      if(selectCoin == 'bells'){
+        selectCoin = "bel";
+      }
       final response = await ApiService().get('/v1/earnings/list', queryParameters: {
         'subaccount_id': subaccountId,
-        'coin': _selectedCoin.toLowerCase(),
+        'coin': selectCoin,
         'page': currentPage,
         'page_size': _pageSize,
         'type': type,

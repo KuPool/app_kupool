@@ -34,7 +34,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     {'name': 'PEP', 'icon': ImageUtils.coin_pep},
     {'name': 'SHIC', 'icon': ImageUtils.coin_shic},
     {'name': 'TRMP', 'icon': ImageUtils.coin_trmp},
-    {'name': 'DIGO', 'icon': ImageUtils.coin_dingo},
+    {'name': 'DINGO', 'icon': ImageUtils.coin_dingo},
     {'name': 'JKC', 'icon': ImageUtils.coin_jkc},
     {'name': 'CRC', 'icon': ImageUtils.coin_crc},
   ];
