@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
@@ -9,6 +10,7 @@ import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
@@ -28,10 +30,14 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
   final GlobalKey _yesterdayEarningsKey = GlobalKey();
   final GlobalKey _cumulativePaymentKey = GlobalKey();
   final GlobalKey _wkDatePaymentKey = GlobalKey();
+  final GlobalKey _headerKey = GlobalKey();
 
   final leftPadding = 10.0;
   final rightPadding = 10.0;
 
+  final ScrollController _scrollController = ScrollController();
+  double _scrollPositionEarn = 0.0;
+  double _scrollPositionPay = 0.0;
 
   @override
   void initState() {
@@ -41,6 +47,16 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
+    _scrollController.addListener(_saveScrollPosition);
+  }
+  void _saveScrollPosition() {
+    if(_recordsTabController.index == 0){
+      _scrollPositionEarn = _scrollController.position.pixels;
+    }else{
+      _scrollPositionPay = _scrollController.position.pixels;
+    }
+    print("滚动位置: ${_scrollController.position.pixels}");
+
   }
 
   @override
@@ -63,6 +79,49 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
 
+    final RenderSliver renderSliver =
+    _headerKey.currentContext?.findRenderObject() as RenderSliver;
+
+    final headerStick =  renderSliver.constraints.precedingScrollExtent;
+
+    if(_recordsTabController.index == 0 && notifier.earningRecords.isEmpty){
+      if(_scrollPositionPay >= headerStick){
+        _scrollController.jumpTo(headerStick);
+      }
+    }
+    if(_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty){
+      if(_scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(headerStick);
+      }
+    }
+    if(_recordsTabController.index == 0){
+      if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(_scrollPositionEarn);
+      }else {
+        if(_scrollPositionPay < headerStick){
+          double minValue = max(_scrollPositionPay, _scrollPositionEarn);
+          _scrollController.jumpTo(minValue);
+        }else{
+          double minValue = min(_scrollPositionPay, _scrollPositionEarn);
+          _scrollController.jumpTo(minValue);
+        }
+      }
+    }else{
+      if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(_scrollPositionPay);
+      }else{
+        if(_scrollPositionEarn < headerStick){
+          double minValue = max(_scrollPositionPay, _scrollPositionEarn);
+          _scrollController.jumpTo(minValue);
+        }else{
+          double minValue = min(_scrollPositionPay, _scrollPositionEarn);
+          _scrollController.jumpTo(minValue);
+        }
+      }
+    }
+
+
+
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
@@ -72,6 +131,18 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       _refreshController.resetFooter();
        notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
+    // if(_recordsTabController.index == 0){
+    //   _scrollController.jumpTo(_scrollPositionEarn);
+    // }else{
+    //   _scrollController.jumpTo(_scrollPositionPay);
+    // }
+
+    // final renderBox = _headerKey.currentContext!.findRenderObject() as RenderBox;
+    // final ScrollController scrollController = PrimaryScrollController.of(context);
+    // final RenderAbstractViewport? viewport =
+    // Scrollable.maybeOf(context)?.context.findRenderObject() as RenderAbstractViewport?;
+
+
   }
 
   @override
@@ -79,6 +150,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     _removeTooltip();
     _recordsTabController.dispose();
     _refreshController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -189,6 +261,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         onLoad: _onLoad,
         childBuilder: (context, physics) {
           return CustomScrollView(
+            controller: _scrollController,
             physics: physics,
             slivers: <Widget>[
               SliverToBoxAdapter(
@@ -199,6 +272,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
               ),
               SliverPersistentHeader(
                 pinned: true,
+                key: _headerKey,
                 delegate: _SliverHeaderDelegate(
                   child: _buildRecordsSectionHeader(),
                   height: 116.0,
@@ -493,6 +567,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                     key: _wkDatePaymentKey,
                     child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
                   ),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),

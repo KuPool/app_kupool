@@ -230,8 +230,9 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
                             children: [
                               _buildRecordRow(
                                 date: (record.datetime ?? '').split(' ').first,
-                                status: record.status?.toString() ?? '',
+                                status: record.status ?? 0,
                                 amount: record.amount ?? '0',
+                                direction: record.direction ?? "",
                                 currency: (record.coin ?? '').toUpperCase(),
                               ),
                               if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
@@ -468,26 +469,95 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       ),
     );
   }
+  Widget statusConvertForWidget(int code, String direction) {
 
-  Widget _buildRecordRow({required String date,required String status, required String amount, required String currency,}) {
+    if(code == null){
+      return SizedBox.shrink();
+    }
+    String statusStr = "";
+    switch (code) {
+      case 0:
+        statusStr = '未入账';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: const Color(0xFFF53F3F),
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case 10:
+        statusStr = '已审核';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case 20:
+        statusStr = '准备发款';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+
+      case 21:
+        statusStr = '发款中';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: ColorUtils.mainColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case 30:
+        statusStr = '已支付';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: const Color(0xFF00C490),
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      case -1:
+        statusStr = '已取消';
+        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
+          color: const Color(0xFFF53F3F),
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),);
+
+      default:
+        return SizedBox.shrink();
+    }
+  }
+  Widget _buildRecordRow({required String date,required int status, required String amount, required String currency,required String direction,}) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1))),
-          Expanded(flex: 1, child: Text(status, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, color: ColorUtils.mainColor))),
+          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
+          SizedBox(width: 30,),
+          statusConvertForWidget(status, direction),
+          SizedBox(width: 16,),
           Expanded(
-            flex: 4,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Expanded(child: Text(amount, textAlign: TextAlign.right,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne))),
-                const SizedBox(width: 4),
-                Text(currency, style: const TextStyle(fontSize: 12, color: ColorUtils.color888)),
-              ],
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: RichText(
+                maxLines: 1,
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: amount,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: ColorUtils.colorTitleOne),
+                    ),
+                    TextSpan(
+                      text: ' $currency',
+                      style: const TextStyle(fontSize: 12, color: ColorUtils.color888),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
