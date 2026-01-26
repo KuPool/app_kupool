@@ -38,6 +38,7 @@ class ImageUtils {
   static const String coin_jkc = '${_imageBasePath}earn/JKC.png';
   static const String coin_ltc = '${_imageBasePath}earn/LTC.png';
   static const String coin_doge = '${_imageBasePath}earn/DOGE.png';
+  static const String coin_fb = '${_imageBasePath}earn/FB.png';
 
 
   // machine

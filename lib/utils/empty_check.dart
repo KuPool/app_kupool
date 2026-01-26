@@ -8,3 +8,6 @@ bool isEmpty(List? list) {
 bool isValidString(String? str) {
   return str != null && str.isNotEmpty;
 }
+bool isUnValidString(String? str) {
+  return str == null && str == "";
+}

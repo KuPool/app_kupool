@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/ecological_earnings_notifier.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
@@ -35,7 +36,9 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   double _scrollPositionEarn = 0.0;
   double _scrollPositionPay = 0.0;
 
-  final List<Map<String, String>> _coins = [
+  List<Map<String, String>> _coins = [];
+
+  final List<Map<String, String>> _coinLtc = [
     {'name': 'BELLS', 'icon': ImageUtils.coinBells},
     {'name': 'LKY', 'icon': ImageUtils.coin_lky},
     {'name': 'PEP', 'icon': ImageUtils.coin_pep},
@@ -44,6 +47,10 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     {'name': 'DINGO', 'icon': ImageUtils.coin_dingo},
     {'name': 'JKC', 'icon': ImageUtils.coin_jkc},
     {'name': 'CRC', 'icon': ImageUtils.coin_crc},
+  ];
+
+  final List<Map<String, String>> _coinsBtc = [
+    {'name': 'FB', 'icon': ImageUtils.coin_fb},
   ];
 
   @override
@@ -56,6 +63,8 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     );
 
     _scrollController.addListener(_saveScrollPosition);
+
+    _coins = selectCurrentCoinType == "ltc" ? _coinLtc : _coinsBtc;
   }
   void _saveScrollPosition() {
     if(_recordsTabController.index == 0){
@@ -70,7 +79,12 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     super.didChangeDependencies();
     final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
-    if (selectedAccount != null && selectedAccount != _previousSelectedAccount) {
+    if (selectedAccount != null &&  (selectedAccount.id != _previousSelectedAccount?.id || selectedAccount.selectCoin != _previousSelectedAccount?.selectCoin)) {
+
+      if(selectedAccount.selectCoin != _previousSelectedAccount?.selectCoin){
+        _coins = selectCurrentCoinType == "ltc" ? _coinLtc : _coinsBtc;
+        context.read<EcologicalEarningsNotifier>().setSelectedCoin(selectCurrentCoinType == "ltc" ? "BELLS" : "FB");
+      }
       _previousSelectedAccount = selectedAccount;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {

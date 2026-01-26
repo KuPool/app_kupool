@@ -4,7 +4,9 @@ import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
@@ -62,11 +64,11 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     super.didChangeDependencies();
     final selectedAccount = context.watch<DogeLtcListNotifier>().selectedAccount;
 
-    if (selectedAccount != null && selectedAccount != _previousSelectedAccount) {
+    if (selectedAccount != null && (selectedAccount.id != _previousSelectedAccount?.id || selectedAccount.selectCoin !=  _previousSelectedAccount?.selectCoin)) {
       _previousSelectedAccount = selectedAccount;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          context.read<StandardEarningsNotifier>().refreshAll(selectedAccount.id!, _recordsTabController.index);
+          context.read<StandardEarningsNotifier>().refreshAll(selectedAccount.id!, _recordsTabController.index,selectedAccount.selectCoin);
         }
       });
     }
@@ -115,11 +117,11 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
-      notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1);
+      notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 1,coinType: selectedAccount.selectCoin);
     } else if (_recordsTabController.index == 0 && notifier.earningRecords.isEmpty) {
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
-       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
+       notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0,coinType: selectedAccount.selectCoin);
     }
 
   }
@@ -190,7 +192,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     final notifier = context.read<StandardEarningsNotifier>();
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount != null) {
-      await notifier.refreshAll(selectedAccount.id!, _recordsTabController.index);
+      await notifier.refreshAll(selectedAccount.id!, _recordsTabController.index,selectedAccount.selectCoin);
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
     } else {
@@ -205,7 +207,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     bool hasMore = currentTabIndex == 0 ? notifier.hasMoreEarnings : notifier.hasMorePayments;
 
     if (selectedAccount != null && hasMore) {
-      await notifier.fetchRecords(subaccountId: selectedAccount.id!, type: currentTabIndex, isLoadMore: true);
+      await notifier.fetchRecords(subaccountId: selectedAccount.id!, type: currentTabIndex, isLoadMore: true,coinType: selectedAccount.selectCoin);
       bool newHasMore = currentTabIndex == 0 ? notifier.hasMoreEarnings : notifier.hasMorePayments;
       _refreshController.finishLoad(newHasMore ? IndicatorResult.success : IndicatorResult.noMore);
     } else {
@@ -283,6 +285,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                               amount: record.amount ?? '0',
                               currency: (record.coin ?? '').toUpperCase(),
                               direction: record.direction ?? "",
+                              txHash: record.txHash ?? "",
                             ),
                             if (!isLast)
                               Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
@@ -300,7 +303,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     );
   }
 
-  Widget statusConvertForWidget(int? code, String direction) {
+  Widget statusConvertForWidget(int? code, String direction,String txHash) {
 
     if(code == null){
       return SizedBox.shrink();
@@ -341,9 +344,9 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         ),);
 
       case 30:
-        statusStr = direction == 'i' ? '已入账' : '已支付';
+        statusStr = (direction == 'i' && isUnValidString(txHash)) ? '待支付' : '已支付';
         return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: direction == 'i' ? ColorUtils.mainColor : const Color(0xFF00C490),
+          color: (direction == 'i' && isUnValidString(txHash)) ? ColorUtils.mainColor : const Color(0xFF00C490),
           fontSize: 12,
           fontWeight: FontWeight.w400,
         ),);
@@ -405,10 +408,12 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
               infoKey: _yesterdayEarningsKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: selectCurrentCoinType == "ltc" ?  [
                   _buildEarningRow(notifier.dogeInfo?.yesterdayEarnings ?? '0.00', 'DOGE', amountSize: 20, currencySize: 16),
                   const SizedBox(height: 2),
                   _buildEarningRow(notifier.ltcInfo?.yesterdayEarnings ?? '0.00', 'LTC', amountSize: 20, currencySize: 16),
+                ] : [
+                  _buildEarningRow(notifier.coinInfo?.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase(), amountSize: 20, currencySize: 16),
                 ],
               ),
             ),
@@ -424,10 +429,12 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                     infoKey: _cumulativePaymentKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: selectCurrentCoinType == "ltc" ? [
                         _buildEarningRow(notifier.dogeInfo?.totalPaid ?? '0.00', 'DOGE'),
                         const SizedBox(height: 8),
                         _buildEarningRow(notifier.ltcInfo?.totalPaid ?? '0.00', 'LTC'),
+                      ] : [
+                        _buildEarningRow(notifier.coinInfo?.totalPaid ?? '0.00', selectCurrentCoinType.toUpperCase()),
                       ],
                     ),
                   ),
@@ -439,10 +446,12 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                     hasInfoIcon: false,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: selectCurrentCoinType == "ltc" ? [
                          _buildEarningRow(notifier.dogeInfo?.balance ?? '0.00', 'DOGE',),
                          const SizedBox(height: 8),
                          _buildEarningRow(notifier.ltcInfo?.balance ?? '0.00', 'LTC',),
+                      ] : [
+                        _buildEarningRow(notifier.coinInfo?.balance ?? '0.00', selectCurrentCoinType.toUpperCase(),),
                       ],
                     ),
                   ),
@@ -561,6 +570,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     required String date,
     required int? status,
     required String direction,
+    required String txHash,
     required String amount,
     required String currency,
   }) {
@@ -571,7 +581,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         children: [
           Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
           SizedBox(width: 30.w,),
-          statusConvertForWidget(status, direction),
+          statusConvertForWidget(status, direction,txHash),
           SizedBox(width: 16.w,),
           Expanded(
             child: FittedBox(

@@ -1,6 +1,7 @@
 import 'package:Kupool/drawer/main_drawer.dart';
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/net/api_service.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,9 @@ class DogeLtcListNotifier with ChangeNotifier {
   SubAccountMiniInfoList? get selectedAccount => _selectedAccount;
 
   SubAccountCoinType? _currentCoinType;
+  String currentCoinType() {
+    return  _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc";
+  }
 
   Future<void> fetchAccounts({SubAccountCoinType coinType = SubAccountCoinType.dogeLtc}) async {
     _currentCoinType = coinType;
@@ -30,7 +34,7 @@ class DogeLtcListNotifier with ChangeNotifier {
         'page': 1,
         'page_size': 50,
         'is_hidden': -1,
-        "coin_type": _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc",
+        "coin_type": currentCoinType(),
       };
 
       final response = await ApiService().get(
@@ -42,7 +46,7 @@ class DogeLtcListNotifier with ChangeNotifier {
         var resultModel = SubAccountMiniInfoEntity.fromJson(response);
         _accounts = resultModel.list;
         if (_accounts != null && _accounts!.isNotEmpty) {
-          _selectedAccount = _accounts!.first;
+          selectAccount(_accounts!.first);
         }
       } else {
         _accounts = [];
@@ -63,9 +67,10 @@ class DogeLtcListNotifier with ChangeNotifier {
     notifyListeners();
   }
   void selectAccount(SubAccountMiniInfoList account) {
-    if (_selectedAccount != account) {
+    if (_selectedAccount?.id != account.id || selectCurrentCoinType != currentCoinType()) {
       _selectedAccount = account;
-      _selectedAccount?.selectCoin = _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc";
+      _selectedAccount?.selectCoin = currentCoinType();
+      selectCurrentCoinType = _selectedAccount!.selectCoin;
       notifyListeners();
     }
   }
@@ -168,7 +173,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
               ),
             ],
           ),
-          // SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,

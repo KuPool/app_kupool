@@ -8,6 +8,10 @@ class EcologicalEarningsNotifier with ChangeNotifier {
   String _selectedCoin = 'BELLS'; // Default coin
   String get selectedCoin => _selectedCoin;
 
+  setSelectedCoin(String coin){
+    _selectedCoin = coin;
+  }
+
   EarningsInfoEntity? _summaryInfo;
   EarningsInfoEntity? get summaryInfo => _summaryInfo;
 

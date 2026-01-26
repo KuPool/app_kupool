@@ -21,6 +21,10 @@ class StandardEarningsNotifier with ChangeNotifier {
   EarningsInfoEntity? _ltcInfo;
   EarningsInfoEntity? get ltcInfo => _ltcInfo;
 
+  // 除了doge和ltc之外的币种
+  EarningsInfoEntity? _coinInfo;
+  EarningsInfoEntity? get coinInfo => _coinInfo;
+
   // State for lists
   List<EarningsRecordList> _earningRecords = [];
   List<EarningsRecordList> get earningRecords => _earningRecords;
@@ -52,16 +56,30 @@ class StandardEarningsNotifier with ChangeNotifier {
     }
   }
 
-  Future<void> fetchSummary(int subaccountId) async {
+  Future<void> fetchSummary(int subaccountId,String coinType) async {
     _isSummaryLoading = true;
     notifyListeners();
     try {
-      final responses = await Future.wait([
-        ApiService().get('/v1/earnings/info', queryParameters: {'subaccount_id': subaccountId, 'coin': 'doge'}),
-        ApiService().get('/v1/earnings/info', queryParameters: {'subaccount_id': subaccountId, 'coin': 'ltc'}),
-      ]);
-      if (responses[0] != null) _dogeInfo = EarningsInfoEntity.fromJson(responses[0]);
-      if (responses[1] != null) _ltcInfo = EarningsInfoEntity.fromJson(responses[1]);
+      if(coinType == "ltc") {
+        final responses = await Future.wait([
+          ApiService().get('/v1/earnings/info',
+              queryParameters: {'subaccount_id': subaccountId, 'coin': 'doge'}),
+          ApiService().get('/v1/earnings/info',
+              queryParameters: {'subaccount_id': subaccountId, 'coin': 'ltc'}),
+        ]);
+        if (responses[0] != null) {
+          _dogeInfo = EarningsInfoEntity.fromJson(responses[0]);
+        }
+        if (responses[1] != null) {
+          _ltcInfo = EarningsInfoEntity.fromJson(responses[1]);
+        }
+      }else{
+        final response = await ApiService().get('/v1/earnings/info',
+            queryParameters: {'subaccount_id': subaccountId, 'coin': coinType});
+        if (response != null) {
+          _coinInfo = EarningsInfoEntity.fromJson(response);
+        }
+      }
     } catch (e) {
       debugPrint('Failed to fetch earnings summary: $e');
     } finally {
@@ -70,7 +88,7 @@ class StandardEarningsNotifier with ChangeNotifier {
     }
   }
 
-  Future<void> fetchRecords({required int subaccountId, required int type, bool isLoadMore = false}) async {
+  Future<void> fetchRecords({required int subaccountId, required int type, bool isLoadMore = false,required String coinType}) async {
     final bool isEarning = type == 0;
     if (isLoadMore && (isEarning ? !_hasMoreEarnings : !_hasMorePayments)) return;
     if (_isRecordsLoading) return;
@@ -86,13 +104,14 @@ class StandardEarningsNotifier with ChangeNotifier {
     }
 
     try {
-      final response = await ApiService().get('/v1/earnings/list', queryParameters: {
+      var params = {
         'subaccount_id': subaccountId,
-        'coin': 'doge,ltc',
+        'coin': coinType != "ltc" ? coinType : 'doge,ltc',
         'page': currentPage,
         'page_size': _pageSize,
         'type': type,
-      });
+      };
+      final response = await ApiService().get('/v1/earnings/list', queryParameters: params);
 
       if (response != null) {
         final recordEntity = EarningsRecordEntity.fromJson(response);
@@ -119,10 +138,10 @@ class StandardEarningsNotifier with ChangeNotifier {
     }
   }
 
-  Future<void> refreshAll(int subaccountId, int currentTabIndex) async {
+  Future<void> refreshAll(int subaccountId, int currentTabIndex,String coinType) async {
     await Future.wait([
-      fetchSummary(subaccountId),
-      fetchRecords(subaccountId: subaccountId, type: currentTabIndex, isLoadMore: false),
+      fetchSummary(subaccountId,coinType),
+      fetchRecords(subaccountId: subaccountId, type: currentTabIndex, isLoadMore: false,coinType: coinType),
     ]);
   }
 }
