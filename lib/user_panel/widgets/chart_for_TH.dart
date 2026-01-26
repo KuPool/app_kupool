@@ -44,7 +44,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
 
 
     if (chartNotifier.isLoading && chartNotifier.chartData == null) {
-      return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
+      return SizedBox(height: 140,child: const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,)));
     }
 
     final chartData = chartNotifier.chartData;
