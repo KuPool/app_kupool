@@ -38,11 +38,9 @@ class DogeLtcListNotifier with ChangeNotifier {
         queryParameters: params,
       );
 
-      // ---- 成功逻辑 ----
       if (response != null) {
         var resultModel = SubAccountMiniInfoEntity.fromJson(response);
         _accounts = resultModel.list;
-        // 只有在首次加载且没有选中账户时，才设置默认选中
         if (_accounts != null && _accounts!.isNotEmpty) {
           _selectedAccount = _accounts!.first;
         }
@@ -51,18 +49,13 @@ class DogeLtcListNotifier with ChangeNotifier {
       }
 
     } catch (e) {
-      // ---- 错误处理逻辑 ----
-      // ApiService 已经弹了 Toast，这里我们只需要处理好本 Notifier 的状态即可
-      print('Failed to fetch accounts: $e'); // 可以在 debug 时打印错误
-      _accounts = []; // 将列表设置为空，避免 UI 显示旧数据
-      // 你也可以根据需求设置一个专门的错误状态变量
+      print('Failed to fetch accounts: $e');
+      _accounts = [];
     } finally {
-      // ---- 无论成功还是失败，最终都必须执行的逻辑 ----
       _isLoading = false;
-      notifyListeners(); // 通知 UI 停止加载并刷新界面
+      notifyListeners();
     }
   }
-
 
   void clearData(){
     _accounts = null;
@@ -112,7 +105,6 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
           children: [
             InkWell(
               onTap: () {
-                // The UI only needs to update the state and close the drawer.
                 context.read<DogeLtcListNotifier>().selectAccount(item);
                 Navigator.pop(context);
               },
@@ -145,27 +137,58 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
       color: isSelected ? const Color(0xFFE9F0FF) : Colors.transparent,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(name,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.normal,
-                      color: Colors.black.withAlpha(180))),
+                      color: Colors.black.withAlpha(180)),
+                ),
+              ),
               SizedBox(height: 4.h),
-              Text(remark, style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  remark,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2),
+                ),
+              ),
             ],
           ),
-          Row(
-            children: [
-              Text(hashrate, style: TextStyle(fontSize: 15, color: ColorUtils.colorT1)),
-              SizedBox(width: 8.w),
-              if (isSelected)
-                Image.asset(ImageUtils.subAccountSelect, width: 18, height: 18)
-            ],
+          // SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      hashrate,
+                      maxLines: 1,
+                      style: TextStyle(fontSize: 15, color: ColorUtils.colorT1),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                if (isSelected)
+                  Image.asset(ImageUtils.subAccountSelect, width: 18, height: 18)
+              ],
+            ),
           )
         ],
       ),

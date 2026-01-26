@@ -9,7 +9,7 @@ class ChartNotifier with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  String _dimension = ''; // Default dimension
+  String _dimension = '15m'; // Default dimension
   String get dimension => _dimension;
 
   Future<void> fetchChartData({
