@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
@@ -8,6 +9,7 @@ import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../../drawer/model/sub_account_mini_info_entity.dart';
@@ -27,6 +29,11 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
   final GlobalKey _yesterdayEarningsKey = GlobalKey();
   final GlobalKey _cumulativePaymentKey = GlobalKey();
   final GlobalKey _wkDatePaymentKey = GlobalKey();
+  final GlobalKey _headerKey = GlobalKey();
+
+  final ScrollController _scrollController = ScrollController();
+  double _scrollPositionEarn = 0.0;
+  double _scrollPositionPay = 0.0;
 
   final List<Map<String, String>> _coins = [
     {'name': 'BELLS', 'icon': ImageUtils.coinBells},
@@ -47,6 +54,15 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
+
+    _scrollController.addListener(_saveScrollPosition);
+  }
+  void _saveScrollPosition() {
+    if(_recordsTabController.index == 0){
+      _scrollPositionEarn = _scrollController.position.pixels;
+    }else{
+      _scrollPositionPay = _scrollController.position.pixels;
+    }
   }
 
   @override
@@ -69,6 +85,40 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
     if (selectedAccount == null) return;
 
+    final RenderSliver renderSliver =
+    _headerKey.currentContext?.findRenderObject() as RenderSliver;
+
+    final headerStick =  renderSliver.constraints.precedingScrollExtent;
+
+    if(_recordsTabController.index == 0 && notifier.earningRecords.isEmpty){
+      if(_scrollPositionPay >= headerStick){
+        _scrollController.jumpTo(headerStick);
+      }
+    }
+    if(_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty){
+      if(_scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(headerStick);
+      }
+    }
+    if(_recordsTabController.index == 0){
+      if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(_scrollPositionEarn);
+      }else {
+        double minPost = min(headerStick, _scrollPositionPay);
+        _scrollController.jumpTo(minPost);
+      }
+      _scrollPositionEarn = _scrollController.position.pixels;
+
+    }else{
+      if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
+        _scrollController.jumpTo(_scrollPositionPay);
+      }else{
+        double minPost = min(headerStick, _scrollPositionEarn);
+        _scrollController.jumpTo(minPost);
+      }
+      _scrollPositionPay = _scrollController.position.pixels;
+    }
+
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
@@ -85,6 +135,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
     _removeTooltip();
     _recordsTabController.dispose();
     _refreshController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
   
@@ -189,6 +240,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
         onLoad: _onLoad,
         childBuilder: (context, physics) {
           return CustomScrollView(
+            controller: _scrollController,
             physics: physics,
             slivers: <Widget>[
               SliverToBoxAdapter(child: _buildCoinSelectionChips(notifier)),
@@ -204,6 +256,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
                   ),
                 ),
                 SliverPersistentHeader(
+                  key: _headerKey,
                   pinned: true,
                   delegate: _SliverHeaderDelegate(
                     child: _buildRecordsSectionHeader(),
@@ -405,8 +458,8 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
               children: [
                 Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT2)),
                 if (hasInfoIcon)
-                  Padding(
-                    padding: EdgeInsets.only(left: 4),
+                  Container(
+                    padding: EdgeInsets.only(left: 4,right: 10),
                     child: Container(
                       key: infoKey,
                       child: Image(image: AssetImage(ImageUtils.infoIcon), width: 14, height: 14),
@@ -440,7 +493,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
 
   Widget _buildRecordsHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: ColorUtils.colorHeadBg,
@@ -453,15 +506,20 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
             onTap: () {
               _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
             },
-            child: Row(
-              children: [
-                Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
-                const SizedBox(width: 4),
-                Container(
-                  key: _wkDatePaymentKey,
-                  child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
-                ),
-              ],
+            child: Container(
+              color: Colors.transparent,
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
+                  const SizedBox(width: 4),
+                  Container(
+                    key: _wkDatePaymentKey,
+                    child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+              ),
             ),
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),

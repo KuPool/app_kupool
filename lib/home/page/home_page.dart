@@ -149,7 +149,7 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildMiningCoinsSection(BuildContext context, HomeDataState homeData) {
-    const List<int> flexes = [3, 3, 4];
+    const List<int> flexes = [4, 3, 4];
     var coinInfoModel = homeData.coinInfo.ltc;
     var poolHash = FormatUtils.formatHashrate(coinInfoModel?.poolHash);
 

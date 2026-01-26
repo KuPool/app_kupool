@@ -55,8 +55,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     }else{
       _scrollPositionPay = _scrollController.position.pixels;
     }
-    print("滚动位置: ${_scrollController.position.pixels}");
-
   }
 
   @override
@@ -98,28 +96,20 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
         _scrollController.jumpTo(_scrollPositionEarn);
       }else {
-        if(_scrollPositionPay < headerStick){
-          double minValue = max(_scrollPositionPay, _scrollPositionEarn);
-          _scrollController.jumpTo(minValue);
-        }else{
-          double minValue = min(_scrollPositionPay, _scrollPositionEarn);
-          _scrollController.jumpTo(minValue);
-        }
+        double minPost = min(headerStick, _scrollPositionPay);
+        _scrollController.jumpTo(minPost);
       }
+      _scrollPositionEarn = _scrollController.position.pixels;
+
     }else{
       if(_scrollPositionPay >= headerStick && _scrollPositionEarn >= headerStick){
         _scrollController.jumpTo(_scrollPositionPay);
       }else{
-        if(_scrollPositionEarn < headerStick){
-          double minValue = max(_scrollPositionPay, _scrollPositionEarn);
-          _scrollController.jumpTo(minValue);
-        }else{
-          double minValue = min(_scrollPositionPay, _scrollPositionEarn);
-          _scrollController.jumpTo(minValue);
-        }
+        double minPost = min(headerStick, _scrollPositionEarn);
+        _scrollController.jumpTo(minPost);
       }
+      _scrollPositionPay = _scrollController.position.pixels;
     }
-
 
 
     if (_recordsTabController.index == 1 && notifier.paymentRecords.isEmpty) {
@@ -131,17 +121,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       _refreshController.resetFooter();
        notifier.fetchRecords(subaccountId: selectedAccount.id!, type: 0);
     }
-    // if(_recordsTabController.index == 0){
-    //   _scrollController.jumpTo(_scrollPositionEarn);
-    // }else{
-    //   _scrollController.jumpTo(_scrollPositionPay);
-    // }
-
-    // final renderBox = _headerKey.currentContext!.findRenderObject() as RenderBox;
-    // final ScrollController scrollController = PrimaryScrollController.of(context);
-    // final RenderAbstractViewport? viewport =
-    // Scrollable.maybeOf(context)?.context.findRenderObject() as RenderAbstractViewport?;
-
 
   }
 
@@ -567,7 +546,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
                     key: _wkDatePaymentKey,
                     child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                 ],
               ),
             ),
