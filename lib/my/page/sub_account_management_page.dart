@@ -1,9 +1,16 @@
+import 'package:Kupool/my/model/sub_list_with_address_entity.dart';
 import 'package:Kupool/my/page/sub_account_create.dart';
+import 'package:Kupool/my/provider/sub_account_management_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/widgets/app_refresh.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:provider/provider.dart';
 
+import '../../drawer/model/sub_account_mini_info_entity.dart';
 import '../../utils/toast_utils.dart';
 
 class SubAccountManagementPage extends StatelessWidget {
@@ -11,6 +18,62 @@ class SubAccountManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => SubAccountManagementNotifier(),
+      child: const _SubAccountManagementView(),
+    );
+  }
+}
+
+class _SubAccountManagementView extends StatefulWidget {
+  const _SubAccountManagementView();
+
+  @override
+  State<_SubAccountManagementView> createState() => _SubAccountManagementViewState();
+}
+
+class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
+  late EasyRefreshController _refreshController;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshController = EasyRefreshController(
+      controlFinishRefresh: true,
+      controlFinishLoad: true,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SubAccountManagementNotifier>().fetchAccounts();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    await context.read<SubAccountManagementNotifier>().refresh();
+    _refreshController.finishRefresh();
+    _refreshController.resetFooter();
+  }
+
+  Future<void> _onLoad() async {
+    final notifier = context.read<SubAccountManagementNotifier>();
+    if (notifier.hasMore) {
+      await notifier.fetchAccounts(isLoadMore: true);
+      _refreshController.finishLoad(notifier.hasMore ? IndicatorResult.success : IndicatorResult.noMore);
+    } else {
+      _refreshController.finishLoad(IndicatorResult.noMore);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    final notifier = context.watch<SubAccountManagementNotifier>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('子账户管理', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
@@ -20,7 +83,7 @@ class SubAccountManagementPage extends StatelessWidget {
         scrolledUnderElevation: 0,
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16),
             child: GestureDetector(
               onTap: () {},
               child: Image.asset(
@@ -34,32 +97,44 @@ class SubAccountManagementPage extends StatelessWidget {
       ),
       backgroundColor: ColorUtils.widgetBgColor,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildSubAccountRow(context, 'liupro', '内蒙古老刘放假了三等奖付了款戴假发反反复复', '918.90 TH/s', ImageUtils.homeDoge, true),
-                        _buildSubAccountRow(context, 'wakuang1', '湖南老王', '918.90 TH/s', ImageUtils.homeDoge, true),
-                        _buildSubAccountRow(context, 'jackma', '杭州老马', '918.90 TH/s', ImageUtils.homeDoge, true),
-                        _buildSubAccountRow(context, 'tonyma', '深圳马', '918.90 TH/s', ImageUtils.homeDoge, true),
-                        _buildSubAccountRow(context, 'wakuang1', '内蒙古老刘', '918.90 TH/s', ImageUtils.homeDoge, true),
-                        _buildSubAccountRow(context, 'wakuang1', '内蒙古老刘', '0.00 TH/s', ImageUtils.homeDoge, false),
-                      ],
+            Column(
+              children: [
+                Expanded(
+                  child: EasyRefresh(
+                    controller: _refreshController,
+                    onLoad: _onLoad,
+                    onRefresh: _onRefresh,
+                    header: AppRefreshHeader(),
+                    footer: AppRefreshFooter(),
+                    child: Container(
+                      margin: EdgeInsets.only(left: 10,right: 10),
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListView.builder(itemBuilder: (context,index){
+                        SubAccountMiniInfoList listModel = notifier.accounts[index];
+                        return  Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                          ),
+                          child: _buildSubAccountRow(context, listModel.name ?? "" , listModel.remark ?? "", '${listModel.miningInfo?.hashrate}H/s', ImageUtils.homeDoge, true),
+                        );
+                      },
+                        itemCount: notifier.accounts.length,
+                      ),
                     ),
                   ),
-                ],
-              ),  
+                ),
+                if (!notifier.isLoading)
+                    _buildCreateButton(),
+              ],
             ),
-            _buildCreateButton(),
+            if (notifier.isLoading && isEmpty(notifier.accounts))
+             const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,))
           ],
         ),
       ),
@@ -91,8 +166,8 @@ class SubAccountManagementPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
+                    padding: const EdgeInsets.all(24),
+                    decoration: const BoxDecoration(
                       color: Color(0xFFF4F4F4),
                       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     ),
@@ -100,14 +175,14 @@ class SubAccountManagementPage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Align(
+                        const Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             '修改备注',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         AnimatedBuilder(
                           animation: Listenable.merge([controller, focusNode]),
                           builder: (context, _) {
@@ -118,26 +193,26 @@ class SubAccountManagementPage extends StatelessWidget {
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(color: Colors.grey.shade300, width: 0.5),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: ColorUtils.mainColor, width: 0.5),
+                                  borderSide: const BorderSide(color: ColorUtils.mainColor, width: 0.5),
                                 ),
                                 suffixIcon: focusNode.hasFocus && controller.text.isNotEmpty
                                     ? GestureDetector(
                                         onTap: () => controller.clear(),
-                                        child: Icon(Icons.cancel, color: Colors.grey.shade400, size: 16),
+                                        child: const Icon(Icons.cancel, color: Colors.grey, size: 16),
                                       )
                                     : null,
                               ),
                             );
                           },
                         ),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         SizedBox(
                           height: 42,
                           child: ElevatedButton(
@@ -150,7 +225,7 @@ class SubAccountManagementPage extends StatelessWidget {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
                             ),
-                            child: Text(
+                            child: const Text(
                               '确认修改',
                               style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                             ),
@@ -171,7 +246,6 @@ class SubAccountManagementPage extends StatelessWidget {
     });
   }
 
-
   void _showChangeCoinSheet(BuildContext context) {
     String selectedCoin = "DOGE/LTC";
     showModalBottomSheet(
@@ -181,8 +255,8 @@ class SubAccountManagementPage extends StatelessWidget {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Container(
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: const BoxDecoration(
                 color: ColorUtils.widgetBgColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -190,13 +264,13 @@ class SubAccountManagementPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, bottom: 12.0),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16.0, bottom: 12.0),
                     child: Text('选择默认币种', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                   ),
                   SafeArea(
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(24)),
                       ),
@@ -223,16 +297,16 @@ class SubAccountManagementPage extends StatelessWidget {
     return InkWell(
       onTap: () => onSelected(title),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             Image.asset(iconPath, width: 24, height: 24),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
-              child: Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
+              child: Text(title, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
             ),
             if (isSelected)
-              Icon(Icons.check, color: ColorUtils.mainColor, size: 20),
+              const Icon(Icons.check, color: ColorUtils.mainColor, size: 20),
           ],
         ),
       ),
@@ -247,7 +321,7 @@ class SubAccountManagementPage extends StatelessWidget {
       builder: (BuildContext bc) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 10), // Margin from bottom
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10), // Margin from bottom
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -281,12 +355,12 @@ class SubAccountManagementPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text('返回', style: TextStyle(color: ColorUtils.colorNoteT2, fontSize: 14, fontWeight: FontWeight.w500)),
+                            child: const Text('返回', style: TextStyle(color: ColorUtils.colorNoteT2, fontSize: 14, fontWeight: FontWeight.w500)),
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: SizedBox(
                           height: 42,
@@ -297,7 +371,7 @@ class SubAccountManagementPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text('确认隐藏', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                            child: const Text('确认隐藏', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                             onPressed: () {
                               Navigator.of(context).pop();
                               ToastUtils.showLoading(message: '正在隐藏...');
@@ -306,8 +380,7 @@ class SubAccountManagementPage extends StatelessWidget {
                                 ToastUtils.showSuccess('子账户已隐藏'); // 显示成功提示
                                 // 在这里可以写真正的刷新页面的逻辑
                               });
-                            }
-
+                            },
                           ),
                         ),
                       ),
@@ -453,7 +526,7 @@ class SubAccountManagementPage extends StatelessWidget {
                   _showAccountActionsSheet(context, name, description, iconPath);
                 },
                 child: Container(
-                  padding: EdgeInsets.only(left: 24,right: 16),
+                  padding: EdgeInsets.only(left: 24,right: 6),
                   child: Transform.rotate(
                     angle: math.pi/2,
                     child: Icon(Icons.more_horiz, color: ColorUtils.mainColor),

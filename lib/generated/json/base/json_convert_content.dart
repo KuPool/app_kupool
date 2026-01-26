@@ -10,6 +10,7 @@ import 'package:Kupool/home/model/home_coin_info_entity.dart';
 import 'package:Kupool/home/model/home_price_entity.dart';
 import 'package:Kupool/json_serializable_model/login_model_entity.dart';
 import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
+import 'package:Kupool/my/model/sub_list_with_address_entity.dart';
 import 'package:Kupool/user_panel/model/panel_chart_hashrate_entity.dart';
 import 'package:Kupool/user_panel/model/subAccount_panel_entity.dart';
 
@@ -253,6 +254,19 @@ class JsonConvert {
       return data.map<MinerListStatistics>((Map<String, dynamic> e) =>
           MinerListStatistics.fromJson(e)).toList() as M;
     }
+    if (<SubListWithAddressEntity>[] is M) {
+      return data.map<SubListWithAddressEntity>((Map<String, dynamic> e) =>
+          SubListWithAddressEntity.fromJson(e)).toList() as M;
+    }
+    if (<SubListWithAddressList>[] is M) {
+      return data.map<SubListWithAddressList>((Map<String, dynamic> e) =>
+          SubListWithAddressList.fromJson(e)).toList() as M;
+    }
+    if (<SubListWithAddressListAddresses>[] is M) {
+      return data.map<SubListWithAddressListAddresses>((
+          Map<String, dynamic> e) =>
+          SubListWithAddressListAddresses.fromJson(e)).toList() as M;
+    }
     if (<PanelChartHashrateEntity>[] is M) {
       return data.map<PanelChartHashrateEntity>((Map<String, dynamic> e) =>
           PanelChartHashrateEntity.fromJson(e)).toList() as M;
@@ -314,6 +328,10 @@ class JsonConvertClassCollection {
     (MinerListEntity).toString(): MinerListEntity.fromJson,
     (MinerListList).toString(): MinerListList.fromJson,
     (MinerListStatistics).toString(): MinerListStatistics.fromJson,
+    (SubListWithAddressEntity).toString(): SubListWithAddressEntity.fromJson,
+    (SubListWithAddressList).toString(): SubListWithAddressList.fromJson,
+    (SubListWithAddressListAddresses)
+        .toString(): SubListWithAddressListAddresses.fromJson,
     (PanelChartHashrateEntity).toString(): PanelChartHashrateEntity.fromJson,
     (PanelChartHashrateTicks).toString(): PanelChartHashrateTicks.fromJson,
     (SubAccountPanelEntity).toString(): SubAccountPanelEntity.fromJson,
