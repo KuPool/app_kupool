@@ -9,6 +9,7 @@ import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'package:provider/provider.dart';
 
@@ -123,7 +124,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                           ),
-                          child: _buildSubAccountRow(context, listModel.name ?? "" , listModel.remark ?? "", '${listModel.miningInfo?.hashrate}H/s', listModel.defaultCoin ?? "ltc", true),
+                          child: _buildSubAccountRow(context, "${listModel.id ?? ""}",listModel.name ?? "" , listModel.remark ?? "", '${listModel.miningInfo?.hashrate}H/s', listModel.defaultCoin ?? "ltc", true),
                         );
                       },
                         itemCount: notifier.accounts.length,
@@ -143,12 +144,12 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     );
   }
 
-  void _showEditRemarkDialog(BuildContext context, String currentRemark) {
+  void _showEditRemarkDialog(BuildContext superContext, String currentRemark,String accountId) {
     final controller = TextEditingController(text: currentRemark);
     final focusNode = FocusNode();
 
     showModalBottomSheet(
-      context: context,
+      context: superContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -192,6 +193,11 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               autofocus: true,
                               focusNode: focusNode,
                               controller: controller,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
+                                )
+                              ],
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.white,
@@ -218,9 +224,22 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                         SizedBox(
                           height: 42,
                           child: ElevatedButton(
-                            onPressed: () {
-                              // Add update logic here
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              if (controller.text.trim().isEmpty) {
+                                ToastUtils.show('请输入备注');
+                                return;
+                              }
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              ToastUtils.showLoading(message: '正在修改...');
+                              final remark =  await superContext.read<SubAccountManagementNotifier>().updateRemark(controller.text, int.parse(accountId));
+                              ToastUtils.dismiss();
+                              Navigator.of(superContext).pop();
+                              if(isValidString(remark)){
+                                ToastUtils.showSuccess("修改成功");
+                              }else{
+                                ToastUtils.show("请稍后重试");
+                              }
+
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.mainColor,
@@ -398,7 +417,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
   }
 
 
-  void _showAccountActionsSheet(BuildContext context, String name, String description, String iconType) {
+  void _showAccountActionsSheet(BuildContext context, String name, String description, String iconType,String accountId) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -440,7 +459,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                       children: [
                         _buildSheetMenuItem('修改备注名', trailing: Expanded(child: Text(description,textAlign: TextAlign.right, style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2))), onTap: () {
                           Navigator.of(context).pop(); // Dismiss first sheet
-                          _showEditRemarkDialog(context, description);
+                          _showEditRemarkDialog(context, description,accountId);
                         }),
                         Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
                         _buildSheetMenuItem('修改默认币种', trailing: Text('DOGE/LTC', style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2)), onTap: () {
@@ -486,7 +505,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     );
   }
 
-  Widget _buildSubAccountRow(BuildContext context, String name, String description, String hashrate, String iconType, bool hasDivider) {
+  Widget _buildSubAccountRow(BuildContext context, String accountId ,String name, String description, String hashrate, String iconType, bool hasDivider) {
 
     final (value, unit) = FormatUtils.splitValueAndUnit(hashrate);
 
@@ -531,7 +550,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
               ),
               GestureDetector(
                 onTap: (){
-                  _showAccountActionsSheet(context, name, description, iconType);
+                  _showAccountActionsSheet(context, name, description, iconType,accountId);
                 },
                 child: Container(
                   padding: EdgeInsets.only(left: 24,right: 16),

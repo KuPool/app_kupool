@@ -65,4 +65,27 @@ class SubAccountManagementNotifier with ChangeNotifier {
   Future<void> refresh() async {
     await fetchAccounts(isLoadMore: false);
   }
+
+  Future<String?> updateRemark(String remark,int accountId) async {
+    try {
+      final response = await ApiService().post('/v1/subaccount/update_remark', data: {
+        "subaccount_id": accountId,
+        "remark": remark
+      });
+      if (response != null) {
+        final entity = SubAccountMiniInfoList.fromJson(response);
+        final index = accounts.indexWhere((account) => account.id == accountId);
+        if (index != -1) {
+          // 2. 更新该账户的 remark 字段
+          accounts[index].remark = entity.remark;
+          // 3. 通知 UI 刷新！
+          notifyListeners();
+        }
+        return entity.remark;
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
 }

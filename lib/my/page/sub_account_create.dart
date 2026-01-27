@@ -148,7 +148,9 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                           hint: '请添加子账户备注',
                           isOptional: true,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\u4e00-\u9fa5\s.,;!?]*'))
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
+                            )
                           ]),
                       const SizedBox(height: 24),
                       _buildCoinSelector(),
