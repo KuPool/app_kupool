@@ -321,27 +321,45 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
-                      child: ListTile(
-                        leading: SizedBox(
-                          width: 40,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                left: 12,
-                                child: CircleAvatar(radius: 12,backgroundColor: Colors.transparent, child: Image.asset(ImageUtils.homeLtc),),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: SizedBox(
+                              width: 40,
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    left: 12,
+                                    child: CircleAvatar(radius: 12,backgroundColor: Colors.transparent, child: Image.asset(ImageUtils.homeLtc),),
+                                  ),
+                                  const CircleAvatar(radius: 12,backgroundColor: Colors.transparent, backgroundImage: AssetImage(ImageUtils.homeDoge)),
+                                ],
                               ),
-                              const CircleAvatar(radius: 12,backgroundColor: Colors.transparent, backgroundImage: AssetImage(ImageUtils.homeDoge)),
-                            ],
+                            ),
+                            title: const Text('DOGE/LTC'),
+                            trailing: _selectedCoin == 'DOGE/LTC'
+                                ? const Icon(Icons.check, color: ColorUtils.mainColor)
+                                : null,
+                            onTap: () {
+                              setState(() => _selectedCoin = 'DOGE/LTC');
+                              Navigator.pop(context);
+                            },
                           ),
-                        ),
-                        title: const Text('DOGE/LTC'),
-                        trailing: _selectedCoin == 'DOGE/LTC'
-                            ? const Icon(Icons.check, color: ColorUtils.mainColor)
-                            : null,
-                        onTap: () {
-                          setState(() => _selectedCoin = 'DOGE/LTC');
-                          Navigator.pop(context);
-                        },
+                          ListTile(
+                            leading: SizedBox(
+                              width: 40,
+                              child: Center(child: const CircleAvatar(radius: 12,backgroundColor: Colors.transparent, backgroundImage: AssetImage(ImageUtils.homeBtc))),
+                            ),
+                            title: const Text('BTC'),
+                            trailing: _selectedCoin == 'BTC'
+                                ? const Icon(Icons.check, color: ColorUtils.mainColor)
+                                : null,
+                            onTap: () {
+                              setState(() => _selectedCoin = 'BTC');
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -365,12 +383,12 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                   var remark = _remarkController.text.trim();
                   var address = _addressController.text.trim();
 
+                  defaultCoin = _selectedCoin == "DOGE/LTC" ? "ltc" : "btc";
                   var parm = {
                     "name": name,
                     "default_coin": defaultCoin,
                     "addresses": {
-                      "ltc": address,
-                      "doge": ""
+                      defaultCoin: address,
                     },
                     "remark": remark
                   };

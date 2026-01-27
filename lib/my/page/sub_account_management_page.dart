@@ -553,20 +553,20 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
   }
 
   Widget _buildCreateButton() {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.symmetric(horizontal: 30,vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: ColorUtils.mainColor, width: 0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Builder(
-        builder: (context) {
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountCreatePage()));
-            },
-            child: Padding(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountCreatePage()));
+      },
+      child: Container(
+        width: double.infinity,
+        margin: EdgeInsets.symmetric(horizontal: 30,vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: ColorUtils.mainColor, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Builder(
+          builder: (context) {
+            return Padding(
               padding: EdgeInsets.symmetric(vertical: 10),
               child: Center(
                 child: Text(
@@ -574,9 +574,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                   style: TextStyle(fontSize: 15, color: ColorUtils.mainColor, fontWeight: FontWeight.w600),
                 ),
               ),
-            ),
-          );
-        }
+            );
+          }
+        ),
       ),
     );
   }

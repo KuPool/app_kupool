@@ -36,7 +36,7 @@ class SubAccountManagementNotifier with ChangeNotifier {
         'page': _page,
         'page_size': _pageSize,
         'is_hidden': -1,
-        'coins': 'ltc,doge,btc',
+        'coins': 'ltc',
       });
 
       if (response != null) {
