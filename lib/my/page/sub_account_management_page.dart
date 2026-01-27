@@ -344,9 +344,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     );
   }
 
-  void _showHideAccountSheet(BuildContext context, String accountName) {
+  void _showHideAccountSheet(BuildContext superContext, String accountName,String accountId) {
     showModalBottomSheet(
-      context: context,
+      context: superContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (BuildContext bc) {
@@ -403,14 +403,16 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               ),
                             ),
                             child: const Text('确认隐藏', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                            onPressed: () async {
                               ToastUtils.showLoading(message: '正在隐藏...');
-                              Future.delayed(const Duration(seconds: 2), () {
-                                ToastUtils.dismiss();
-                                ToastUtils.showSuccess('子账户已隐藏'); // 显示成功提示
-                                // 在这里可以写真正的刷新页面的逻辑
-                              });
+                              final isSuccess = await superContext.read<SubAccountManagementNotifier>().updateAccountIsHidden(1, int.parse(accountId));
+                              ToastUtils.dismiss();
+                              Navigator.of(superContext).pop();
+                              if(isSuccess){
+                                ToastUtils.showSuccess("子账号已隐藏");
+                              }else{
+                                ToastUtils.show("请稍后重试");
+                              }
                             },
                           ),
                         ),
@@ -479,7 +481,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                         Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
                         _buildSheetMenuItem('隐藏子账户', onTap: () {
                            Navigator.of(context).pop();
-                          _showHideAccountSheet(context, name);
+                          _showHideAccountSheet(context, name,accountId);
                         }),
                       ],
                     ),

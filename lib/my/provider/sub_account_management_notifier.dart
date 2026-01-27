@@ -105,6 +105,22 @@ class SubAccountManagementNotifier with ChangeNotifier {
     } catch (e) {
       return false;
     }
-    return false;
+  }
+  Future<bool> updateAccountIsHidden(int hide,int accountId) async {
+    try {
+      final response = await ApiService().post('/v1/subaccount/hide', data: {
+        "subaccount_id": accountId,
+        "hide": hide,
+      });
+      // if (response != null) {}
+      final index = accounts.indexWhere((account) => account.id == accountId);
+      if (index != -1) {
+        accounts[index].isHidden = hide;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
