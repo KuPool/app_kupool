@@ -6,6 +6,7 @@ import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/standard_earnings_notifier.dart';
 import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/common_widget.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
@@ -303,67 +304,6 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
     );
   }
 
-  Widget statusConvertForWidget(int? code, String direction,String txHash) {
-
-    if(code == null){
-      return SizedBox.shrink();
-    }
-    String statusStr = "";
-    switch (code) {
-      case 0:
-        statusStr = '未入账';
-       return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-         color: const Color(0xFFF53F3F),
-         fontSize: 12,
-         fontWeight: FontWeight.w400,
-       ),);
-
-      case 10:
-        statusStr = '已审核';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case 20:
-        statusStr = '准备发款';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-
-      case 21:
-        statusStr = '发款中';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case 30:
-        statusStr = (direction == 'i' && isUnValidString(txHash)) ? '待支付' : '已支付';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: (direction == 'i' && isUnValidString(txHash)) ? ColorUtils.mainColor : const Color(0xFF00C490),
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case -1:
-        statusStr = '已取消';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: const Color(0xFFF53F3F),
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      default:
-        return SizedBox.shrink();
-    }
-  }
-
   Widget _buildRecordsSectionHeader() {
      return Container(
       margin:  EdgeInsets.only(left: leftPadding,right: rightPadding,top: 10),
@@ -581,7 +521,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         children: [
           Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
           SizedBox(width: 30.w,),
-          statusConvertForWidget(status, direction,txHash),
+          CommonWidgets.statusConvertForWidget(status, direction, txHash),
           SizedBox(width: 16.w,),
           Expanded(
             child: FittedBox(

@@ -5,6 +5,7 @@ import 'package:Kupool/earnings/model/earnings_record_entity.dart';
 import 'package:Kupool/earnings/provider/ecological_earnings_notifier.dart';
 import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/common_widget.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:Kupool/widgets/custom_tab_bar.dart';
@@ -301,6 +302,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
                                 amount: record.amount ?? '0',
                                 direction: record.direction ?? "",
                                 currency: (record.coin ?? '').toUpperCase(),
+                                txHash: record.txHash ?? "",
                               ),
                               if (!isLast) Divider(height: 0.5, color: ColorUtils.colorDdd.withAlpha(125),),
                             ],
@@ -541,67 +543,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       ),
     );
   }
-  Widget statusConvertForWidget(int code, String direction) {
-
-    if(code == null){
-      return SizedBox.shrink();
-    }
-    String statusStr = "";
-    switch (code) {
-      case 0:
-        statusStr = '未入账';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: const Color(0xFFF53F3F),
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case 10:
-        statusStr = '已审核';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case 20:
-        statusStr = '准备发款';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-
-      case 21:
-        statusStr = '发款中';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: ColorUtils.mainColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case 30:
-        statusStr = '已支付';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: const Color(0xFF00C490),
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      case -1:
-        statusStr = '已取消';
-        return Text(statusStr,textAlign: TextAlign.right,style:TextStyle(
-          color: const Color(0xFFF53F3F),
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),);
-
-      default:
-        return SizedBox.shrink();
-    }
-  }
-  Widget _buildRecordRow({required String date,required int status, required String amount, required String currency,required String direction,}) {
+  Widget _buildRecordRow({required String date,required int status, required String amount, required String currency,required String direction, required String txHash,}) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 13),
@@ -609,7 +551,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
         children: [
           Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
           SizedBox(width: 30,),
-          statusConvertForWidget(status, direction),
+          CommonWidgets.statusConvertForWidget(status, direction, txHash),
           SizedBox(width: 16,),
           Expanded(
             child: FittedBox(
