@@ -88,4 +88,23 @@ class SubAccountManagementNotifier with ChangeNotifier {
     }
     return null;
   }
+
+  Future<bool> updateCoin(String coin,int accountId) async {
+    try {
+      final response = await ApiService().post('/v1/subaccount/default_coin', data: {
+        "subaccount_id": accountId,
+        "default_coin": coin
+      });
+      // if (response != null) {}
+      final index = accounts.indexWhere((account) => account.id == accountId);
+      if (index != -1) {
+        accounts[index].defaultCoin = coin;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
 }

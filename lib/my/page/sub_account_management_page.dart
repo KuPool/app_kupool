@@ -267,10 +267,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     });
   }
 
-  void _showChangeCoinSheet(BuildContext context) {
-    String selectedCoin = "DOGE/LTC";
+  void _showChangeCoinSheet(BuildContext superContext,String iconType,String accountId) {
     showModalBottomSheet(
-      context: context,
+      context: superContext,
       backgroundColor: Colors.transparent,
       builder: (BuildContext bc) {
         return StatefulBuilder(
@@ -297,9 +296,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                       ),
                       child: Column(
                         children: [
-                          _buildCoinOption(context, 'DOGE/LTC', ImageUtils.homeDoge, selectedCoin, (value) => setState(() => selectedCoin = value)),
+                          _buildCoinOption(superContext, 'DOGE/LTC', ImageUtils.homeDoge, iconType,accountId),
                           Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
-                          _buildCoinOption(context, 'BTC', ImageUtils.homeDoge, selectedCoin, (value) => setState(() => selectedCoin = value)),
+                          _buildCoinOption(superContext, 'BTC', ImageUtils.homeDoge, iconType,accountId),
                         ],
                       ),
                     ),
@@ -313,15 +312,26 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     );
   }
 
-  Widget _buildCoinOption(BuildContext context, String title, String iconPath, String selectedCoin, ValueChanged<String> onSelected) {
-    bool isSelected = selectedCoin == title;
+  Widget _buildCoinOption(BuildContext context, String title, String iconPath, String selectedCoin,String accountId) {
+    String selectedCoinName = selectedCoin == "ltc" ? "DOGE/LTC" : "BTC";
+    bool isSelected = selectedCoinName == title;
     return InkWell(
-      onTap: () => onSelected(title),
+      onTap: () async {
+        ToastUtils.showLoading(message: '设置中...');
+        final isSuccess =  await context.read<SubAccountManagementNotifier>().updateCoin(title == "DOGE/LTC" ? "ltc" : "btc", int.parse(accountId));
+        ToastUtils.dismiss();
+        Navigator.of(context).pop();
+        if(isSuccess){
+          ToastUtils.showSuccess("设置成功");
+        }else{
+          ToastUtils.show("请稍后重试");
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Image.asset(iconPath, width: 24, height: 24),
+            CommonWidgets.buildCoinHeaderImageWidget(iconType: title == "DOGE/LTC" ? "ltc" : "btc"),
             const SizedBox(width: 8),
             Expanded(
               child: Text(title, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
@@ -462,9 +472,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                           _showEditRemarkDialog(context, description,accountId);
                         }),
                         Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
-                        _buildSheetMenuItem('修改默认币种', trailing: Text('DOGE/LTC', style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2)), onTap: () {
+                        _buildSheetMenuItem('修改默认币种', trailing: Text(iconType == "ltc" ? 'DOGE/LTC' : "BTC", style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2)), onTap: () {
                            Navigator.of(context).pop();
-                          _showChangeCoinSheet(context);
+                          _showChangeCoinSheet(context,iconType,accountId);
                         }),
                         Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
                         _buildSheetMenuItem('隐藏子账户', onTap: () {
