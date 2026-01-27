@@ -2,7 +2,9 @@ import 'package:Kupool/my/model/sub_list_with_address_entity.dart';
 import 'package:Kupool/my/page/sub_account_create.dart';
 import 'package:Kupool/my/provider/sub_account_management_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/common_widget.dart';
 import 'package:Kupool/utils/empty_check.dart';
+import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
@@ -121,7 +123,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                           ),
-                          child: _buildSubAccountRow(context, listModel.name ?? "" , listModel.remark ?? "", '${listModel.miningInfo?.hashrate}H/s', ImageUtils.homeDoge, true),
+                          child: _buildSubAccountRow(context, listModel.name ?? "" , listModel.remark ?? "", '${listModel.miningInfo?.hashrate}H/s', listModel.defaultCoin ?? "ltc", true),
                         );
                       },
                         itemCount: notifier.accounts.length,
@@ -396,7 +398,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
   }
 
 
-  void _showAccountActionsSheet(BuildContext context, String name, String description, String iconPath) {
+  void _showAccountActionsSheet(BuildContext context, String name, String description, String iconType) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -419,7 +421,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                   padding: const EdgeInsets.only(left: 8.0, bottom: 16),
                   child: Row(
                     children: [
-                      Image.asset(iconPath, width: 40, height: 40),
+                      CommonWidgets.buildCoinHeaderImageWidget(iconType: iconType),
                       SizedBox(width: 8),
                       Text(
                         name,
@@ -484,10 +486,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     );
   }
 
-  Widget _buildSubAccountRow(BuildContext context, String name, String description, String hashrate, String iconPath, bool hasDivider) {
-    final parts = hashrate.split(' ');
-    final value = parts.isNotEmpty ? parts[0] : '';
-    final unit = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
+  Widget _buildSubAccountRow(BuildContext context, String name, String description, String hashrate, String iconType, bool hasDivider) {
+
+    final (value, unit) = FormatUtils.splitValueAndUnit(hashrate);
 
     return Padding(
       padding: EdgeInsets.only(left: 16, right: 0, top: 0, bottom: 0),
@@ -495,8 +496,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
         children: [
           SizedBox(height: 12,),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(iconPath, width: 40, height: 40), // Placeholder icon
+              CommonWidgets.buildCoinHeaderImageWidget(iconType: iconType),
               SizedBox(width: 12),
               Expanded(
                 child: Padding(
@@ -505,8 +507,13 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ColorUtils.colorTitleOne)),
-                      SizedBox(height: 2),
-                      Text(description, style: TextStyle(fontSize: 12, color: ColorUtils.color888),maxLines: 1, overflow: TextOverflow.ellipsis,),
+                      Offstage(
+                        offstage: isUnValidString(description),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(description, style: TextStyle(fontSize: 12, color: ColorUtils.color888),maxLines: 1, overflow: TextOverflow.ellipsis,),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -515,18 +522,19 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
               RichText(
                 text: TextSpan(
                   style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
-                  children: <TextSpan>[
+                  children: [
                     TextSpan(text: value),
+                    WidgetSpan(child: SizedBox(width: 4)),
                     TextSpan(text: unit, style: TextStyle(color: ColorUtils.color888)),
                   ],
                 ),
               ),
               GestureDetector(
                 onTap: (){
-                  _showAccountActionsSheet(context, name, description, iconPath);
+                  _showAccountActionsSheet(context, name, description, iconType);
                 },
                 child: Container(
-                  padding: EdgeInsets.only(left: 24,right: 6),
+                  padding: EdgeInsets.only(left: 24,right: 16),
                   child: Transform.rotate(
                     angle: math.pi/2,
                     child: Icon(Icons.more_horiz, color: ColorUtils.mainColor),

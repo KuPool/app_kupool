@@ -9,5 +9,5 @@ bool isValidString(String? str) {
   return str != null && str.isNotEmpty;
 }
 bool isUnValidString(String? str) {
-  return str == null && str == "";
+  return str == null || str == "";
 }
