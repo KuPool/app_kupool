@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../drawer/model/sub_account_mini_info_entity.dart';
 
-class SubAccountManagementNotifier with ChangeNotifier {
+class SubAccountHiddenNotifier with ChangeNotifier {
   List<SubAccountMiniInfoList> _accounts = [];
   List<SubAccountMiniInfoList> get accounts => _accounts;
 
@@ -35,7 +35,7 @@ class SubAccountManagementNotifier with ChangeNotifier {
       final response = await ApiService().get('/v1/subaccount/list_with_mining_info', queryParameters: {
         'page': _page,
         'page_size': _pageSize,
-        'is_hidden': -1,
+        'is_hidden': 1,
         'coins': 'ltc',
       });
 
@@ -48,7 +48,7 @@ class SubAccountManagementNotifier with ChangeNotifier {
         } else {
           _accounts = newAccounts;
         }
-        
+
         _page++;
         _hasMore = _accounts.length < (entity.total ?? 0);
         _hasError = false;
@@ -89,23 +89,6 @@ class SubAccountManagementNotifier with ChangeNotifier {
     return null;
   }
 
-  Future<bool> updateCoin(String coin,int accountId) async {
-    try {
-      final response = await ApiService().post('/v1/subaccount/default_coin', data: {
-        "subaccount_id": accountId,
-        "default_coin": coin
-      });
-      // if (response != null) {}
-      final index = accounts.indexWhere((account) => account.id == accountId);
-      if (index != -1) {
-        accounts[index].defaultCoin = coin;
-        notifyListeners();
-      }
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
   Future<bool> updateAccountIsHidden(int hide,int accountId) async {
     try {
       final response = await ApiService().post('/v1/subaccount/hide', data: {

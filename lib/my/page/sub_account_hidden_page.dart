@@ -1,6 +1,5 @@
 import 'package:Kupool/my/model/sub_list_with_address_entity.dart';
 import 'package:Kupool/my/page/sub_account_create.dart';
-import 'package:Kupool/my/page/sub_account_hidden_page.dart';
 import 'package:Kupool/my/provider/sub_account_hidden_notifier.dart';
 import 'package:Kupool/my/provider/sub_account_management_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
@@ -18,20 +17,29 @@ import 'package:provider/provider.dart';
 import '../../drawer/model/sub_account_mini_info_entity.dart';
 import '../../utils/toast_utils.dart';
 
-class SubAccountManagementPage extends StatelessWidget {
-  const SubAccountManagementPage({super.key});
+class SubAccountHiddenPage extends StatelessWidget {
+  final VoidCallback? onAccountUpdated;
+  const SubAccountHiddenPage({
+    super.key,
+    this.onAccountUpdated, // 在构造函数中接收
+  });
+
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => SubAccountManagementNotifier(),
-      child: const _SubAccountManagementView(),
+      create: (_) => SubAccountHiddenNotifier(),
+      child:  _SubAccountManagementView(onAccountUpdated: onAccountUpdated),
     );
   }
 }
 
 class _SubAccountManagementView extends StatefulWidget {
-  const _SubAccountManagementView();
+  final VoidCallback? onAccountUpdated;
+  const _SubAccountManagementView({
+    this.onAccountUpdated, // 在构造函数中接收
+  });
+
 
   @override
   State<_SubAccountManagementView> createState() => _SubAccountManagementViewState();
@@ -48,7 +56,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
       controlFinishLoad: true,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SubAccountManagementNotifier>().fetchAccounts();
+      context.read<SubAccountHiddenNotifier>().fetchAccounts();
     });
   }
 
@@ -59,13 +67,13 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
   }
 
   Future<void> _onRefresh() async {
-    await context.read<SubAccountManagementNotifier>().refresh();
+    await context.read<SubAccountHiddenNotifier>().refresh();
     _refreshController.finishRefresh();
     _refreshController.resetFooter();
   }
 
   Future<void> _onLoad() async {
-    final notifier = context.read<SubAccountManagementNotifier>();
+    final notifier = context.read<SubAccountHiddenNotifier>();
     if (notifier.hasMore) {
       await notifier.fetchAccounts(isLoadMore: true);
       _refreshController.finishLoad(notifier.hasMore ? IndicatorResult.success : IndicatorResult.noMore);
@@ -77,32 +85,15 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
   @override
   Widget build(BuildContext context) {
 
-    final notifier = context.watch<SubAccountManagementNotifier>();
+    final notifier = context.watch<SubAccountHiddenNotifier>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('子账户管理', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+        title: const Text('隐藏的子账户', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         centerTitle: true,
         backgroundColor: ColorUtils.widgetBgColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (contextRoute) =>  SubAccountHiddenPage( onAccountUpdated: () {
-                    hiddenSuccessCallBack();
-                },)));
-              },
-              child: Image.asset(
-                ImageUtils.myAccountYC,
-                width: 32,
-                height: 32,
-              ),
-            ),
-          ),
-        ],
       ),
       backgroundColor: ColorUtils.widgetBgColor,
       body: SafeArea(
@@ -138,20 +129,16 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                     ),
                   ),
                 ),
-                if (!notifier.isLoading)
-                    _buildCreateButton(),
               ],
             ),
             if (notifier.isLoading && isEmpty(notifier.accounts))
-             const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,))
+              const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,))
           ],
         ),
       ),
     );
   }
-  void hiddenSuccessCallBack(){
-    _refreshController.callRefresh();
-  }
+
   void _showEditRemarkDialog(BuildContext superContext, String currentRemark,String accountId) {
     final controller = TextEditingController(text: currentRemark);
     final focusNode = FocusNode();
@@ -220,9 +207,9 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                                 ),
                                 suffixIcon: focusNode.hasFocus && controller.text.isNotEmpty
                                     ? GestureDetector(
-                                        onTap: () => controller.clear(),
-                                        child: const Icon(Icons.cancel, color: Colors.grey, size: 16),
-                                      )
+                                  onTap: () => controller.clear(),
+                                  child: const Icon(Icons.cancel, color: Colors.grey, size: 16),
+                                )
                                     : null,
                               ),
                             );
@@ -239,7 +226,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               }
                               FocusManager.instance.primaryFocus?.unfocus();
                               ToastUtils.showLoading(message: '正在修改...');
-                              final remark =  await superContext.read<SubAccountManagementNotifier>().updateRemark(controller.text, int.parse(accountId));
+                              final remark =  await superContext.read<SubAccountHiddenNotifier>().updateRemark(controller.text, int.parse(accountId));
                               ToastUtils.dismiss();
                               Navigator.of(superContext).pop();
                               if(isValidString(remark)){
@@ -275,83 +262,6 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
     });
   }
 
-  void _showChangeCoinSheet(BuildContext superContext,String iconType,String accountId) {
-    showModalBottomSheet(
-      context: superContext,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext bc) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: const BoxDecoration(
-                color: ColorUtils.widgetBgColor,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 16.0, bottom: 12.0),
-                    child: Text('选择默认币种', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                  ),
-                  SafeArea(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(24)),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildCoinOption(superContext, 'DOGE/LTC', ImageUtils.homeDoge, iconType,accountId),
-                          Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
-                          _buildCoinOption(superContext, 'BTC', ImageUtils.homeDoge, iconType,accountId),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildCoinOption(BuildContext context, String title, String iconPath, String selectedCoin,String accountId) {
-    String selectedCoinName = selectedCoin == "ltc" ? "DOGE/LTC" : "BTC";
-    bool isSelected = selectedCoinName == title;
-    return InkWell(
-      onTap: () async {
-        ToastUtils.showLoading(message: '设置中...');
-        final isSuccess =  await context.read<SubAccountManagementNotifier>().updateCoin(title == "DOGE/LTC" ? "ltc" : "btc", int.parse(accountId));
-        ToastUtils.dismiss();
-        Navigator.of(context).pop();
-        if(isSuccess){
-          ToastUtils.showSuccess("设置成功");
-        }else{
-          ToastUtils.show("请稍后重试");
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            CommonWidgets.buildCoinHeaderImageWidget(iconType: title == "DOGE/LTC" ? "ltc" : "btc"),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(title, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
-            ),
-            if (isSelected)
-              const Icon(Icons.check, color: ColorUtils.mainColor, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showHideAccountSheet(BuildContext superContext, String accountName,String accountId) {
     showModalBottomSheet(
       context: superContext,
@@ -371,16 +281,16 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('隐藏子账户', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
+                  Text('显示子账户', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
                   SizedBox(height: 8),
-                 RichText(
-                   textAlign: TextAlign.center,
-                   text: TextSpan(
-                   children: [
-                     WidgetSpan(child: Text('确认隐藏子账户 ', style: TextStyle(fontSize: 15, color: ColorUtils.colorTitleOne))),
-                     WidgetSpan(child: Text(accountName, style: TextStyle(fontSize: 15, color: ColorUtils.mainColor))),
-                   ],
-                 )),
+                  RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        children: [
+                          WidgetSpan(child: Text('确认显示子账户 ', style: TextStyle(fontSize: 15, color: ColorUtils.colorTitleOne))),
+                          WidgetSpan(child: Text(accountName, style: TextStyle(fontSize: 15, color: ColorUtils.mainColor))),
+                        ],
+                      )),
                   SizedBox(height: 24),
                   Row(
                     children: <Widget>[
@@ -405,19 +315,21 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                           height: 42,
                           child: TextButton(
                             style: TextButton.styleFrom(
-                              backgroundColor: ColorUtils.colorRed,
+                              backgroundColor: ColorUtils.mainColor,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text('确认隐藏', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                            child: const Text('确认显示', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                             onPressed: () async {
-                              ToastUtils.showLoading(message: '正在隐藏...');
-                              final isSuccess = await superContext.read<SubAccountManagementNotifier>().updateAccountIsHidden(1, int.parse(accountId));
+                              ToastUtils.showLoading(message: '正在显示...');
+                              final isSuccess = await superContext.read<SubAccountHiddenNotifier>().updateAccountIsHidden(0, int.parse(accountId));
                               ToastUtils.dismiss();
+                              if (!superContext.mounted) return;
                               Navigator.of(superContext).pop();
                               if(isSuccess){
-                                ToastUtils.showSuccess("子账号已隐藏");
+                                widget.onAccountUpdated?.call();
+                                ToastUtils.showSuccess("子账号已显示");
                               }else{
                                 ToastUtils.show("请稍后重试");
                               }
@@ -478,17 +390,12 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                     child: Column(
                       children: [
                         _buildSheetMenuItem('修改备注名', trailing: Expanded(child: Text(description,textAlign: TextAlign.right, style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2))), onTap: () {
-                          Navigator.of(context).pop(); // Dismiss first sheet
+                          Navigator.of(context).pop();
                           _showEditRemarkDialog(context, description,accountId);
                         }),
                         Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
-                        _buildSheetMenuItem('修改默认币种', trailing: Text(iconType == "ltc" ? 'DOGE/LTC' : "BTC", style: TextStyle(fontSize: 15, color: ColorUtils.colorNoteT2)), onTap: () {
-                           Navigator.of(context).pop();
-                          _showChangeCoinSheet(context,iconType,accountId);
-                        }),
-                        Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16),
-                        _buildSheetMenuItem('隐藏子账户', onTap: () {
-                           Navigator.of(context).pop();
+                        _buildSheetMenuItem('显示该子账户', onTap: () {
+                          Navigator.of(context).pop();
                           _showHideAccountSheet(context, name,accountId);
                         }),
                       ],
@@ -584,39 +491,11 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
           ),
           SizedBox(height: 12,),
           if (hasDivider)
-             Divider(height: 1, color: Colors.grey.shade200, indent: 40+12, endIndent: 16),
+            Divider(height: 1, color: Colors.grey.shade200, indent: 40+12, endIndent: 16),
 
         ],
       ),
     );
   }
 
-  Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountCreatePage()));
-      },
-      child: Container(
-        width: double.infinity,
-        margin: EdgeInsets.symmetric(horizontal: 30,vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: ColorUtils.mainColor, width: 0.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Builder(
-          builder: (context) {
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Center(
-                child: Text(
-                  '创建子账户',
-                  style: TextStyle(fontSize: 15, color: ColorUtils.mainColor, fontWeight: FontWeight.w600),
-                ),
-              ),
-            );
-          }
-        ),
-      ),
-    );
-  }
 }
