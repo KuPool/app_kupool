@@ -56,6 +56,10 @@ class ImageUtils {
   static const String myAccountYC = '${_imageBasePath}mine/sub_account_yc.png';
   static const String selectStatusCheck = '${_imageBasePath}mine/check.png';
   static const String mineHeader = '${_imageBasePath}mine/mine_header.png';
+  static const String minePsHidden = '${_imageBasePath}mine/mine_ps_hidden.png';
+  static const String minePsShow = '${_imageBasePath}mine/mine_ps_show.png';
+
+
 
 
 
