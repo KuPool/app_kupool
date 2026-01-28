@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -67,6 +69,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         }
       });
     });
+  }
+
+  bool _validatePasswords() {
+    final oldPassword = _oldPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (oldPassword.length < 8 || newPassword.length < 8 || confirmPassword.length < 8) {
+      ToastUtils.show('密码长度不能少于8位',displayTime: Duration(seconds: 2));
+      return false;
+    }
+
+    if (newPassword != confirmPassword) {
+      ToastUtils.show('两次输入的新密码不一致',displayTime: Duration(seconds: 2));
+      return false;
+    }
+
+    return true;
   }
   
   final _passwordFormatter = FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
@@ -204,36 +224,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         TextField(
           style: const TextStyle(fontSize: 15, color: ColorUtils.colorTitleOne),
           controller: _codeController,
-          keyboardType: TextInputType.text,
+          keyboardType: TextInputType.numberWithOptions(),
+          autocorrect: false,
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), 
           ],
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFFF7F8FA),
             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             hintText: '输入邮箱验证码',
-            hintStyle: const TextStyle(fontSize: 14, color: ColorUtils.color999),
+            hintStyle: const TextStyle(fontSize: 15, color: ColorUtils.color999),
             suffixIcon: GestureDetector(
               onTap: _isCountingDown ? null : () {
-                // TODO: Add API call to send verification code
+                if (!_validatePasswords()) return;
                 setState(() {
                    _startCountdown();
                 });
               },
-              child: Container(
-                width: 100,
-                color: Colors.transparent, // Make GestureDetector's background transparent
-                padding: const EdgeInsets.only(right: 16),
-                alignment: Alignment.centerRight,
-                child: Text(
-                  _isCountingDown ? '$_countdownSeconds 秒后重新发送' : '发送验证码',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorUtils.mainColor,
-                    fontWeight: FontWeight.w500,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    _isCountingDown ? '$_countdownSeconds秒后重新发送' : '发送验证码',
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: ColorUtils.mainColor,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10.0),
+                ],
               ),
             ),
              border: OutlineInputBorder(
@@ -258,23 +281,33 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget _buildConfirmButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton(
-          onPressed: _isButtonEnabled ? () {
-            // TODO: Add password change logic
-          } : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _isButtonEnabled ? ColorUtils.mainColor : ColorUtils.mainColor.withOpacity(0.5),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-            disabledBackgroundColor: ColorUtils.mainColor.withOpacity(0.3)
+      child: GestureDetector(
+        onTap: _isButtonEnabled
+            ? () {
+                if (!_validatePasswords()) return;
+                if(_isCountingDown == false){
+                  ToastUtils.show('请先发送验证码',displayTime: Duration(seconds: 2));
+                  return;
+                }
+                if (isUnValidString(_codeController.text.trim()) ) {
+                  ToastUtils.show('请输入验证码',displayTime: Duration(seconds: 2));
+                  return;
+                };
+              //   发起请求
+
+              }
+            : null,
+        child: Container(
+          width: double.infinity,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _isButtonEnabled ? ColorUtils.mainColor : ColorUtils.mainColor.withAlpha(125),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: const Text(
             '确认修改',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ),
       ),
