@@ -86,7 +86,7 @@ class PersonalInfoPage extends ConsumerWidget {
 
   Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
     return Container(
-      height: 34,
+      height: 44,
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
       child: OutlinedButton(
@@ -113,7 +113,7 @@ class PersonalInfoPage extends ConsumerWidget {
         return SafeArea(
           child: Container(
             padding: const EdgeInsets.all(24),
-            margin: const EdgeInsets.only(left: 24,right: 24,bottom: 0,),
+            margin: const EdgeInsets.only(left: 24,right: 24,bottom: 10,),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12.r),

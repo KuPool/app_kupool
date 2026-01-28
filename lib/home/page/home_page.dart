@@ -15,6 +15,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../utils/common_widget.dart';
+
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -291,7 +293,8 @@ class HomePage extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildCoinIcons(icons),
+                // _buildCoinIcons(icons),
+                CommonWidgets.buildCoinHeaderImageWidget(iconType: "ltc",width:48,coinWidth: 30,coinHeight: 30),
               ],
             ),
           ),

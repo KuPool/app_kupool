@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'color_utils.dart';
@@ -68,56 +70,69 @@ class CommonWidgets{
     }
   }
 
-  static  Widget buildCoinHeaderImageWidget({required String iconType,double width = 40,double height = 40}) {
+  static  Widget buildCoinHeaderImageWidget({required String iconType,double width = 40,double height = 40,double coinWidth = 26,double coinHeight = 26}) {
     final coinType = iconType.toLowerCase();
     switch (coinType) {
       case "ltc":
         final icons = [ImageUtils.homeDoge, ImageUtils.homeLtc];
-        return _buildCoinIcons(icons, width, height);
+        return _buildCoinIcons(icons, width, height,coinWidth,coinHeight);
       case "btc":
         final icons = [ImageUtils.homeBtc];
-        return _buildCoinIcons(icons,width,height);
+        return _buildCoinIcons(icons,width,height,coinWidth,coinHeight);
 
       default:
         return SizedBox.shrink();
     }
   }
 
-  static Widget _buildCoinIcons(List<String> icons,double width,double height) {
+  static Widget _buildCoinIcons(List<String> icons,double width,double height,double coinWidth,double coinHeight) {
     if (icons.length > 1) {
+      const double overlapFactor = 0.5;
+      final double overlapDistance = coinWidth * overlapFactor;
+
+      // 2. 计算两个图标重叠后的总实际宽度
+      final double totalIconsWidth = (coinWidth * 2) - overlapDistance;
+
+      // 3. 计算为了让这个整体居中，左边需要留出的空白距离
+      final double startOffset = max((width - totalIconsWidth) / 2, 0);
+
+      // 4. 计算两个图标各自的 left 偏移量
+      final double leftIconOffset = max(startOffset, 0);
+      final double rightIconOffset = startOffset + coinWidth - overlapDistance;
+
+
       return SizedBox(
         width: width,
         height: height,
-        child: Center(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Positioned(
-                left: (26*2 - width),
-                child: SizedBox(
-                  width: 26,
-                  height: 26,
-                  child: CircleAvatar(
-                    radius: 26 / 2,
-                    backgroundImage: AssetImage(icons[1]),
-                    backgroundColor: Colors.transparent,
-                  ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              left: rightIconOffset,
+              // left: (coinWidth*2 - width),
+              child: SizedBox(
+                width: coinWidth,
+                height: coinHeight,
+                child: CircleAvatar(
+                  radius: coinWidth / 2,
+                  backgroundImage: AssetImage(icons[1]),
+                  backgroundColor: Colors.transparent,
                 ),
               ),
-              Positioned(
-                left: 0,
-                child: SizedBox(
-                  width: 26,
-                  height: 26,
-                  child: CircleAvatar(
-                    radius: 26 / 2,
-                    backgroundImage: AssetImage(icons[0]),
-                    backgroundColor: Colors.transparent,
-                  ),
+            ),
+            Positioned(
+              left: leftIconOffset,
+              child: SizedBox(
+                width: coinWidth,
+                height: coinHeight,
+                child: CircleAvatar(
+                  radius: coinWidth / 2,
+                  backgroundImage: AssetImage(icons[0]),
+                  backgroundColor: Colors.transparent,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     } else {
@@ -126,10 +141,10 @@ class CommonWidgets{
         height: height,
         child: Center(
           child: SizedBox(
-            width: 26,
-            height: 26,
+            width: coinWidth,
+            height: coinHeight,
             child: CircleAvatar(
-              radius: 26 / 2,
+              radius: coinWidth / 2,
               backgroundImage: AssetImage(icons.first),
               backgroundColor: Colors.transparent,
             ),
