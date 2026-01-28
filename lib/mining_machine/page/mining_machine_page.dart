@@ -118,6 +118,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         if (selectedAccount != null) {
           notifier.changeStatusFilter(activeType, subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin);
@@ -253,10 +254,10 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
       child: Row(
         // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildHeaderCell('矿机名', 'miner_name', notifier,flex: 2),
-          _buildHeaderCell('实时算力', 'hash_15m', notifier, flex: 2, alignment: TextAlign.left),
-          _buildHeaderCell('日算力', 'hash_24h', notifier, flex: 2, alignment: TextAlign.left),
-          _buildHeaderCell('拒绝率', 'reject_rate', notifier,flex: 2, alignment: TextAlign.center),
+          Expanded(flex: 2,child: _buildHeaderCell('矿机名', 'miner_name', notifier,flex: 2)),
+          Expanded(flex: 2,child: _buildHeaderCell('实时算力', 'hash_15m', notifier, flex: 2, alignment: TextAlign.left)),
+          Expanded(flex: 2,child: _buildHeaderCell('日算力', 'hash_24h', notifier, flex: 2, alignment: TextAlign.left)),
+          Expanded(flex: 2,child: _buildHeaderCell('拒绝率', 'reject_rate', notifier,flex: 2, alignment: TextAlign.center)),
         ],
       ),
     );
@@ -266,40 +267,36 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     final isSelected = notifier.sortField == field;
     final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
 
-    return Expanded(
-      flex: flex,
-      child: Container(
-        child: InkWell(
-          onTap: () {
-            if (selectedAccount != null) {
-              notifier.changeSort(field, subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin);
-            }
-          },
-          child: Row(
-            mainAxisAlignment: alignment == TextAlign.center ? MainAxisAlignment.center : (alignment == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start),
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
-                ),
-              ),
-              const SizedBox(width: 2),
-              if (isSelected)
-                Transform.rotate(
-                  angle: notifier.sortAscending ? math.pi : 0,
-                  child: Image.asset(
-                    ImageUtils.arrowDown,
-                    width: 12,
-                    height: 12,
-                    color: ColorUtils.mainColor,
-                    gaplessPlayback: true,
-                  ),
-                ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (selectedAccount != null) {
+          notifier.changeSort(field, subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin);
+        }
+      },
+      child: Row(
+        mainAxisAlignment: alignment == TextAlign.center ? MainAxisAlignment.center : (alignment == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start),
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT2,
+            ),
           ),
-        ),
+          const SizedBox(width: 2),
+          if (isSelected)
+            Transform.rotate(
+              angle: notifier.sortAscending ? math.pi : 0,
+              child: Image.asset(
+                ImageUtils.arrowDown,
+                width: 12,
+                height: 12,
+                color: ColorUtils.mainColor,
+                gaplessPlayback: true,
+              ),
+            ),
+        ],
       ),
     );
   }

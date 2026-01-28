@@ -16,6 +16,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
+import '../../login/page/agreement_page.dart';
+
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
 
@@ -124,6 +126,7 @@ class _MyPageState extends ConsumerState<MyPage> {
           Builder(
               builder: (context) {
                 return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const SubAccountManagementPage()));
                   },
@@ -135,6 +138,7 @@ class _MyPageState extends ConsumerState<MyPage> {
           Builder(
               builder: (context) {
                 return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: (){
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const SecuritySettingsPage()));
                     },
@@ -146,6 +150,7 @@ class _MyPageState extends ConsumerState<MyPage> {
           Builder(
               builder: (context) {
                 return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: (){
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageSelectionPage()));
                   },
@@ -170,11 +175,27 @@ class _MyPageState extends ConsumerState<MyPage> {
       ),
       child: Column(
         children: [
-          _buildMenuItem(iconPath: ImageUtils.myHelp, title: '帮助中心'),
+          Builder(
+            builder: (context) {
+              return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AgreementPage(title: "", url: "https://help.kupool.com/hc/zh-cn"),
+                      ),
+                    );
+                  },
+                  child: _buildMenuItem(iconPath: ImageUtils.myHelp, title: '帮助中心')
+              );
+            }
+          ),
           Divider(height: 1, color: Colors.grey.shade200, indent: 52,endIndent: 16,),
           Builder(
               builder: (context) {
                 return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutKupoolPage()));
                   },

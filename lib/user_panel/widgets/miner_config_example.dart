@@ -124,12 +124,16 @@ class _MinerConfigExampleState extends State<MinerConfigExample> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  value,
-                  style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(fontSize: 14, color: ColorUtils.colorT1),
+                  ),
                 ),
               ),
+              SizedBox(width: 8,),
               if (showCopyButton)
                 InkWell(
                   onTap: () {
