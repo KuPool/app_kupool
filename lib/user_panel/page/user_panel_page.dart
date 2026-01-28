@@ -5,6 +5,7 @@ import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/user_panel/provider/chart_notifier.dart';
 import 'package:Kupool/user_panel/provider/user_panel_provider.dart';
 import 'package:Kupool/user_panel/widgets/add_miner_guide.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -298,16 +299,20 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Row(
       children: [
         Expanded(
-          child: _buildRevenueColumn('昨日收益', [
+          child: _buildRevenueColumn('昨日收益', selectCurrentCoinType == "ltc" ? [
             MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
             MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
+          ] : [
+            MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
         SizedBox(width: 12,),
         Expanded(
-          child: _buildRevenueColumn('今日已挖 (预估)', [
+          child: _buildRevenueColumn('今日已挖 (预估)',selectCurrentCoinType == "ltc" ? [
             MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
             MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
+          ] : [
+            MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
       ],
@@ -341,24 +346,32 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...revenues.map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        Table(
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          children: revenues.map((entry) {
+            return TableRow(
               children: [
-                Flexible(
-                  child: _buildDecimalText(entry.key),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4.0, bottom: 4.0),
+                    child: _buildDecimalText(entry.key),
+                  ),
                 ),
-                SizedBox(width: 4),
-                Text(entry.value, style: TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold)),
+                TableCell(
+                  verticalAlignment: TableCellVerticalAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      entry.value,
+                      style: const TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
               ],
-            ),
-          )),
-        ],
-      ),
+            );
+          }).toList(),
+        ),
         SizedBox(height: 4.h),
         Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
       ],
@@ -368,7 +381,7 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   Widget _buildDecimalText(String text) {
     Color textColor = ColorUtils.colorT1;
     final intStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: textColor);
-    final decimalStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: textColor); // 小数点后的样式
+    final decimalStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: textColor);
 
     if (text.contains('.')) {
       final parts = text.split('.');
@@ -377,23 +390,22 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
 
       return FittedBox(
         fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
         child: RichText(
-          text: TextSpan(// 继承默认文本样式
+          text: TextSpan(
             children: <TextSpan>[
               TextSpan(text: integerPart, style: intStyle),
-              TextSpan(text: '.', style: decimalStyle), // 小数点本身也用小号字体
+              TextSpan(text: '.', style: decimalStyle),
               TextSpan(text: decimalPart, style: decimalStyle),
             ],
           ),
         ),
       );
     } else {
-      // 如果没有小数点，直接返回一个普通的 Text Widget
       return Text(
         text,
         style: intStyle,
       );
     }
   }
-
 }
