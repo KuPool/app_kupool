@@ -347,7 +347,10 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Table(
-          defaultColumnWidth: const IntrinsicColumnWidth(),
+          columnWidths: const <int, TableColumnWidth>{
+            0: FlexColumnWidth(),
+            1: IntrinsicColumnWidth(),
+          },
           children: revenues.map((entry) {
             return TableRow(
               children: [
