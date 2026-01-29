@@ -8,8 +8,8 @@
         android:label="Kupool"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
         tools:ignore="ExtraText">
-        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

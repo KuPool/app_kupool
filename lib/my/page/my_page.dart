@@ -17,6 +17,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../login/page/agreement_page.dart';
+import '../../net/env_config.dart';
 
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
@@ -183,7 +184,7 @@ class _MyPageState extends ConsumerState<MyPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AgreementPage(title: "", url: "https://help.kupool.com/hc/zh-cn"),
+                          builder: (context) => AgreementPage(title: "", url: "https://help.kupool.com/hc/zh-cn"),
                       ),
                     );
                   },
