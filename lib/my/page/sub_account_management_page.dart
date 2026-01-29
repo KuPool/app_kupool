@@ -6,6 +6,7 @@ import 'package:Kupool/my/provider/sub_account_management_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/common_widget.dart';
 import 'package:Kupool/utils/empty_check.dart';
+import 'package:Kupool/utils/empty_emoji_formatter.dart';
 import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
@@ -202,9 +203,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               focusNode: focusNode,
                               controller: controller,
                               inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'[!-~]')
-                                )
+                                NoSpaceEmojiFormatter()
                               ],
                               decoration: InputDecoration(
                                 filled: true,

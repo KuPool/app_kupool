@@ -4,6 +4,7 @@ import 'package:Kupool/main.dart';
 import 'package:Kupool/my/provider/user_info_notifier.dart';
 import 'package:Kupool/net/auth_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
@@ -45,18 +46,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _updateButtonState() {
     setState(() {
       _isButtonEnabled =
-          _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+          _emailController.text.trim().isNotEmpty && _passwordController.text.trim().isNotEmpty;
     });
   }
 
   void _login() {
-    final email = _emailController.text;
+    final email = _emailController.text.trim();
 
-    final bool isEmailValid = RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-        .hasMatch(email);
+    // final bool isEmailValid = RegExp(
+    //         r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+    //     .hasMatch(email);
 
-    if (!isEmailValid) {
+    if (isUnValidString(email)) {
       ToastUtils.show('请输入有效的邮箱地址');
       return;
     }

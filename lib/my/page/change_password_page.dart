@@ -194,7 +194,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   )
                 : (controller.text.isNotEmpty ? 
                     IconButton(
-                      icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
+                      icon: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1, size: 20),
                       onPressed: () => controller.clear(),
                     ) : null),
             border: OutlineInputBorder(

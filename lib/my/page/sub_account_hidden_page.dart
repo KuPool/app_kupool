@@ -15,6 +15,7 @@ import 'dart:math' as math;
 import 'package:provider/provider.dart';
 
 import '../../drawer/model/sub_account_mini_info_entity.dart';
+import '../../utils/empty_emoji_formatter.dart';
 import '../../utils/toast_utils.dart';
 
 class SubAccountHiddenPage extends StatelessWidget {
@@ -188,11 +189,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               autofocus: true,
                               focusNode: focusNode,
                               controller: controller,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'[!-~]')
-                                )
-                              ],
+                              inputFormatters: [NoSpaceEmojiFormatter()],
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.white,
