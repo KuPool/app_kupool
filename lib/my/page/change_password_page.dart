@@ -76,6 +76,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final newPassword = _newPasswordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
+    if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      ToastUtils.show('请填写完整信息',displayTime: Duration(seconds: 2));
+      return false;
+    }
+
     if (oldPassword.length < 8 || newPassword.length < 8 || confirmPassword.length < 8) {
       ToastUtils.show('密码长度不能少于8位',displayTime: Duration(seconds: 2));
       return false;

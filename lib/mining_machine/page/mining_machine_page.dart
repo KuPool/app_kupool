@@ -215,7 +215,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
     if (miners.isEmpty) {
       _controller.finishRefresh();
       _controller.finishLoad();
-      return const Center(child: Text('没有矿机数据'));
+      return const Center(child: Text('暂无矿机数据'));
     }
 
     return ListView.builder(

@@ -145,6 +145,8 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
             ),
             if (notifier.isLoading && isEmpty(notifier.accounts))
              const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,))
+            else if(!notifier.isLoading && isEmpty(notifier.accounts))
+              const Center(child: Text("暂无数据"),)
           ],
         ),
       ),
