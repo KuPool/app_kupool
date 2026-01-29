@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
           ],
           child: MaterialApp(
             navigatorObservers: [FlutterSmartDialog.observer],
-            builder: FlutterSmartDialog.init(),
+            // builder: FlutterSmartDialog.init(),
             navigatorKey: NavigationService.navigatorKey,
             title: 'Kupool',
             debugShowCheckedModeBanner: false,
@@ -66,6 +66,22 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
               useMaterial3: true,
             ),
+            builder: (context, widget) {
+              // 禁用系统字体大小影响
+              final mediaQuery = MediaQuery.of(context);
+              final newMediaQueryData = mediaQuery.copyWith(
+                // 使用 textScaler (新版Flutter) 或 textScaleFactor (旧版)
+                textScaler: TextScaler.linear(1.0),
+              );
+              // 整合 SmartDialog 的初始化
+              return FlutterSmartDialog.init()(
+                context,
+                MediaQuery(
+                  data: newMediaQueryData,
+                  child: widget!,
+                ),
+              );
+            },
             home: child,
           ),
         );
