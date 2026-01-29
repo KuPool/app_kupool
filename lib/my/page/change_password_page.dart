@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:Kupool/net/api_service.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -27,6 +28,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Timer? _timer;
   int _countdownSeconds = 60;
   bool _isCountingDown = false;
+  bool tapSendCode = false;
 
   @override
   void initState() {
@@ -241,10 +243,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             hintText: '输入邮箱验证码',
             hintStyle: const TextStyle(fontSize: 15, color: ColorUtils.color999),
             suffixIcon: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: _isCountingDown ? null : () {
                 if (!_validatePasswords()) return;
-                setState(() {
-                   _startCountdown();
+                ApiService().post('/v1/change_password/send_code').then((_) {
+                  if (!mounted) return;
+                  ToastUtils.show('验证码发送成功');
+                  tapSendCode = true;
+                  setState(() {
+                    _startCountdown();
+                  });
+                }).catchError((e) {
+                  if (!mounted) return;
+                  ToastUtils.show('验证码发送失败，请稍后重试');
                 });
               },
               child: Row(
@@ -256,7 +267,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     softWrap: false,
                     style: TextStyle(
                       fontSize: 15,
-                      color: ColorUtils.mainColor,
+                      color: _isCountingDown ? Colors.grey : ColorUtils.mainColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -288,18 +299,34 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: GestureDetector(
         onTap: _isButtonEnabled
-            ? () {
+            ? () async {
                 if (!_validatePasswords()) return;
-                if(_isCountingDown == false){
+                if(tapSendCode == false){
                   ToastUtils.show('请先发送验证码',displayTime: Duration(seconds: 2));
                   return;
                 }
                 if (isUnValidString(_codeController.text.trim()) ) {
                   ToastUtils.show('请输入验证码',displayTime: Duration(seconds: 2));
                   return;
-                };
-              //   发起请求
+                }
 
+                ToastUtils.showLoading(message: '正在修改...');
+                try {
+                  final params = {
+                    'current_password': _oldPasswordController.text.trim(),
+                    'new_password': _newPasswordController.text.trim(),
+                    'code': _codeController.text.trim(),
+                  };
+                  await ApiService().post('/v1/change_password', data: params);
+                  ToastUtils.showSuccess('密码修改成功');
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                } catch (e) {
+
+                } finally {
+                  ToastUtils.dismiss();
+                }
               }
             : null,
         child: Container(
