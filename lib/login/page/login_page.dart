@@ -186,7 +186,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
         suffixIcon: _emailController.text.isNotEmpty
             ? IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.grey),
+                iconSize: 20,
+                icon: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1),
                 onPressed: () {
                   _emailController.clear();
                 },
@@ -230,9 +231,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
         suffixIcon: IconButton(
-          icon: Icon(
-            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
+          icon:
+          Image.asset(
+            _isPasswordVisible ? ImageUtils.minePsShow : ImageUtils.minePsHidden,
+            width: 20,
+            height: 20,
+            color: ColorUtils.colorInputIcon1,
           ),
           onPressed: () {
             setState(() {

@@ -221,7 +221,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                                 suffixIcon: focusNode.hasFocus && controller.text.isNotEmpty
                                     ? GestureDetector(
                                         onTap: () => controller.clear(),
-                                        child: const Icon(Icons.cancel, color: Colors.grey, size: 16),
+                                        child: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1, size: 20),
                                       )
                                     : null,
                               ),

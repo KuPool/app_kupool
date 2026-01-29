@@ -255,9 +255,12 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
           ),
         ),
         suffixIcon: IconButton(
-          icon: Icon(
-            isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: Colors.grey,
+          icon:
+          Image.asset(
+            isVisible ? ImageUtils.minePsShow : ImageUtils.minePsHidden,
+            width: 20,
+            height: 20,
+            color: ColorUtils.colorInputIcon1,
           ),
           onPressed: onToggleVisibility,
         ),

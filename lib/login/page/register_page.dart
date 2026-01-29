@@ -237,8 +237,8 @@ class _RegisterPageState extends State<RegisterPage>
           ),
         ),
         suffixIcon: _emailController.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.grey),
+            ? IconButton(iconSize: 20,
+                icon: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1),
                 onPressed: () {
                   _emailController.clear();
                 },
