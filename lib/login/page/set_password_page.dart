@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../utils/toast_utils.dart';
+
 class SetPasswordPage extends StatefulWidget {
   final String email;
   final String verificationCode;
@@ -110,7 +112,7 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
 
       // 密码长度校验
       if (password.length < 8) {
-        // ToastUtils.show('密码长度至少为8位');
+        ToastUtils.show('密码长度至少为8位');
         return;
       }
       
@@ -288,24 +290,24 @@ class _SetPasswordPageState extends State<SetPasswordPage> with LoadingStateMixi
 
   Widget _buildCompleteButton() {
     return Container(
-      height: 48.h,
+      height: 44,
       width: double.infinity,
       decoration: BoxDecoration(
         color: _isButtonEnabled && !isLoading ? ColorUtils.mainColor : ColorUtils.unUseMainColor,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: _isButtonEnabled && !isLoading ? _onComplete : null,
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(12),
           child: Center(
             child: isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : Text(
                     '完成',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),

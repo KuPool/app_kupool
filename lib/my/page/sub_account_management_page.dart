@@ -203,7 +203,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               controller: controller,
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                    RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
+                                    RegExp(r'[!-~]')
                                 )
                               ],
                               decoration: InputDecoration(

@@ -3,6 +3,7 @@ import 'package:Kupool/login/page/email_verification_page.dart';
 import 'package:Kupool/net/api_service.dart';
 import 'package:Kupool/net/env_config.dart';
 import 'package:Kupool/utils/color_utils.dart';
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/utils/loading_state_mixin.dart';
 import 'package:flutter/gestures.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../utils/toast_utils.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -84,13 +86,13 @@ class _RegisterPageState extends State<RegisterPage>
       FocusManager.instance.primaryFocus?.unfocus();
 
       // 第一步：校验邮箱格式
-      final email = _emailController.text;
-      final isEmailValid = RegExp(
-              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-          .hasMatch(email);
+      final email = _emailController.text.trim();
+      // final isEmailValid = RegExp(
+      //         r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+      //     .hasMatch(email);
 
-      if (!isEmailValid) {
-        // ToastUtils.show('请输入有效的邮箱地址');
+      if (isUnValidString(email)) {
+        ToastUtils.show('请输入有效的邮箱地址');
         return; // 中断操作
       }
 
@@ -178,7 +180,6 @@ class _RegisterPageState extends State<RegisterPage>
                     _buildEmailField(),
                     SizedBox(height: 36.h),
                     _buildNextButton(),
-                    SizedBox(height: 16.h),
                     _buildAgreementRow(),
                   ],
                 ),
@@ -269,17 +270,17 @@ class _RegisterPageState extends State<RegisterPage>
 
   Widget _buildNextButton() {
     return Container(
-      height: 48.h,
+      height: 44,
       decoration: BoxDecoration(
         color: _isButtonEnabled && !isLoading
             ? ColorUtils.mainColor
             : ColorUtils.unUseMainColor,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(12),
           onTap: _isButtonEnabled && !isLoading ? _onNextStep : null,
           child: Center(
             child: isLoading
@@ -294,7 +295,7 @@ class _RegisterPageState extends State<RegisterPage>
                 : Text(
                     '下一步',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
@@ -310,20 +311,24 @@ class _RegisterPageState extends State<RegisterPage>
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        InkWell(
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: isLoading ? null : () { // 加载时禁用
             setState(() {
               _isAgreed = !_isAgreed;
               _updateButtonState();
             });
           },
-          child: Image.asset(
-            _isAgreed ? ImageUtils.checkSelect : ImageUtils.checkUnSelect,
-            width: 16.w,
-            height: 16.h,
+          child: Container(
+            color: Colors.white,
+            padding: EdgeInsets.only(right: 8.w,top: 16.w,bottom: 16.w),
+            child: Image.asset(
+              _isAgreed ? ImageUtils.checkSelect : ImageUtils.checkUnSelect,
+              width: 16.w,
+              height: 16.w,
+            ),
           ),
         ),
-        SizedBox(width: 8.w),
         Expanded(
           child: Text.rich(
             TextSpan(

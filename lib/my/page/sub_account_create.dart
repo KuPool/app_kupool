@@ -149,7 +149,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                           isOptional: true,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
+                                RegExp(r'[!-~]')
                             )
                           ]),
                       const SizedBox(height: 24),
