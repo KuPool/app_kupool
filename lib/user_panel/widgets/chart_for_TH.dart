@@ -69,6 +69,66 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       ],
     );
   }
+  List<int> _getEvenlySpacedIndexes(int totalCount, int numberOfPoints) {
+    if (totalCount <= numberOfPoints) {
+      return List<int>.generate(totalCount, (index) => index);
+    }
+    final List<int> indexes = [];
+    final double step = (totalCount - 1) / (numberOfPoints - 1);
+    for (int i = 0; i < numberOfPoints; i++) {
+      final index = (i * step).round();
+      if (indexes.isEmpty || indexes.last != index) {
+        indexes.add(index);
+      }
+    }
+    return indexes;
+  }
+  Widget _buildTimeLabelsRow(List<PanelChartHashrateTicks> ticks, String dimension) {
+    if (ticks.length < 2) {
+      return const SizedBox.shrink();
+    }
+
+    // 1. 使用我们之前写的算法获取5个均匀分布的索引
+    final targetIndexes = _getEvenlySpacedIndexes(ticks.length, 5);
+
+    // 2. 根据索引获取对应的时间字符串
+    final labels = targetIndexes.map((index) {
+      final tick = ticks[index];
+      final parsedAsLocal = DateTime.parse(tick.datetime!);
+      final utcDateTime = DateTime.utc(
+          parsedAsLocal.year, parsedAsLocal.month, parsedAsLocal.day,
+          parsedAsLocal.hour, parsedAsLocal.minute, parsedAsLocal.second
+      );
+      final dt = utcDateTime.toLocal();
+      final format = dimension != '15m' ? DateFormat('MM-dd') : DateFormat('HH:mm');
+      return format.format(dt);
+    }).toList();
+    return Row(
+      children: [
+        // 第一个标签，左对齐
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(labels[0], style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        ),
+        // 中间的3个标签，使用 Expanded 来均分空间
+        if (labels.length > 2)
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: labels.sublist(1, labels.length - 1).map((label) {
+                return Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10));
+              }).toList(),
+            ),
+          ),
+        // 最后一个标签，右对齐
+        if (labels.length > 1)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(labels.last, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+          ),
+      ],
+    );
+  }
 
   Widget _buildChart(PanelChartHashrateEntity chartData, String dimension) {
     var maxHashrateY = chartData.ticks!
@@ -85,44 +145,57 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       return const Center(child: Text('暂无图表数据'));
     }
 
-    return AspectRatio(
-      aspectRatio: 1.8,
-      child: LineChart(
-        LineChartData(
-          clipData: const FlClipData.none(),
-          minY: 0,
-          maxY: 100,
-          minX: spotsData.minX,
-          maxX: spotsData.maxX,
-          gridData: const FlGridData(show: false),
-          extraLinesData: ExtraLinesData(
-            horizontalLines: _buildHorizontalGridLines(),
-          ),
-          borderData: FlBorderData(
-            show: true,
-            border: Border(
-              bottom: BorderSide(color: ColorUtils.colorBe, width: 1),
-              top: BorderSide.none,
+    return Column(
+      children: [
+        AspectRatio(
+          aspectRatio: 1.8,
+          child: LineChart(
+            LineChartData(
+              clipData: const FlClipData.none(),
+              // clipData: FlClipData.vertical(),
+              minY: -1,
+              maxY: 105,
+              minX: spotsData.minX,
+              maxX: spotsData.maxX,
+              gridData: const FlGridData(show: false),
+              extraLinesData: ExtraLinesData(
+                horizontalLines: _buildHorizontalGridLines(),
+              ),
+              borderData: FlBorderData(
+                show: true,
+                border: Border(
+                  bottom: BorderSide(color: ColorUtils.colorBe, width: 1),
+                  top: BorderSide.none,
+                ),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  // isCurved: true,
+                  spots: spotsData.spots,
+                  color: ColorUtils.mainColor,
+                  barWidth: 1.5,
+                  curveSmoothness: 0.35,
+                  dotData: const FlDotData(show: false),
+                ),
+                LineChartBarData(
+                  isCurved: true,
+                  spots: rejectionSpots,
+                  color: Colors.red,
+                  barWidth: 1.5,
+                  curveSmoothness: 0.35,
+                  dotData: const FlDotData(show: false),
+                ),
+              ],
+              titlesData: _buildTitlesData(chartData.unit ?? "",chartData.ticks!, maxHashrateY, spotsData.minX, spotsData.maxX, dimension),
+              lineTouchData: _buildLineTouchData(chartData, spotsData.maxY),
             ),
           ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spotsData.spots,
-              color: ColorUtils.mainColor,
-              barWidth: 1,
-              dotData: const FlDotData(show: false),
-            ),
-            LineChartBarData(
-              spots: rejectionSpots,
-              color: Colors.red,
-              barWidth: 1,
-              dotData: const FlDotData(show: false),
-            ),
-          ],
-          titlesData: _buildTitlesData(chartData.unit ?? "",chartData.ticks!, maxHashrateY, spotsData.minX, spotsData.maxX, dimension),
-          lineTouchData: _buildLineTouchData(chartData, spotsData.maxY),
         ),
-      ),
+        Container(
+          padding: const EdgeInsets.only(left: 8,right: 8,top: 10,bottom: 8),
+          child: _buildTimeLabelsRow(chartData.ticks!, dimension),
+        ),
+      ],
     );
   }
 
@@ -219,7 +292,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           interval: 20,
           reservedSize: 20,
           getTitlesWidget: (value, meta) {
-            if (value > 100) return const SizedBox.shrink();
+            if (value > 100 || value < 0) return const SizedBox.shrink();
             final realHashrate = (value / 100) * maxHashrateY;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -234,7 +307,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           interval: 20, 
           reservedSize: 24,
           getTitlesWidget: (value, meta) {
-            if (value > 100) return const SizedBox.shrink();
+            if (value > 100 || value < 0) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text('${value.toInt()}', style: const TextStyle(color: Colors.red, fontSize: 10), textAlign: TextAlign.right),
@@ -244,7 +317,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       ),
       bottomTitles: AxisTitles(
         sideTitles: SideTitles(
-          showTitles: true,
+          showTitles: false,
           interval: (maxX - minX) / 1000,
           reservedSize: 30,
           getTitlesWidget: (value, meta) {
@@ -273,16 +346,11 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
             }
 
             final parsedAsLocal = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-            final utcDateTime = DateTime.utc(
-                parsedAsLocal.year, parsedAsLocal.month, parsedAsLocal.day,
-                parsedAsLocal.hour, parsedAsLocal.minute, parsedAsLocal.second
-            );
-            final dt = utcDateTime.toLocal();
             final format = dimension != '15m' ? DateFormat('MM-dd') : DateFormat('HH:mm');
 
             return SideTitleWidget(
               axisSide: meta.axisSide,
-              child: Text(format.format(dt), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+              child: Text(format.format(parsedAsLocal), style: const TextStyle(color: Colors.grey, fontSize: 10)),
             );
           },
         ),

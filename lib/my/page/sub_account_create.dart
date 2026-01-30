@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 import '../../net/api_service.dart';
+import '../../utils/empty_emoji_formatter.dart';
 
 class SubAccountCreatePage extends ConsumerStatefulWidget {
   const SubAccountCreatePage({super.key});
@@ -33,6 +34,8 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
   String _selectedCoin = 'DOGE/LTC';
   String  defaultCoin = "ltc";
 
+  final _asciiFormatter = FilteringTextInputFormatter.allow(RegExp(r'[!-~]'));
+  final _userNameFormatter = FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9]'));
 
   @override
   void initState() {
@@ -59,9 +62,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
     setState(() {
       final name = _nameController.text;
       if (name.isNotEmpty &&
-          (name.length < 4 ||
-              name.length > 30 ||
-              !RegExp(r'^[a-z0-9]+$').hasMatch(name))) {
+          !RegExp(r'^[a-z0-9]{4,30}$').hasMatch(name)) {
         _nameError = '子账户名格式错误';
       } else {
         _nameError = '';
@@ -82,11 +83,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
 
   void _updateSubmitButtonState() {
     final name = _nameController.text;
-    final isNameValid = name.isNotEmpty &&
-        name.length >= 4 &&
-        name.length <= 30 &&
-        RegExp(r'^[a-z0-9]+$').hasMatch(name);
-
+    final isNameValid = RegExp(r'^[a-z0-9]{4,30}$').hasMatch(name);
     setState(() {
       _isSubmitEnabled = isNameValid;
     });
@@ -140,6 +137,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                           label: '子账户名',
                           hint: '仅 4-30 位小写字母或数字',
                           isRequired: true,
+                          inputFormatters: [_userNameFormatter],
                           errorText: _nameError),
                       const SizedBox(height: 24),
                       _buildTextField(
@@ -147,11 +145,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
                           label: '子账户备注',
                           hint: '请添加子账户备注',
                           isOptional: true,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
-                            )
-                          ]),
+                          inputFormatters: [NoSpaceEmojiFormatter()]),
                       const SizedBox(height: 24),
                       _buildCoinSelector(),
                       const SizedBox(height: 24),
@@ -251,6 +245,7 @@ class _SubAccountCreatePageState extends ConsumerState<SubAccountCreatePage> {
             ),
             suffixIcon: controller.text.isNotEmpty
                 ? IconButton(
+                    iconSize: 20,
                     icon: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1),
                     onPressed: () {
                       controller.clear();

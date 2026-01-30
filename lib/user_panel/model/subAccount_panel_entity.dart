@@ -31,6 +31,7 @@ class SubAccountPanelEntity {
 	String? yesterdayAcceptHashrate;
 	@JSONField(name: 'yesterday_accept_hashrate_unit')
 	String? yesterdayAcceptHashrateUnit;
+  bool settling = false;
 
 	SubAccountPanelEntity();
 

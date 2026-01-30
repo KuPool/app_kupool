@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../utils/color_utils.dart';
 
@@ -15,51 +15,68 @@ class AgreementPage extends StatefulWidget {
 }
 
 class _AgreementPageState extends State<AgreementPage> {
-  late final WebViewController _controller;
+  InAppWebViewController? _webViewController;
   bool _isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
-
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-          onWebResourceError: (WebResourceError error) {
-            // 您可以在这里处理加载错误
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(widget.url));
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: ColorUtils.mainColor,),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) {
+          return;
+        }
+        final navigator = Navigator.of(context);
+        if (await _webViewController?.canGoBack() ?? false) {
+          await _webViewController?.goBack();
+        } else {
+          if (navigator.canPop()) {
+            navigator.pop(result);
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+          elevation: 0,
+        ),
+        body: Stack(
+          children: [
+            InAppWebView(
+              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+              initialSettings: InAppWebViewSettings(
+                useHybridComposition: true,
+              ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+              },
+              onLoadStart: (controller, url) {
+                setState(() {
+                  _isLoading = true;
+                });
+              },
+              onLoadStop: (controller, url) {
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+              onReceivedError: (controller, request, error) {
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+              onReceivedHttpError: (controller, request, errorResponse) {
+                 setState(() {
+                  _isLoading = false;
+                });
+              },
             ),
-        ],
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(color: ColorUtils.mainColor),
+              ),
+          ],
+        ),
       ),
     );
   }

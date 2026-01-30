@@ -186,6 +186,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
             top: offset.dy + size.height + 5,
             left: left,
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: _removeTooltip,
               child: Material(
                 color: Colors.transparent,
@@ -462,6 +463,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             if (hasInfoIcon && tooltipMessage != null && infoKey != null) {
               _showTooltip(context, infoKey, tooltipMessage);
@@ -519,6 +521,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
               _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
             },

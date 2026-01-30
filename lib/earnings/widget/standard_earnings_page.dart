@@ -170,6 +170,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
             top: offset.dy + size.height + 5, // Position below the icon
             left: left,
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: _removeTooltip, // Allow tapping the tooltip to dismiss
               child: Material(
                 color: Colors.transparent,
@@ -420,6 +421,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: (){
             if (hasInfoIcon){
               if (tooltipMessage != null && infoKey != null) {
@@ -482,6 +484,7 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
               _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
             },

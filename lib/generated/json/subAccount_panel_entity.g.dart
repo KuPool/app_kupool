@@ -67,6 +67,10 @@ SubAccountPanelEntity $SubAccountPanelEntityFromJson(
     subAccountPanelEntity.yesterdayAcceptHashrateUnit =
         yesterdayAcceptHashrateUnit;
   }
+  final bool? settling = jsonConvert.convert<bool>(json['settling']);
+  if (settling != null) {
+    subAccountPanelEntity.settling = settling;
+  }
   return subAccountPanelEntity;
 }
 
@@ -86,6 +90,7 @@ Map<String, dynamic> $SubAccountPanelEntityToJson(
   data['today_estimated_doge'] = entity.todayEstimatedDoge;
   data['yesterday_accept_hashrate'] = entity.yesterdayAcceptHashrate;
   data['yesterday_accept_hashrate_unit'] = entity.yesterdayAcceptHashrateUnit;
+  data['settling'] = entity.settling;
   return data;
 }
 
@@ -104,6 +109,7 @@ extension SubAccountPanelEntityExtension on SubAccountPanelEntity {
     String? todayEstimatedDoge,
     String? yesterdayAcceptHashrate,
     String? yesterdayAcceptHashrateUnit,
+    bool? settling,
   }) {
     return SubAccountPanelEntity()
       ..realtimeHashrate = realtimeHashrate ?? this.realtimeHashrate
@@ -121,6 +127,7 @@ extension SubAccountPanelEntityExtension on SubAccountPanelEntity {
       ..yesterdayAcceptHashrate = yesterdayAcceptHashrate ??
           this.yesterdayAcceptHashrate
       ..yesterdayAcceptHashrateUnit = yesterdayAcceptHashrateUnit ??
-          this.yesterdayAcceptHashrateUnit;
+          this.yesterdayAcceptHashrateUnit
+      ..settling = settling ?? this.settling;
   }
 }

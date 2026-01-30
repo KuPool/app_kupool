@@ -1,3 +1,4 @@
+import 'package:Kupool/my/page/change_password_page.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,7 +27,15 @@ class SecuritySettingsPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min, // Make column wrap content
             children: [
-              _buildSettingsItem('修改密码'),
+              _buildSettingsItem(
+                '修改密码',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                  );
+                },
+              ),
               // Divider(height: 1, color: Colors.grey.shade200, indent: 16.w, endIndent: 16.w),
               // _buildSettingsItem('登录记录'),
             ],
@@ -36,11 +45,12 @@ class SecuritySettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsItem(String title) {
+  Widget _buildSettingsItem(String title, {VoidCallback? onTap}) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           child: Row(
@@ -53,8 +63,7 @@ class SecuritySettingsPage extends StatelessWidget {
               ),
               Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey.shade400),
             ],
-          ),
-        ),
+          ),        ),
       ),
     );
   }

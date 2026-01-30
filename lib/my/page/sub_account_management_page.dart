@@ -6,6 +6,7 @@ import 'package:Kupool/my/provider/sub_account_management_notifier.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/common_widget.dart';
 import 'package:Kupool/utils/empty_check.dart';
+import 'package:Kupool/utils/empty_emoji_formatter.dart';
 import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/widgets/app_refresh.dart';
@@ -144,6 +145,8 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
             ),
             if (notifier.isLoading && isEmpty(notifier.accounts))
              const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,))
+            else if(!notifier.isLoading && isEmpty(notifier.accounts))
+              const Center(child: Text("暂无数据"),)
           ],
         ),
       ),
@@ -202,9 +205,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                               focusNode: focusNode,
                               controller: controller,
                               inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'[a-zA-Z0-9\u4E00-\u9FFF_.+@#%&*\[\]{}():;!,?\-\\|]')
-                                )
+                                NoSpaceEmojiFormatter()
                               ],
                               decoration: InputDecoration(
                                 filled: true,
@@ -221,7 +222,7 @@ class _SubAccountManagementViewState extends State<_SubAccountManagementView> {
                                 suffixIcon: focusNode.hasFocus && controller.text.isNotEmpty
                                     ? GestureDetector(
                                         onTap: () => controller.clear(),
-                                        child: const Icon(Icons.cancel, color: Colors.grey, size: 16),
+                                        child: const Icon(Icons.cancel, color: ColorUtils.colorInputIcon1, size: 20),
                                       )
                                     : null,
                               ),

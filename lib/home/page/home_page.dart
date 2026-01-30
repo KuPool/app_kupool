@@ -10,16 +10,52 @@ import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
 import 'package:Kupool/utils/toast_utils.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class HomePage extends ConsumerWidget {
+import '../../utils/common_widget.dart';
+import '../../widgets/app_refresh.dart';
+
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  late EasyRefreshController _easyRefreshController;
+
+  @override
+  void initState() {
+    super.initState();
+    _easyRefreshController = EasyRefreshController(
+      controlFinishRefresh: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _easyRefreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    // Refresh both providers in parallel
+    await Future.wait([
+      ref.refresh(homeDataProvider.future),
+      ref.refresh(announcementProvider.future),
+    ]);
+    if (mounted) {
+      _easyRefreshController.finishRefresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final homeDataAsync = ref.watch(homeDataProvider);
     final announcementAsync = ref.watch(announcementProvider);
@@ -57,35 +93,27 @@ class HomePage extends ConsumerWidget {
           ),
         ].where((widget) => widget is! SizedBox).toList(),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Refresh both providers in parallel
-          await Future.wait([
-            ref.refresh(homeDataProvider.future),
-            ref.refresh(announcementProvider.future),
-          ]);
-        },
-        color: ColorUtils.mainColor,
-        backgroundColor: Colors.white,
-        child: SingleChildScrollView(
+      body: EasyRefresh(
+        controller: _easyRefreshController,
+        header: const AppRefreshHeader(),
+        onRefresh: _onRefresh,
+        child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            children: [
-              _buildTopBanner(context),
-              announcementAsync.when(
-                data: (announcement) => announcement != null ? _buildAnnouncementBar(context, announcement) : const SizedBox.shrink(),
-                loading: () => const SizedBox.shrink(),
-                error: (err, stack) => const SizedBox.shrink(),
-              ),
-              homeDataAsync.when(
-                data: (homeData) => _buildMiningCoinsSection(context, homeData),
-                loading: () => const HomeSkeletonWidget(),
-                error: (err, stack) => const HomeErrorWidget(),
-              ),
-              SizedBox(height: 24),
-            ],
-          ),
+          children: [
+            _buildTopBanner(context),
+            announcementAsync.when(
+              data: (announcement) => announcement != null ? _buildAnnouncementBar(context, announcement) : const SizedBox.shrink(),
+              loading: () => const SizedBox.shrink(),
+              error: (err, stack) => const SizedBox.shrink(),
+            ),
+            homeDataAsync.when(
+              data: (homeData) => _buildMiningCoinsSection(context, homeData),
+              loading: () => const HomeSkeletonWidget(),
+              error: (err, stack) => const HomeErrorWidget(),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -94,7 +122,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildTopBanner(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      margin: EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -123,8 +151,8 @@ class HomePage extends ConsumerWidget {
         }
       },
       child: Container(
-        margin: EdgeInsets.only(top: 12),
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
@@ -175,8 +203,8 @@ class HomePage extends ConsumerWidget {
 
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12),
-      margin: EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
@@ -185,16 +213,16 @@ class HomePage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text('挖矿币种',
                 style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.normal,
                     color: ColorUtils.colorT1)),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _buildCoinHeader(flexes),
           ),
           _buildCoinRow(
@@ -214,7 +242,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildCoinHeader(List<int> flexes) {
     return Row(
       children: [
-        SizedBox(width: 56),
+        const SizedBox(width: 56),
         Expanded(
             flex: flexes[0],
             child: Text('币种',
@@ -282,7 +310,7 @@ class HomePage extends ConsumerWidget {
       required String dailyEarning,
       required String poolHashrate}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         // crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -291,7 +319,8 @@ class HomePage extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildCoinIcons(icons),
+                // _buildCoinIcons(icons),
+                CommonWidgets.buildCoinHeaderImageWidget(iconType: "ltc",width:48,coinWidth: 30,coinHeight: 30),
               ],
             ),
           ),
@@ -309,14 +338,14 @@ class HomePage extends ConsumerWidget {
               ),
             ),
           ),
-          SizedBox(width: 6,),
+          const SizedBox(width: 6,),
           Expanded(
               flex: flexes[1],
               child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text(dailyEarning, textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1)))),
-          SizedBox(width: 6,),
+          const SizedBox(width: 6,),
           Expanded(
             flex: flexes[2],
-            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text("${poolHashrate}H/s",textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,))),
+            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text("${poolHashrate}H/s",textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,))), 
           ),
         ],
       ),
@@ -328,8 +357,8 @@ class HomePage extends ConsumerWidget {
     var ltcModel = homeData.coinInfo.ltc;
 
     return Container(
-      padding: EdgeInsets.all(12),
-      margin: EdgeInsets.only(top: 0, left: 12, right: 12),
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(top: 0, left: 12, right: 12),
       decoration: BoxDecoration(
         color: ColorUtils.widgetBgColor, 
         borderRadius: BorderRadius.circular(16.r),
@@ -356,7 +385,7 @@ class HomePage extends ConsumerWidget {
           _buildInfoRow('分配方式',
               value: Text.rich(
                 TextSpan(
-                  style: TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 14),
                   children: <TextSpan>[
                     TextSpan(text: '${ltcModel?.dogeEarnMode} ', style: TextStyle(color: ColorUtils.colorT1)),
                     TextSpan(text: 'DOGE', style: TextStyle(color: ColorUtils.color888)),
@@ -370,7 +399,7 @@ class HomePage extends ConsumerWidget {
           _buildInfoRow('起付额', 
             value: Text.rich(
               TextSpan(
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
                 children: <TextSpan>[
                   TextSpan(text: '${ltcModel?.dogeMinimumPayAmount} ', style: TextStyle(color: ColorUtils.colorT1)),
                   TextSpan(text: 'DOGE', style: TextStyle(color: ColorUtils.color888)),
@@ -394,7 +423,7 @@ class HomePage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(region, style: TextStyle(fontSize: 14, color: ColorUtils.colorT1)),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: FittedBox(
             fit: BoxFit.scaleDown,
@@ -427,15 +456,13 @@ class HomePage extends ConsumerWidget {
 
   Widget _buildInfoRow(String title, {required Widget value}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start, // 1. 添加 start 对齐
         children: [
           Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorTableHear)),
-          SizedBox(width: 16), // 2. 添加间距
-          Expanded(
-            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: value), // 3. 用 Expanded 包裹 value，使其可以换行
-          ),
+          const SizedBox(width: 24),
+          Expanded(child: value),
         ],
       ),
     );

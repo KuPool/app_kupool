@@ -251,18 +251,18 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
 
   Widget _buildNextButton() {
     return Container(
-      height: 48.h,
+      height: 44,
       width: double.infinity,
       decoration: BoxDecoration(
         color: _isButtonEnabled && !isLoading
             ? ColorUtils.mainColor
             : ColorUtils.unUseMainColor,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(12),
           onTap: _isButtonEnabled && !isLoading ? _onNext : null,
           child: Center(
             child: isLoading
@@ -276,7 +276,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
                 : Text(
                     '下一步',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),

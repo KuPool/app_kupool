@@ -300,19 +300,19 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       children: [
         Expanded(
           child: _buildRevenueColumn('昨日收益', selectCurrentCoinType == "ltc" ? [
-            MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
-            MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
+           data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
           ] : [
-            MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
         SizedBox(width: 12,),
         Expanded(
           child: _buildRevenueColumn('今日已挖 (预估)',selectCurrentCoinType == "ltc" ? [
-            MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
-            MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
           ] : [
-            MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
       ],
@@ -346,34 +346,63 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Table(
-          defaultColumnWidth: const IntrinsicColumnWidth(),
-          children: revenues.map((entry) {
-            return TableRow(
+        ...revenues.map((entry) => Container(
+            padding: const EdgeInsets.only(bottom: 6.0),
+            child:
+            isUnValidString(entry.value) ?
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 4.0, bottom: 4.0),
-                    child: _buildDecimalText(entry.key),
-                  ),
+                Text(
+                  entry.key,
+                  style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1, fontWeight: FontWeight.w400),
                 ),
-                TableCell(
-                  verticalAlignment: TableCellVerticalAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4.0),
+              ],
+            )
+                :
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(flex: 2,child: _buildDecimalText(entry.key)),
+                SizedBox(width: 4,),
+                Flexible(
+                  flex: 1,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 36),
                     child: Text(
                       entry.value,
                       style: const TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                )
               ],
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 4.h),
+            )
+        )),
         Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ...revenues.map((entry) => Padding(
+        padding: const EdgeInsets.only(bottom: 4.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(child: _buildDecimalText(entry.key)),
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 40),
+              child: Text(
+                entry.value,
+                style: const TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],)
+        )
+        )
+        , Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
       ],
     );
   }
