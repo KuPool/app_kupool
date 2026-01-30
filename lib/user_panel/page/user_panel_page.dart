@@ -346,37 +346,50 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Table(
-          columnWidths: const <int, TableColumnWidth>{
-            0: FlexColumnWidth(),
-            1: IntrinsicColumnWidth(),
-          },
-          children: revenues.map((entry) {
-            return TableRow(
+        ...revenues.map((entry) => Container(
+            padding: const EdgeInsets.only(bottom: 6.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 4.0, bottom: 4.0),
-                    child: _buildDecimalText(entry.key),
-                  ),
-                ),
-                TableCell(
-                  verticalAlignment: TableCellVerticalAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4.0),
+                Flexible(flex: 2,child: _buildDecimalText(entry.key)),
+                SizedBox(width: 4,),
+                Flexible(
+                  flex: 1,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 36),
                     child: Text(
                       entry.value,
                       style: const TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                )
               ],
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 4.h),
+            )
+        )),
         Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ...revenues.map((entry) => Padding(
+        padding: const EdgeInsets.only(bottom: 4.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(child: _buildDecimalText(entry.key)),
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 40),
+              child: Text(
+                entry.value,
+                style: const TextStyle(fontSize: 12, color: ColorUtils.color888, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],)
+        )
+        )
+        , Text(label, style: TextStyle(fontSize: 12, color: ColorUtils.colorT2,)),
       ],
     );
   }

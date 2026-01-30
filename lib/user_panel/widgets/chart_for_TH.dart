@@ -89,8 +89,9 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       aspectRatio: 1.8,
       child: LineChart(
         LineChartData(
-          clipData: const FlClipData.none(),
-          minY: 0,
+          // clipData: const FlClipData.none(),
+          clipData: FlClipData.all(),
+          minY: -0.5,
           maxY: 100,
           minX: spotsData.minX,
           maxX: spotsData.maxX,
@@ -101,21 +102,25 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           borderData: FlBorderData(
             show: true,
             border: Border(
-              bottom: BorderSide(color: ColorUtils.colorBe, width: 1),
+              bottom: BorderSide(color: ColorUtils.colorBe, width: 0.5),
               top: BorderSide.none,
             ),
           ),
           lineBarsData: [
             LineChartBarData(
+              isCurved: true,
               spots: spotsData.spots,
               color: ColorUtils.mainColor,
-              barWidth: 1,
+              barWidth: 1.5,
+              curveSmoothness: 0.35,
               dotData: const FlDotData(show: false),
             ),
             LineChartBarData(
+              isCurved: true,
               spots: rejectionSpots,
               color: Colors.red,
-              barWidth: 1,
+              barWidth: 1.5,
+              curveSmoothness: 0.35,
               dotData: const FlDotData(show: false),
             ),
           ],
@@ -219,7 +224,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           interval: 20,
           reservedSize: 20,
           getTitlesWidget: (value, meta) {
-            if (value > 100) return const SizedBox.shrink();
+            if (value > 100 || value < 0) return const SizedBox.shrink();
             final realHashrate = (value / 100) * maxHashrateY;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -234,7 +239,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           interval: 20, 
           reservedSize: 24,
           getTitlesWidget: (value, meta) {
-            if (value > 100) return const SizedBox.shrink();
+            if (value > 100 || value < 0) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text('${value.toInt()}', style: const TextStyle(color: Colors.red, fontSize: 10), textAlign: TextAlign.right),
