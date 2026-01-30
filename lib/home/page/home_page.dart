@@ -97,25 +97,23 @@ class _HomePageState extends ConsumerState<HomePage> {
         controller: _easyRefreshController,
         header: const AppRefreshHeader(),
         onRefresh: _onRefresh,
-        child: SingleChildScrollView(
+        child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            children: [
-              _buildTopBanner(context),
-              announcementAsync.when(
-                data: (announcement) => announcement != null ? _buildAnnouncementBar(context, announcement) : const SizedBox.shrink(),
-                loading: () => const SizedBox.shrink(),
-                error: (err, stack) => const SizedBox.shrink(),
-              ),
-              homeDataAsync.when(
-                data: (homeData) => _buildMiningCoinsSection(context, homeData),
-                loading: () => const HomeSkeletonWidget(),
-                error: (err, stack) => const HomeErrorWidget(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+          children: [
+            _buildTopBanner(context),
+            announcementAsync.when(
+              data: (announcement) => announcement != null ? _buildAnnouncementBar(context, announcement) : const SizedBox.shrink(),
+              loading: () => const SizedBox.shrink(),
+              error: (err, stack) => const SizedBox.shrink(),
+            ),
+            homeDataAsync.when(
+              data: (homeData) => _buildMiningCoinsSection(context, homeData),
+              loading: () => const HomeSkeletonWidget(),
+              error: (err, stack) => const HomeErrorWidget(),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -463,10 +461,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start, // 1. 添加 start 对齐
         children: [
           Text(title, style: TextStyle(fontSize: 14, color: ColorUtils.colorTableHear)),
-          const SizedBox(width: 16), // 2. 添加间距
-          Expanded(
-            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: value), // 3. 用 Expanded 包裹 value，使其可以换行
-          ),
+          const SizedBox(width: 24),
+          Expanded(child: value),
         ],
       ),
     );
