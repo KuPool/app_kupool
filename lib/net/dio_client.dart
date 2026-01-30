@@ -45,18 +45,18 @@ class DioClient {
 
     // *** Charles 抓包代理配置 ***
     // 注意：此配置仅用于开发调试，发布时请务必移除！
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
-      // 设置代理
-      client.findProxy = (uri) {
-        // 代理到你的电脑IP和Charles端口
-        return 'PROXY 192.168.110.93:8888';
-      };
-      // 信任Charles的自签名证书，抓取 https 请求
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-      return client;
-    };
+    // (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    //   final client = HttpClient();
+    //   // 设置代理
+    //   client.findProxy = (uri) {
+    //     // 代理到你的电脑IP和Charles端口
+    //     return 'PROXY 192.168.110.93:8888';
+    //   };
+    //   // 信任Charles的自签名证书，抓取 https 请求
+    //   client.badCertificateCallback =
+    //       (X509Certificate cert, String host, int port) => true;
+    //   return client;
+    // };
     // *** Charles 抓包代理配置 ***
 
     _dio.interceptors.addAll([
