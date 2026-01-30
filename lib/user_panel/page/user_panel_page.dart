@@ -300,19 +300,19 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       children: [
         Expanded(
           child: _buildRevenueColumn('昨日收益', selectCurrentCoinType == "ltc" ? [
-            MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
-            MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
+           data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
           ] : [
-            MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
         SizedBox(width: 12,),
         Expanded(
           child: _buildRevenueColumn('今日已挖 (预估)',selectCurrentCoinType == "ltc" ? [
-            MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
-            MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
           ] : [
-            MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
+            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
           ]),
         ),
       ],
@@ -348,7 +348,20 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       children: [
         ...revenues.map((entry) => Container(
             padding: const EdgeInsets.only(bottom: 6.0),
-            child: Row(
+            child:
+            isUnValidString(entry.value) ?
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  entry.key,
+                  style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1, fontWeight: FontWeight.w400),
+                ),
+              ],
+            )
+                :
+            Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
