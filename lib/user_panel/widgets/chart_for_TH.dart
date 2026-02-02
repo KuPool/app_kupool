@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/user_panel/model/panel_chart_hashrate_entity.dart';
@@ -215,7 +217,18 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
       final dt = utcDateTime.toLocal();
       final x = dt.millisecondsSinceEpoch.toDouble();
 
-      final hashrate = double.tryParse(tick.hashrate ?? '0') ?? 0.0;
+      var hashrate = double.tryParse(tick.hashrate ?? '0') ?? 0.0;
+      final staleHashrate = double.tryParse(tick.staleHashrate ?? '0') ?? 0.0;
+      final rejectHashrate = double.tryParse(tick.rejectHashrate ?? '0') ?? 0.0;
+      // 新增算法
+      final chartProvider = context.read<ChartNotifier>();
+      final dimension = chartProvider.dimension;
+      if(dimension == "15m"){
+        hashrate = max(hashrate - rejectHashrate, 0.0);
+      }else{
+        hashrate = max(hashrate - rejectHashrate - staleHashrate, 0.0);
+      }
+
       final y = maxHashrateY > 0 ? (hashrate / maxHashrateY) * 100 : 0.0;
 
       spotList.add(FlSpot(x, y));
@@ -402,10 +415,24 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           final dt = utcDateTime.toLocal();
 
           final time = DateFormat('MM-dd HH:mm').format(dt);
-          final hashrate = '${tick.hashrate} ${chartData.unit}';
 
-          final hashrateX = double.tryParse(tick.hashrate ?? '0') ?? 0.0;
+
+          var hashrateX = double.tryParse(tick.hashrate ?? '0') ?? 0.0;
           final rejectHashrateX = double.tryParse(tick.rejectHashrate ?? '0') ?? 0.0;
+
+          final staleHashrate = double.tryParse(tick.staleHashrate ?? '0') ?? 0.0;
+          // 新增算法
+          final chartProvider = context.read<ChartNotifier>();
+          final dimension = chartProvider.dimension;
+          if(dimension == "15m"){
+            hashrateX = max(hashrateX - rejectHashrateX, 0.0);
+          }else{
+            hashrateX = max(hashrateX - rejectHashrateX - staleHashrate, 0.0);
+          }
+          final hashrateStr = hashrateX.toStringAsFixed(2);
+          final hashrate = '$hashrateStr ${chartData.unit}';
+
+
           double rejectionPercentage = 0.0;
 
           if (hashrateX + rejectHashrateX > 0) {
