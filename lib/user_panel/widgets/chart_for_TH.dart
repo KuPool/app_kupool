@@ -152,9 +152,8 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           child: LineChart(
             LineChartData(
               clipData: const FlClipData.none(),
-              // clipData: FlClipData.vertical(),
-              minY: -1,
-              maxY: 105,
+              minY: 0,
+              maxY: 100,
               minX: spotsData.minX,
               maxX: spotsData.maxX,
               gridData: const FlGridData(show: false),
@@ -170,19 +169,19 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
               ),
               lineBarsData: [
                 LineChartBarData(
-                  // isCurved: true,
-                  spots: spotsData.spots,
-                  color: ColorUtils.mainColor,
-                  barWidth: 1.5,
-                  curveSmoothness: 0.35,
-                  dotData: const FlDotData(show: false),
-                ),
-                LineChartBarData(
                   isCurved: true,
                   spots: rejectionSpots,
                   color: Colors.red,
                   barWidth: 1.5,
-                  curveSmoothness: 0.35,
+                  curveSmoothness: 0.2,
+                  dotData: const FlDotData(show: false),
+                ),
+                LineChartBarData(
+                  isCurved: true,
+                  spots: spotsData.spots,
+                  color: ColorUtils.mainColor,
+                  barWidth: 1.5,
+                  curveSmoothness: 0.20,
                   dotData: const FlDotData(show: false),
                 ),
               ],
