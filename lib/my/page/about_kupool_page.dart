@@ -12,7 +12,7 @@ class AboutKupoolPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('关于 Kupool', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+        title: const Text('关于 KuPool', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         centerTitle: true,
         backgroundColor: ColorUtils.widgetBgColor,
         elevation: 0,

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../net/business_exception.dart';
 
 /// Extracts a user-friendly error message from a DioException.

@@ -3,6 +3,7 @@ import 'package:Kupool/login/page/register_page.dart';
 import 'package:Kupool/main.dart';
 import 'package:Kupool/my/provider/user_info_notifier.dart';
 import 'package:Kupool/net/auth_notifier.dart';
+import 'package:Kupool/net/dio_client.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:Kupool/net/dio_client.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -124,7 +124,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '登录 Kupool',
+                      '登录 KuPool',
                       style: TextStyle(
                         fontSize: 26.sp,
                         fontWeight: FontWeight.bold,

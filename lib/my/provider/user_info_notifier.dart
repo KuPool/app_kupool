@@ -1,6 +1,7 @@
-import '../../json_serializable_model/login_model_entity.dart';
 import 'package:Kupool/net/api_service.dart';
 import 'package:flutter/material.dart';
+
+import '../../json_serializable_model/login_model_entity.dart';
 
 class UserInfoNotifier with ChangeNotifier {
   LoginModelUserInfo? _userInfo;

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/mining_machine/model/miner_list_entity.dart';
@@ -7,7 +9,6 @@ import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:math' as math;
 import 'package:provider/provider.dart';
 
 import '../../utils/image_utils.dart';

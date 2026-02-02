@@ -336,7 +336,7 @@ class _RegisterPageState extends State<RegisterPage>
               style: TextStyle(fontSize: 14.sp, color: Colors.black87),
               children: [
                 TextSpan(
-                  text: '《Kupool用户协议》',
+                  text: '《KuPool用户协议》',
                   style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),
                   recognizer: _agreementRecognizer, // 将手势识别器绑定到TextSpan
                 ),

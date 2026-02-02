@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:Kupool/my/model/sub_list_with_address_entity.dart';
 import 'package:Kupool/my/page/sub_account_create.dart';
 import 'package:Kupool/my/provider/sub_account_hidden_notifier.dart';
@@ -11,7 +13,6 @@ import 'package:Kupool/widgets/app_refresh.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math' as math;
 import 'package:provider/provider.dart';
 
 import '../../drawer/model/sub_account_mini_info_entity.dart';

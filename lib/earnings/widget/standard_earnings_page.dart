@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:ui' as ui;
+
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';

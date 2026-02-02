@@ -1,15 +1,14 @@
 import 'dart:convert';
+
 import 'package:Kupool/drawer/page/doge_ltc_list_page.dart';
 import 'package:Kupool/my/provider/user_info_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../json_serializable_model/login_model_entity.dart';
 import 'auth_provider.dart';
 import 'auth_repository.dart';
 import 'dio_client.dart';
-import 'navigation_service.dart';
 
 const String _userSessionKey = 'user_session';
 late AuthRepository _authRepository;

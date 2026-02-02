@@ -1,5 +1,5 @@
-import 'package:Kupool/generated/json/base/json_convert_content.dart';
 import 'package:Kupool/earnings/model/earnings_record_entity.dart';
+import 'package:Kupool/generated/json/base/json_convert_content.dart';
 
 EarningsRecordEntity $EarningsRecordEntityFromJson(Map<String, dynamic> json) {
   final EarningsRecordEntity earningsRecordEntity = EarningsRecordEntity();

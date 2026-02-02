@@ -1,5 +1,5 @@
-import 'package:Kupool/generated/json/base/json_convert_content.dart';
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
+import 'package:Kupool/generated/json/base/json_convert_content.dart';
 
 SubAccountMiniInfoEntity $SubAccountMiniInfoEntityFromJson(
     Map<String, dynamic> json) {

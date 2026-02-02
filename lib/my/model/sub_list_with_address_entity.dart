@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:Kupool/generated/json/base/json_field.dart';
 import 'package:Kupool/generated/json/sub_list_with_address_entity.g.dart';
-import 'dart:convert';
+
 export 'package:Kupool/generated/json/sub_list_with_address_entity.g.dart';
 
 @JsonSerializable()
