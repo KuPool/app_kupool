@@ -42,7 +42,7 @@ class AboutKupoolPage extends StatelessWidget {
           Image.asset(ImageUtils.kupoolLogo, width: 120.w), // Assuming you have a logo in ImageUtils
           SizedBox(height: 16.h),
           Text(
-            'Kupool 由一支区块链专家团队于2025年创立, 在包括比特币在内的多条公链上, 其团队曾多次获得矿池算力世界第一的成绩。\n我们相信, 行业的发展离不开持续的创新与合规化运营; 而我们也看到, 行业的创新与合规化进程已面临一定程度的停滞。于是我们放下平静的生活, 再次出发。',
+            'KuPool 由一支区块链专家团队于2025年创立, 在包括比特币在内的多条公链上, 其团队曾多次获得矿池算力世界第一的成绩。\n我们相信, 行业的发展离不开持续的创新与合规化运营; 而我们也看到, 行业的创新与合规化进程已面临一定程度的停滞。于是我们放下平静的生活, 再次出发。',
             style: TextStyle(fontSize: 14.sp, color: ColorUtils.colorT2, height: 1.6),
           ),
         ],
