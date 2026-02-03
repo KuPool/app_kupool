@@ -294,6 +294,8 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
   Widget _buildEarningsTabBar() {
     return CustomTabBar(
       controller: _earningsTabController,
+      selectedFontSize: 16,
+      unselectedFontSize: 14,
       tabs: const ['收益', '生态收益'], onTabSelected: (int p1) {
       LogPrint.i("收益-生态收益':" + "$p1");
     },

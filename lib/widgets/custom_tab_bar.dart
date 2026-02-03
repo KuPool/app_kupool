@@ -6,13 +6,17 @@ import 'package:flutter/material.dart';
 class CustomTabBar extends StatelessWidget {
   final TabController controller;
   final List<String> tabs;
-  final Function(int) onTabSelected; // New callback
+  final Function(int) onTabSelected;
+  final double selectedFontSize;
+  final double unselectedFontSize;
 
   const CustomTabBar({
     super.key,
     required this.controller,
     required this.tabs,
-    required this.onTabSelected, // New required parameter
+    required this.onTabSelected,
+    this.selectedFontSize = 14.0,
+    this.unselectedFontSize = 14.0,
   });
 
   @override
@@ -50,7 +54,10 @@ class CustomTabBar extends StatelessWidget {
     final animation = controller.animation!;
     final double selectionFactor = (1.0 - (animation.value - index).abs()).clamp(0.0, 1.0);
     final Color textColor = Color.lerp(ColorUtils.colorT2, ColorUtils.mainColor, selectionFactor)!;
-    final FontWeight fontWeight = FontWeight.lerp(FontWeight.normal, FontWeight.w600, selectionFactor)!;
+
+    final bool isSelected = animation.value.round() == index;
+    final FontWeight fontWeight = isSelected ? FontWeight.w600 : FontWeight.normal;
+    final double fontSize = isSelected ? selectedFontSize : unselectedFontSize;
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -63,11 +70,11 @@ class CustomTabBar extends StatelessWidget {
         onTabSelected(index); // Call the callback on tap
       },
       child: Padding(
-        padding: const EdgeInsets.only(right: 24, bottom: 9, top: 8), // Spacing between tabs
+        padding: const EdgeInsets.only(right: 16, bottom: 9, top: 8), // Spacing between tabs
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: fontSize,
             color: textColor,
             fontWeight: fontWeight,
           ),
@@ -77,13 +84,22 @@ class CustomTabBar extends StatelessWidget {
   }
 
   double _calculateIndicatorPosition() {
-    const double spacing = 24;
+    const double spacing = 16;
     final animationValue = controller.animation!.value;
-    
-    final tabWidths = tabs.map((text) => _getTextWidth(text, const TextStyle(fontSize: 14))).toList();
 
-    final fromIndex = animationValue.floor();
-    final toIndex = animationValue.ceil();
+    final tabWidths = tabs.asMap().entries.map((entry) {
+      final index = entry.key;
+      final text = entry.value;
+
+      final bool isSelected = animationValue.round() == index;
+      final double fontSize = isSelected ? selectedFontSize : unselectedFontSize;
+      final FontWeight fontWeight = isSelected ? FontWeight.w600 : FontWeight.normal;
+
+      return _getTextWidth(text, TextStyle(fontSize: fontSize, fontWeight: fontWeight));
+    }).toList();
+
+    final fromIndex = animationValue.floor().clamp(0, tabs.length - 1);
+    final toIndex = animationValue.ceil().clamp(0, tabs.length - 1);
     final t = animationValue - fromIndex;
 
     double startPos = 0;
@@ -95,7 +111,7 @@ class CustomTabBar extends StatelessWidget {
     for (int i = 0; i < toIndex; i++) {
       endPos += tabWidths[i] + spacing;
     }
-    
+
     final indicatorWidth = 18.0;
     final fromPos = startPos + (tabWidths[fromIndex] - indicatorWidth) / 2;
     final toPos = endPos + (tabWidths[toIndex] - indicatorWidth) / 2;
