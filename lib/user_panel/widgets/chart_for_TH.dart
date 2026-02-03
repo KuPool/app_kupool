@@ -25,19 +25,6 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-
-      final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
-      if(selectedAccount == null) return;
-      context.read<ChartNotifier>().changeDimension(
-        subaccountId: selectedAccount.id!,
-        coin: selectedAccount.selectCoin,
-        newDimension: "15m",
-      );
-
-    });
-
   }
 
   @override

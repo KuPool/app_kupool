@@ -9,6 +9,8 @@ import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/empty_check.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/widgets/app_refresh.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +30,39 @@ class UserPanelPage extends ConsumerStatefulWidget {
 
 class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   SubAccountMiniInfoList? _previousSelectedAccount;
+  late EasyRefreshController _easyRefreshController;
+
+  @override
+  void initState() {
+    super.initState();
+    _easyRefreshController = EasyRefreshController(
+      controlFinishRefresh: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _easyRefreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    final selectedAccount = context.read<DogeLtcListNotifier>().selectedAccount;
+    final chartNotifier = context.read<ChartNotifier>();
+    
+    if (selectedAccount != null) {
+      await Future.wait([
+        context.read<UserPanelNotifier>().fetchPanelData(
+              subaccountId: selectedAccount.id!,
+              coin: selectedAccount.selectCoin,
+            ),
+        chartNotifier.fetchChartData(subaccountId: selectedAccount.id!, coin: selectedAccount.selectCoin),
+      ]);
+    }
+    if(mounted) {
+       _easyRefreshController.finishRefresh();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,33 +178,38 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
   }
 
   Widget _buildUserPanelContent(SubAccountPanelEntity panelData) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      child: Column(
-        children: [
-          _buildInfoCard(
-            iconPath: ImageUtils.panelSl,
-            iconColor: const Color(0xFF00D187),
-            title: '算力',
-            child: _buildHashrateContent(panelData),
-          ),
-          SizedBox(height: 12),
-          _buildInfoCard(
-            iconPath: ImageUtils.panelKj,
-            iconColor: const Color(0xFF3375E0),
-            title: '矿机',
-            child: _buildMinersContent(panelData),
-          ),
-          SizedBox(height: 12),
-          _buildInfoCard(
-            iconPath: ImageUtils.panelWksy,
-            iconColor: const Color(0xFFF5A623),
-            title: '挖矿收益',
-            child: _buildRevenueContent(panelData),
-          ),
-          SizedBox(height: 12),
-          _buildChartCard(),
-        ],
+    return EasyRefresh(
+      controller: _easyRefreshController,
+      header: const AppRefreshHeader(),
+      onRefresh: _onRefresh,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Column(
+          children: [
+            _buildInfoCard(
+              iconPath: ImageUtils.panelSl,
+              iconColor: const Color(0xFF00D187),
+              title: '算力',
+              child: _buildHashrateContent(panelData),
+            ),
+            SizedBox(height: 12),
+            _buildInfoCard(
+              iconPath: ImageUtils.panelKj,
+              iconColor: const Color(0xFF3375E0),
+              title: '矿机',
+              child: _buildMinersContent(panelData),
+            ),
+            SizedBox(height: 12),
+            _buildInfoCard(
+              iconPath: ImageUtils.panelWksy,
+              iconColor: const Color(0xFFF5A623),
+              title: '挖矿收益',
+              child: _buildRevenueContent(panelData),
+            ),
+            SizedBox(height: 12),
+            _buildChartCard(),
+          ],
+        ),
       ),
     );
   }
