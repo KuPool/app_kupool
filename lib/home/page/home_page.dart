@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:Kupool/home/announcement_provider.dart';
@@ -7,6 +8,7 @@ import 'package:Kupool/home/widgets/home_skeleton_widget.dart';
 import 'package:Kupool/login/page/agreement_page.dart';
 import 'package:Kupool/login/page/login_page.dart';
 import 'package:Kupool/net/auth_notifier.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/format_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
@@ -36,6 +38,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     _easyRefreshController = EasyRefreshController(
       controlFinishRefresh: true,
     );
+
+    if(Platform.isAndroid){
+      appType = "android";
+    }else if(Platform.isIOS){
+      appType = "iOS";
+    }
+
   }
 
   @override

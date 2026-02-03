@@ -7,6 +7,7 @@ import 'package:Kupool/net/base_response.dart';
 import 'package:Kupool/net/business_exception.dart';
 import 'package:Kupool/net/env_config.dart';
 import 'package:Kupool/net/navigation_service.dart';
+import 'package:Kupool/utils/base_data.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class DioClient {
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
-        'X-Client-Type': 'FlutterAppKuPool',
+        'X-Client-Type': 'AppKuPool',
         'Content-Type': 'application/json',
       },
     );
@@ -45,18 +46,18 @@ class DioClient {
 
     // *** Charles 抓包代理配置 ***
     // 注意：此配置仅用于开发调试，发布时请务必移除！
-    // (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-    //   final client = HttpClient();
-    //   // 设置代理
-    //   client.findProxy = (uri) {
-    //     // 代理到你的电脑IP和Charles端口
-    //     return 'PROXY 192.168.110.93:8888';
-    //   };
-    //   // 信任Charles的自签名证书，抓取 https 请求
-    //   client.badCertificateCallback =
-    //       (X509Certificate cert, String host, int port) => true;
-    //   return client;
-    // };
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
+      // 设置代理
+      client.findProxy = (uri) {
+        // 代理到你的电脑IP和Charles端口
+        return 'PROXY 192.168.110.110:8888';
+      };
+      // 信任Charles的自签名证书，抓取 https 请求
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+      return client;
+    };
     // *** Charles 抓包代理配置 ***
 
     _dio.interceptors.addAll([
@@ -186,6 +187,9 @@ class AuthInterceptor extends Interceptor {
       RequestOptions options, RequestInterceptorHandler handler) async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString(_userSessionKey);
+
+    // 接口请求拦截
+    options.headers['app-type'] = appType;
 
     if (userJson != null) {
       try {
