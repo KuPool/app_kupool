@@ -200,7 +200,7 @@ class _MyPageState extends ConsumerState<MyPage> {
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutKupoolPage()));
                   },
-                  child: _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 Kupool'),
+                  child: _buildMenuItem(iconPath: ImageUtils.myAbout, title: '关于 KuPool'),
                 );
               }
           ),
