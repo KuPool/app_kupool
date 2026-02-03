@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
             navigatorObservers: [FlutterSmartDialog.observer],
             // builder: FlutterSmartDialog.init(),
             navigatorKey: NavigationService.navigatorKey,
-            title: 'Kupool',
+            title: 'KuPool',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: ColorUtils.mainColor),
@@ -177,6 +177,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
     }
 
     return Scaffold(
+      drawerEnableOpenDragGesture: [1, 2, 3].contains(_currentIndex),
       appBar: _currentIndex == 0 || _currentIndex == 4
           ? null
           : AppBar(
