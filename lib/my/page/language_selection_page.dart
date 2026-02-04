@@ -47,7 +47,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     final isSelected = _selectedLanguage == language;
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           // setState(() {
           //   _selectedLanguage = language;

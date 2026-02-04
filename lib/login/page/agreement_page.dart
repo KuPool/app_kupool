@@ -1,3 +1,4 @@
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
@@ -17,6 +18,7 @@ class AgreementPage extends StatefulWidget {
 class _AgreementPageState extends State<AgreementPage> {
   InAppWebViewController? _webViewController;
   bool _isLoading = true;
+  String errorStr = "";
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +64,7 @@ class _AgreementPageState extends State<AgreementPage> {
               },
               onReceivedError: (controller, request, error) {
                 setState(() {
+                  errorStr = error.description;
                   _isLoading = false;
                 });
               },
@@ -74,6 +77,32 @@ class _AgreementPageState extends State<AgreementPage> {
             if (_isLoading)
               const Center(
                 child: CircularProgressIndicator(color: ColorUtils.mainColor),
+              )
+            else if(_isLoading == false && isValidString(errorStr))
+               Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(errorStr),
+                    GestureDetector(
+                      onTap: (){
+                        setState(() {
+                          errorStr = "";
+                          _isLoading = true;
+                        });
+                        _webViewController?.loadUrl(urlRequest: URLRequest(url: WebUri(widget.url)));
+                      },
+                      child: Container(
+                          decoration: BoxDecoration(
+                            color: ColorUtils.mainColor,
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          margin: EdgeInsets.only(top: 20),
+                          padding: EdgeInsets.symmetric(horizontal: 16,vertical: 10),
+                          child: Text("重新加载",style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600),)),
+                    )
+                  ],
+                ),
               ),
           ],
         ),
