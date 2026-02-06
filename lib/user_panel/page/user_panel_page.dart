@@ -71,6 +71,10 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
     final dogeLtcListNotifier = context.watch<DogeLtcListNotifier>();
     final selectedAccount = dogeLtcListNotifier.selectedAccount;
 
+    if (dogeLtcListNotifier.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
+    }
+
     if (selectedAccount != null && selectedAccount.id != 0 && selectedAccount != _previousSelectedAccount) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {

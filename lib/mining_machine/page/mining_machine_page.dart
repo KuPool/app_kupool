@@ -63,6 +63,11 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
   @override
   Widget build(BuildContext context) {
     final notifier = context.watch<MiningMachineNotifier>();
+    final dogeLtcListNotifier = context.watch<DogeLtcListNotifier>();
+
+    if (dogeLtcListNotifier.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: ColorUtils.mainColor,));
+    }
 
     return Scaffold(
       backgroundColor: ColorUtils.widgetBgColor,
