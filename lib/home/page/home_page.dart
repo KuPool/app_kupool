@@ -132,13 +132,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildTopBanner(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      margin: const EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
       ),
       child: Image.asset(
         ImageUtils.homeBanner,
-        height: 80.h,
+        height: 110,
         width: double.infinity,
         fit: BoxFit.cover,
       ),
@@ -161,7 +161,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(top: 12),
+        margin: const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -214,7 +214,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      margin: const EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),

@@ -512,7 +512,7 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
 
   Widget _buildRecordsHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: ColorUtils.colorHeadBg,
@@ -521,26 +521,34 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
-            },
-            child: Container(
-              color: Colors.transparent,
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
-                  const SizedBox(width: 4),
-                  Container(
-                    key: _wkDatePaymentKey,
-                    child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _showTooltip(context, _wkDatePaymentKey, "货币挖矿中记录区块生成或算力贡献时间");
+                },
+                child: Container(
+                  width: 92,
+                  color: Colors.transparent,
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Text('挖矿日期', style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2)),
+                      const SizedBox(width: 4),
+                      Container(
+                        key: _wkDatePaymentKey,
+                        child: Image.asset(ImageUtils.infoIcon, width: 14, height: 14),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                ],
+                ),
               ),
-            ),
+              SizedBox(width: 22,),
+              Text('状态', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
+            ],
           ),
           Text('数额', style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2)),
         ],
