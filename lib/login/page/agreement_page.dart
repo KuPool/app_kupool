@@ -63,10 +63,10 @@ class _AgreementPageState extends State<AgreementPage> {
                 });
               },
               onReceivedError: (controller, request, error) {
-                setState(() {
-                  errorStr = error.description;
-                  _isLoading = false;
-                });
+                // setState(() {
+                //   errorStr = error.description;
+                //   _isLoading = false;
+                // });
               },
               onReceivedHttpError: (controller, request, errorResponse) {
                  setState(() {
@@ -74,7 +74,7 @@ class _AgreementPageState extends State<AgreementPage> {
                 });
               },
             ),
-            if (_isLoading)
+             if (_isLoading)
               const Center(
                 child: CircularProgressIndicator(color: ColorUtils.mainColor),
               )

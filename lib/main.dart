@@ -187,6 +187,7 @@ class _MainTabBarState extends ConsumerState<MainTabBar> with TickerProviderStat
               leading: Builder(
                 builder: (context) {
                   return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: (){
                       Scaffold.of(context).openDrawer();
                     },

@@ -123,8 +123,10 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
     var maxHashrateY = chartData.ticks!
         .map((tick) => double.tryParse(tick.hashrate ?? '0') ?? 0.0)
         .fold(0.0, (prev, e) => e > prev ? e : prev);
-    if (maxHashrateY < 25.0) {
-      maxHashrateY = 25.0;
+    if (maxHashrateY <= 0.0) {
+      maxHashrateY = 5.0;
+    }else{
+      maxHashrateY = (maxHashrateY * 1.2).ceilToDouble();
     }
 
     final spotsData = _generateSpots(chartData.ticks!, maxHashrateY);
@@ -162,7 +164,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
                   spots: rejectionSpots,
                   color: Colors.red,
                   barWidth: 1.8,
-                  curveSmoothness: 0.3,
+                  curveSmoothness: 0.5,
                   preventCurveOverShooting:true,
                   preventCurveOvershootingThreshold: 1,
                   dotData: const FlDotData(show: false),
@@ -172,7 +174,7 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
                   spots: spotsData.spots,
                   color: ColorUtils.mainColor,
                   barWidth: 1.8,
-                  curveSmoothness: 0.3,
+                  curveSmoothness: 0.5,
                   preventCurveOverShooting:true,
                   preventCurveOvershootingThreshold: 1,
                   dotData: const FlDotData(show: false),
@@ -295,14 +297,37 @@ class _ChartForTHPageState extends State<ChartForTHPage> {
           interval: 20,
           reservedSize: 20,
           getTitlesWidget: (value, meta) {
-            if (value > 100 || value < 0) return const SizedBox.shrink();
+            if (value > 100) {
+              return const SizedBox.shrink();
+            }
             final realHashrate = (value / 100) * maxHashrateY;
+
+            final String labelText;
+            if (maxHashrateY > 0 && maxHashrateY < 5) {
+              labelText = realHashrate.toStringAsFixed(1);
+            } else {
+              labelText = realHashrate.toStringAsFixed(0);
+            }
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: Text(realHashrate.toStringAsFixed(0), style: const TextStyle(color: ColorUtils.color555, fontSize: 10), textAlign: TextAlign.left),
+              child: Text(labelText, style: const TextStyle(color: ColorUtils.color555, fontSize: 10), textAlign: TextAlign.left),
             );
           },
         ),
+        // sideTitles: SideTitles(
+        //   showTitles: true,
+        //   interval: 20,
+        //   reservedSize: 20,
+        //   getTitlesWidget: (value, meta) {
+        //     if (value > 100 || value < 0) return const SizedBox.shrink();
+        //     final realHashrate = (value / 100) * maxHashrateY;
+        //     return Padding(
+        //       padding: const EdgeInsets.only(bottom: 10),
+        //       child: Text(realHashrate.toStringAsFixed(0), style: const TextStyle(color: ColorUtils.color555, fontSize: 10), textAlign: TextAlign.left),
+        //     );
+        //   },
+        // ),
       ),
       rightTitles: AxisTitles(
         sideTitles: SideTitles(

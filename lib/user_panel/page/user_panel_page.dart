@@ -338,31 +338,55 @@ class _UserPanelPageState extends ConsumerState<UserPanelPage> {
       ],
     );
   }
-
   Widget _buildRevenueContent(SubAccountPanelEntity data) {
+    // 定义两个 List<MapEntry> 变量，用于存储最终要传递的数据
+    late final List<MapEntry<String, String>> yesterdayRevenues;
+    late final List<MapEntry<String, String>> todayRevenues;
+
+    if (data.settling) {
+      // 如果正在结算中，则两个列表都只包含一条“账单生成中”的信息
+      final settlingEntry = MapEntry("账单生成中...", '');
+      yesterdayRevenues = [settlingEntry];
+      todayRevenues = [settlingEntry];
+    } else {
+      // 如果没有在结算，则根据币种构建正常的收益数据
+      if (selectCurrentCoinType == "ltc") {
+        // LTC 模式下，显示 DOGE 和 LTC 两条收益
+        yesterdayRevenues = [
+          MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
+          MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
+        ];
+        todayRevenues = [
+          MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
+          MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
+        ];
+      } else {
+        // 其他币种模式下，只显示当前币种的收益
+        final coinName = selectCurrentCoinType.toUpperCase();
+        yesterdayRevenues = [
+          MapEntry(data.yesterdayEarnings ?? '0.00', coinName),
+        ];
+        todayRevenues = [
+          MapEntry(data.todayEstimated ?? '0.00', coinName),
+        ];
+      }
+    }
+
     return Row(
       children: [
         Expanded(
-          child: _buildRevenueColumn('昨日收益', selectCurrentCoinType == "ltc" ? [
-           data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarningsDoge ?? '0.00', 'DOGE'),
-            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', 'LTC'),
-          ] : [
-            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.yesterdayEarnings ?? '0.00', selectCurrentCoinType.toUpperCase()),
-          ]),
+          // 直接将计算好的列表传递给 _buildRevenueColumn
+          child: _buildRevenueColumn('昨日收益', yesterdayRevenues),
         ),
-        SizedBox(width: 12,),
+        const SizedBox(width: 12),
         Expanded(
-          child: _buildRevenueColumn('今日已挖 (预估)',selectCurrentCoinType == "ltc" ? [
-            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimatedDoge ?? '0.00', 'DOGE'),
-            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', 'LTC'),
-          ] : [
-            data.settling ? MapEntry("账单生成中...", '') : MapEntry(data.todayEstimated ?? '0.00', selectCurrentCoinType.toUpperCase()),
-          ]),
+          // 直接将计算好的列表传递给 _buildRevenueColumn
+          child: _buildRevenueColumn('今日已挖 (预估)', todayRevenues),
         ),
       ],
     );
   }
-
+  
   Widget _buildDataColumn(String value, String unit, String label, {Color? valueColor, Color unitColor = ColorUtils.color888}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,

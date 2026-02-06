@@ -553,8 +553,11 @@ class _EcologicalEarningsPageState extends State<EcologicalEarningsPage> with Si
       padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(
         children: [
-          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
-          SizedBox(width: 30,),
+          Container(
+            constraints:  BoxConstraints(minWidth: 100),
+              child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1)
+          ),
+          SizedBox(width: 14,),
           CommonWidgets.statusConvertForWidget(status, direction, txHash),
           SizedBox(width: 16,),
           Expanded(

@@ -26,8 +26,8 @@ class _RegisterPageState extends State<RegisterPage>
         AutomaticKeepAliveClientMixin<RegisterPage>,
         LoadingStateMixin<RegisterPage> { // 混入加载状态管理
   final _emailController = TextEditingController();
-  late final TapGestureRecognizer _agreementRecognizer;
-  late final TapGestureRecognizer _loginRecognizer;
+  // late final TapGestureRecognizer _agreementRecognizer;
+  // late final TapGestureRecognizer _loginRecognizer;
 
   bool _isAgreed = false;
   bool _isButtonEnabled = false;
@@ -40,16 +40,16 @@ class _RegisterPageState extends State<RegisterPage>
   void initState() {
     super.initState();
     _emailController.addListener(_updateButtonState);
-    _agreementRecognizer = TapGestureRecognizer()..onTap = _handleAgreementTap;
-    _loginRecognizer = TapGestureRecognizer()..onTap = _handleLoginTap;
+    // _agreementRecognizer = GestureDetector()..onTap = _handleAgreementTap;
+    // _loginRecognizer = TapGestureRecognizer()..onTap = _handleLoginTap;
   }
 
   @override
   void dispose() {
     _emailController.removeListener(_updateButtonState);
     _emailController.dispose();
-    _agreementRecognizer.dispose(); // 必须释放资源
-    _loginRecognizer.dispose();
+    // _agreementRecognizer.dispose(); // 必须释放资源
+    // _loginRecognizer.dispose();
     super.dispose();
   }
 
@@ -59,7 +59,7 @@ class _RegisterPageState extends State<RegisterPage>
       MaterialPageRoute(
         builder: (context) =>  AgreementPage(
           title: '用户协议',
-          url: EnvConfig.baseUrl, // 保持占位，不拼接具体路径
+          url: 'https://www.notion.so/traderjerry/KuPool-2947c49af15a8074a843ff780e1ffca7', // 保持占位，不拼接具体路径
         ),
       ),
     );
@@ -330,18 +330,24 @@ class _RegisterPageState extends State<RegisterPage>
           ),
         ),
         Expanded(
-          child: Text.rich(
-            TextSpan(
-              text: '已阅读并同意',
-              style: TextStyle(fontSize: 14.sp, color: Colors.black87),
-              children: [
+          child: Row(
+            children: [
+              Text.rich(
                 TextSpan(
-                  text: '《KuPool用户协议》',
-                  style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),
-                  recognizer: _agreementRecognizer, // 将手势识别器绑定到TextSpan
+                  text: '已阅读并同意',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.only(right: 8.w,top: 16.w,bottom: 16.w),
+                child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: (){
+                      _handleAgreementTap();
+                    },child: Text('《KuPool用户协议》',style: TextStyle(color: ColorUtils.mainColor, fontSize: 14.sp),)),
+              )
+            ],
           ),
         ),
       ],

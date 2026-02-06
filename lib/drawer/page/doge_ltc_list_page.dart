@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:Kupool/drawer/main_drawer.dart';
 import 'package:Kupool/drawer/model/sub_account_mini_info_entity.dart';
 import 'package:Kupool/net/api_service.dart';
 import 'package:Kupool/utils/base_data.dart';
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +24,73 @@ class DogeLtcListNotifier with ChangeNotifier {
   SubAccountCoinType? _currentCoinType;
   String currentCoinType() {
     return  _currentCoinType == SubAccountCoinType.dogeLtc ? "ltc" : "btc";
+  }
+
+  Timer? _pollingTimer;
+
+  DogeLtcListNotifier() {
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
+      if (_accounts != null) {
+        LogPrint.i("自动获取账号数据");
+        refreshAccountsPeriodically();
+      }
+    });
+  }
+
+  Future<void> refreshAccountsPeriodically() async {
+    try {
+      final params = {
+        'page': 1,
+        'page_size': 50,
+        'is_hidden': -1,
+        "coin_type": currentCoinType(),
+      };
+
+      final response = await ApiService().get(
+        '/v1/subaccount/list_with_mining_info',
+        queryParameters: params,
+      );
+
+      if (response != null) {
+        var resultModel = SubAccountMiniInfoEntity.fromJson(response);
+        final newAccounts = resultModel.list;
+
+        if (newAccounts != null) {
+          final currentSelectedId = _selectedAccount?.id;
+          _accounts = newAccounts;
+          notifyListeners();
+          //
+          // SubAccountMiniInfoList? accountToSelect;
+          // if (currentSelectedId != null) {
+          //   accountToSelect = _accounts!.firstWhere((acc) => acc.id == currentSelectedId,);
+          // }
+          //
+          // if (accountToSelect == null && _accounts!.isNotEmpty) {
+          //   accountToSelect = _accounts!.first;
+          // }
+          //
+          // if(accountToSelect != null) {
+          //    _selectedAccount = accountToSelect;
+          //    _selectedAccount?.selectCoin = currentCoinType();
+          //    selectCurrentCoinType = _selectedAccount!.selectCoin;
+          // } else {
+          //    _selectedAccount = null;
+          // }
+        }
+      }
+    } catch (e) {
+      print('Failed to periodically refresh accounts: $e');
+    }
   }
 
   Future<void> fetchAccounts({SubAccountCoinType coinType = SubAccountCoinType.dogeLtc}) async {

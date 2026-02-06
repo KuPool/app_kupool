@@ -523,10 +523,13 @@ class _StandardEarningsPageState extends State<StandardEarningsPage> with Single
       padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(
         children: [
-          Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1),
-          SizedBox(width: 30.w,),
+          Container(
+              constraints:  BoxConstraints(minWidth: 100),
+              child: Text(date, style: const TextStyle(fontSize: 14, color: ColorUtils.colorT1), maxLines: 1)
+          ),
+          SizedBox(width: 14,),
           CommonWidgets.statusConvertForWidget(status, direction, txHash),
-          SizedBox(width: 16.w,),
+          SizedBox(width: 16,),
           Expanded(
             child: FittedBox(
               fit: BoxFit.scaleDown,
