@@ -187,7 +187,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildMiningCoinsSection(BuildContext context, HomeDataState homeData) {
-    const List<int> flexes = [4, 3, 4];
+    const List<int> flexes = [4, 4, 4];
     var coinInfoModel = homeData.coinInfo.ltc;
     var poolHash = FormatUtils.formatHashrate(coinInfoModel?.poolHash);
 
@@ -355,7 +355,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(width: 6,),
           Expanded(
             flex: flexes[2],
-            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text("${poolHashrate}H/s",textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,))), 
+            child: FittedBox(fit: BoxFit.scaleDown,alignment: Alignment.centerRight,child: Text(poolHashrate,textAlign: TextAlign.right, style: TextStyle(fontSize: 16, color: ColorUtils.colorT1,))),
           ),
         ],
       ),

@@ -107,7 +107,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          // mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Expanded(child: _buildStatusCard(stats?.total?.toString() ?? '0', '全部', 'live', notifier)),
             Expanded(child: _buildStatusCard(stats?.active?.toString() ?? '0', '活跃', 'active', notifier)),
@@ -131,7 +131,7 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 8),
+        padding: const EdgeInsets.only(left: 4, right: 4, top: 8),
         decoration: isSelected
             ? BoxDecoration(
                 color: ColorUtils.mainColor.withAlpha(16),
@@ -141,12 +141,15 @@ class _MiningMachinePageState extends State<MiningMachinePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT1,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                count,
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? ColorUtils.mainColor : ColorUtils.colorT1,
+                ),
               ),
             ),
             SizedBox(height: 4.h),
