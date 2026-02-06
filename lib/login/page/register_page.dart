@@ -59,7 +59,7 @@ class _RegisterPageState extends State<RegisterPage>
       MaterialPageRoute(
         builder: (context) =>  AgreementPage(
           title: '用户协议',
-          url: 'https://www.notion.so/traderjerry/KuPool-2947c49af15a8074a843ff780e1ffca7', // 保持占位，不拼接具体路径
+          url: 'https://www.kupool.com/#/terms',
         ),
       ),
     );

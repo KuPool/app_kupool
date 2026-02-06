@@ -53,11 +53,11 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
             );
       },
       child: Container(
-        width: 160,
-        height: 40,
+        width: 120,
+        height: 36,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40 / 2),
+          borderRadius: BorderRadius.circular(36 / 2),
           color: const Color(0xff767680).withAlpha(30),
         ),
         child: Stack(
@@ -68,10 +68,10 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
               alignment:
                   is15mSelected ? Alignment.centerLeft : Alignment.centerRight,
               child: Container(
-                width: 160 / 2,
+                width: 120 / 2,
                 decoration: BoxDecoration(
                   color: ColorUtils.mainColor,
-                  borderRadius: BorderRadius.circular(40 / 2),
+                  borderRadius: BorderRadius.circular(36 / 2),
                 ),
               ),
             ),

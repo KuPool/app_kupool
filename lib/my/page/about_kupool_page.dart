@@ -61,7 +61,7 @@ class AboutKupoolPage extends StatelessWidget {
         children: [
           _buildInfoRow('邮箱', 'support@kupool.com'),
           Divider(height: 1, color: Colors.grey.shade200, indent: 16.w, endIndent: 16.w),
-          _buildInfoRow('Twitter (X)', '@kupoolofficial', hasDivider: false),
+          _buildInfoRow('Twitter (X)', '@kupooltech', hasDivider: false),
         ],
       ),
     );
@@ -72,6 +72,9 @@ class AboutKupoolPage extends StatelessWidget {
       onLongPress: () {
         Clipboard.setData(ClipboardData(text: value));
         ToastUtils.show("$title-已复制");
+      },
+      onTap: (){
+
       },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),

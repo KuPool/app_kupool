@@ -210,7 +210,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
       bool isSelected = false}) {
     return Container(
       color: isSelected ? const Color(0xFFE9F0FF) : Colors.transparent,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8),
       child: Row(
         children: [
           Column(
@@ -230,7 +230,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
                       color: Colors.black.withAlpha(180)),
                 ),
               ),
-              SizedBox(height: 4.h),
+              // SizedBox(height: 3),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -238,7 +238,7 @@ class _DogeLtcListPageState extends State<DogeLtcListPage> {
                   remark,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, color: ColorUtils.colorNoteT2),
+                  style: TextStyle(fontSize: 13, color: ColorUtils.colorNoteT2),
                 ),
               ),
             ],
