@@ -39,7 +39,7 @@ class DogeLtcListNotifier with ChangeNotifier {
   }
 
   void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    _pollingTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
       if (_accounts != null) {
         LogPrint.i("自动获取账号数据");
         refreshAccountsPeriodically();

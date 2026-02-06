@@ -1,9 +1,11 @@
 import 'package:Kupool/utils/color_utils.dart';
 import 'package:Kupool/utils/image_utils.dart';
+import 'package:Kupool/utils/logger.dart';
 import 'package:Kupool/utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutKupoolPage extends StatelessWidget {
   const AboutKupoolPage({super.key});
@@ -73,8 +75,24 @@ class AboutKupoolPage extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: value));
         ToastUtils.show("$title-已复制");
       },
-      onTap: (){
-
+      onTap: () async {
+        Uri? uri;
+        // 1. 判断是哪一行被点击了
+        if (title.toLowerCase().contains('twitter')) {
+          uri = Uri.parse('https://x.com/kupooltech');
+        } else if (title.toLowerCase().contains('邮箱')) {
+          // 如果是邮箱，构造 mailto 链接，这会尝试打开邮件客户端
+          uri = Uri.parse('mailto:$value');
+        }
+        // 2. 如果成功构造了 uri，就尝试启动它
+        if (uri != null) {
+          if (await canLaunchUrl(uri)) {
+            var result = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            // 如果找不到可以打开链接的应用，给用户一个提示
+            ToastUtils.show('无法打开链接: $uri');
+          }
+        }
       },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
