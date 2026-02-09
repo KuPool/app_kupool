@@ -190,6 +190,7 @@ class AuthInterceptor extends Interceptor {
 
     // 接口请求拦截
     options.headers['app-type'] = appType;
+    options.headers['app-version'] = "1.0.0";
 
     if (userJson != null) {
       try {

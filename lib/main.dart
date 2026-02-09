@@ -32,7 +32,8 @@ void main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
-  EnvConfig.setEnvironment(Environment.test);
+  // EnvConfig.setEnvironment(Environment.test);
+  EnvConfig.setEnvironment(Environment.prod);
   runApp(const ProviderScope(child: MyApp()));
 }
 
