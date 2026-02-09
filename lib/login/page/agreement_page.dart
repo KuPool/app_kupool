@@ -20,6 +20,14 @@ class _AgreementPageState extends State<AgreementPage> {
   bool _isLoading = true;
   String errorStr = "";
 
+
+  @override
+  void dispose() {
+    InAppWebViewController.clearAllCache();
+    _webViewController?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
