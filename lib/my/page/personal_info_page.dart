@@ -165,13 +165,11 @@ class PersonalInfoPage extends ConsumerWidget {
                             ToastUtils.showLoading(message: "正在退出...");
                             await ref.read(authNotifierProvider.notifier).signOut();
                             ToastUtils.dismiss();
-                            ToastUtils.show("退出成功,为你跳转...",onDismiss: (){
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MainTabBar()),
-                                    (route) => false, // 移除所有路由
-                              );
-                            });
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const MainTabBar()),
+                                  (route) => false, // 移除所有路由
+                            );
                           },
                         ),
                       ),

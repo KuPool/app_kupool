@@ -1,3 +1,4 @@
+import 'package:Kupool/utils/empty_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
@@ -27,6 +28,9 @@ class ToastUtils {
 
   /// 显示一个简单的文字 Toast,时间 ，位置可选
   static void show(String message,{Duration? displayTime,Alignment alignment = Alignment.center,VoidCallback? onDismiss}) {
+    if(isUnValidString(message)){
+      return;
+    }
     SmartDialog.showToast(message,displayTime: displayTime,alignment: alignment,onDismiss: onDismiss);
   }
 

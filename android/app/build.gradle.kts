@@ -29,11 +29,25 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-
+    signingConfigs {
+        maybeCreate("debug").apply {
+            storeFile = file(findProperty("MYAPP_RELEASE_STORE_FILE") ?: "./kupool.jks")
+            storePassword = findProperty("MYAPP_RELEASE_STORE_PASSWORD") as? String ?: "kupool"
+            keyAlias = findProperty("MYAPP_RELEASE_KEY_ALIAS") as? String ?: "kupool"
+            keyPassword = findProperty("MYAPP_RELEASE_KEY_PASSWORD") as? String ?: "kupool"
+        }
+        maybeCreate("release").apply {
+            storeFile = file(findProperty("MYAPP_RELEASE_STORE_FILE") ?: "./kupool.jks")
+            storePassword = findProperty("MYAPP_RELEASE_STORE_PASSWORD") as? String ?: "kupool"
+            keyAlias = findProperty("MYAPP_RELEASE_KEY_ALIAS") as? String ?: "kupool"
+            keyPassword = findProperty("MYAPP_RELEASE_KEY_PASSWORD") as? String ?: "kupool"
+        }
+    }
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("release")
+        }
+        getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
